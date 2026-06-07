@@ -1,0 +1,426 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// 1. CONFIGURACIÓN DEL GIMNASIO
+// ============================================
+
+model GymConfig {
+  id                    String   @id @default(cuid())
+  name                  String   @default("Mi Gimnasio")
+  address               String?
+  phone                 String?
+  email                 String?
+  logoUrl               String?
+  theme                 String   @default("blue")
+  currency              String   @default("ARS")
+  timezone              String   @default("America/Argentina/Buenos_Aires")
+  language              String   @default("es")
+  graceDaysAfterExpiry  Int      @default(3)
+  cancellationPolicyHours Int    @default(12)
+  defaultClassCapacity  Int      @default(20)
+  qrExpiryMinutes       Int      @default(2)
+  openingTime           String   @default("07:00")
+  closingTime           String   @default("22:00")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("gym_config")
+}
+
+// ============================================
+// 2. CLIENTES
+// ============================================
+
+model Member {
+  id                    String   @id @default(cuid())
+  clerkUserId           String?  @unique
+  
+  firstName             String
+  lastName              String
+  dni                   String   @unique
+  email                 String   @unique
+  phone                 String
+  birthDate             DateTime
+  address               String?
+  city                  String?
+  latitude              Float?
+  longitude             Float?
+  photoUrl              String?
+  
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  
+  medicalCertificateUrl String?
+  medicalCertificateExpiry DateTime?
+  medicalNotes          String?
+  internalNotes         String?
+  
+  status                MemberStatus @default(ACTIVE)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  createdBy             String
+  
+  memberships           Membership[]
+  attendances           Attendance[]
+  bookings              Booking[]
+  payments              Payment[]
+  routines              Routine[]
+  weightLogs            WeightLog[]
+  
+  @@map("members")
+}
+
+enum MemberStatus {
+  ACTIVE
+  INACTIVE
+  FROZEN
+  OVERDUE
+}
+
+// ============================================
+// 3. PLANES Y MEMBRESÍAS
+// ============================================
+
+model Plan {
+  id              String     @id @default(cuid())
+  name            String
+  type            PlanType
+  pack            PlanPack
+  price           Decimal    @db.Decimal(10, 2)
+  durationDays    Int
+  classesIncluded Int        @default(0)
+  description     String?
+  isActive        Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  
+  memberships     Membership[]
+  
+  @@map("plans")
+}
+
+enum PlanType {
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+  PER_CLASS
+}
+
+enum PlanPack {
+  GYM_ONLY
+  GYM_CLASSES
+  GYM_CLASSES_TRAINER
+}
+
+model Membership {
+  id                String   @id @default(cuid())
+  memberId          String
+  planId            String
+  startDate         DateTime
+  endDate           DateTime
+  status            MembershipStatus @default(ACTIVE)
+  autoRenew         Boolean  @default(false)
+  classesRemaining  Int?
+  
+  createdAt         DateTime @default(now())
+  
+  member            Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  plan              Plan     @relation(fields: [planId], references: [id])
+  
+  @@map("memberships")
+}
+
+enum MembershipStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  FROZEN
+}
+
+// ============================================
+// 4. ACTIVIDADES Y AGENDA
+// ============================================
+
+model Activity {
+  id              String     @id @default(cuid())
+  name            String
+  description     String?
+  defaultDuration Int
+  maxCapacity     Int
+  color           String?
+  isActive        Boolean    @default(true)
+  
+  schedules       Schedule[]
+  
+  @@map("activities")
+}
+
+model Schedule {
+  id          String   @id @default(cuid())
+  activityId  String
+  date        DateTime @db.Date
+  startTime   String
+  endTime     String
+  trainerId   String?
+  room        String?
+  maxCapacity Int
+  isCancelled Boolean @default(false)
+  isHoliday   Boolean @default(false)
+  
+  activity    Activity @relation(fields: [activityId], references: [id])
+  bookings    Booking[]
+  
+  @@unique([activityId, date, startTime])
+  @@map("schedules")
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  memberId        String
+  scheduleId      String
+  bookingDate     DateTime      @default(now())
+  status          BookingStatus @default(CONFIRMED)
+  waitlistPosition Int?
+  
+  member          Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  schedule        Schedule      @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  
+  @@unique([memberId, scheduleId])
+  @@map("bookings")
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  NO_SHOW
+  COMPLETED
+}
+
+// ============================================
+// 5. ASISTENCIAS (CONTROL DE ACCESO)
+// ============================================
+
+model Attendance {
+  id          String   @id @default(cuid())
+  memberId    String
+  entryTime   DateTime @default(now())
+  qrToken     String
+  status      AttendanceStatus @default(ALLOWED)
+  
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  
+  @@map("attendances")
+}
+
+enum AttendanceStatus {
+  ALLOWED
+  WARNING
+  DENIED
+}
+
+// ============================================
+// 6. PAGOS Y CAJA
+// ============================================
+
+model Payment {
+  id          String        @id @default(cuid())
+  memberId    String
+  amount      Decimal       @db.Decimal(10, 2)
+  method      PaymentMethod
+  status      PaymentStatus @default(COMPLETED)
+  concept     String
+  reference   String?
+  notes       String?
+  createdAt   DateTime      @default(now())
+  
+  member      Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  
+  @@map("payments")
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  MERCADOPAGO
+  CARD
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model CashRegister {
+  id            String   @id @default(cuid())
+  date          DateTime @db.Date @unique
+  openingAmount Decimal  @db.Decimal(10, 2)
+  closingAmount Decimal? @db.Decimal(10, 2)
+  isClosed      Boolean  @default(false)
+  closedAt      DateTime?
+  notes         String?
+  
+  movements     CashMovement[]
+  
+  @@map("cash_registers")
+}
+
+model CashMovement {
+  id             String       @id @default(cuid())
+  cashRegisterId String
+  type           MovementType
+  amount         Decimal      @db.Decimal(10, 2)
+  concept        String
+  category       String?
+  createdAt      DateTime     @default(now())
+  
+  cashRegister   CashRegister @relation(fields: [cashRegisterId], references: [id], onDelete: Cascade)
+  
+  @@map("cash_movements")
+}
+
+enum MovementType {
+  INCOME
+  EXPENSE
+}
+
+// ============================================
+// 7. RUTINAS Y EJERCICIOS
+// ============================================
+
+model Exercise {
+  id          String   @id @default(cuid())
+  name        String
+  category    ExerciseCategory
+  description String?
+  videoUrl    String?
+  imageUrl    String?
+  muscles     String[]
+  equipment   String?
+  isActive    Boolean  @default(true)
+  
+  routineExercises RoutineExercise[]
+  
+  @@map("exercises")
+}
+
+enum ExerciseCategory {
+  CHEST
+  BACK
+  LEGS
+  SHOULDERS
+  ARMS
+  CORE
+  CARDIO
+  FULL_BODY
+  OTHER
+}
+
+model Routine {
+  id          String   @id @default(cuid())
+  name        String
+  memberId    String
+  trainerId   String
+  goal        RoutineGoal
+  frequencyPerWeek Int
+  estimatedDuration Int?
+  notes       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  exercises   RoutineExercise[]
+  progressLogs ProgressLog[]
+  
+  @@map("routines")
+}
+
+enum RoutineGoal {
+  HYPERTROPHY
+  STRENGTH
+  ENDURANCE
+  WEIGHT_LOSS
+  MAINTENANCE
+  REHABILITATION
+}
+
+model RoutineExercise {
+  id          String   @id @default(cuid())
+  routineId   String
+  exerciseId  String
+  dayOfWeek   Int
+  order       Int
+  sets        Int
+  reps        String
+  weight      Decimal? @db.Decimal(5, 2)
+  restSeconds Int?
+  notes       String?
+  
+  routine     Routine  @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  exercise    Exercise @relation(fields: [exerciseId], references: [id])
+  
+  @@map("routine_exercises")
+}
+
+model ProgressLog {
+  id              String   @id @default(cuid())
+  routineId       String
+  exerciseId      String
+  memberId        String
+  date            DateTime @default(now())
+  setsCompleted   Int
+  repsCompleted   String
+  weightUsed      Decimal  @db.Decimal(5, 2)
+  rm              Decimal? @db.Decimal(5, 2)
+  notes           String?
+  
+  routine         Routine  @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  
+  @@map("progress_logs")
+}
+
+// ============================================
+// 8. REGISTROS AUXILIARES
+// ============================================
+
+model WeightLog {
+  id          String   @id @default(cuid())
+  memberId    String
+  weight      Decimal  @db.Decimal(5, 2)
+  date        DateTime @default(now())
+  notes       String?
+  
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  
+  @@map("weight_logs")
+}
+
+model News {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  sentAt      DateTime?
+  createdAt   DateTime @default(now())
+  
+  @@map("news")
+}
+
+model Holiday {
+  id          String   @id @default(cuid())
+  date        DateTime @db.Date @unique
+  name        String
+  description String?
+  
+  @@map("holidays")
+}

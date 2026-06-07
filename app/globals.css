@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 91% 60%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 213 94% 68%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;
+    --radius: 0.5rem;
+  }
+
+  [data-theme="green"] {
+    --primary: 142 71% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 142 69% 58%;
+    --secondary-foreground: 0 0% 100%;
+    --accent: 142 77% 73%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --muted: 138 76% 95%;
+    --muted-foreground: 215 16% 47%;
+    --background: 138 76% 97%;
+    --border: 140 84% 90%;
+    --input: 140 84% 90%;
+    --ring: 142 71% 45%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+}
+
+/* Estilos para react-big-calendar - FUERA del @layer base */
+.rbc-calendar {
+  font-family: 'Inter', sans-serif;
+}
+
+.rbc-header {
+  padding: 8px 4px;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #64748B;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.rbc-time-header-content {
+  border-left: 1px solid #E2E8F0;
+}
+
+.rbc-time-content {
+  border-top: 1px solid #E2E8F0;
+}
+
+.rbc-time-slot {
+  font-size: 12px;
+  color: #64748B;
+}
+
+.rbc-event {
+  border-radius: 6px;
+  padding: 2px 4px;
+  font-size: 12px;
+  border: none;
+}
+
+.rbc-today {
+  background-color: #F0F9FF;
+}
+
+.rbc-current-time-indicator {
+  background-color: #3B82F6;
+  height: 2px;
+}
+
+.rbc-button-link {
+  color: #0F172A;
+  font-weight: 600;
+}
+
+.rbc-month-view .rbc-date-cell {
+  padding: 4px;
+  text-align: center;
+}
+
+.rbc-month-view .rbc-off-range-bg {
+  background-color: #F8FAFC;
+}
+
+.rbc-month-view .rbc-today {
+  background-color: #F0F9FF;
+}

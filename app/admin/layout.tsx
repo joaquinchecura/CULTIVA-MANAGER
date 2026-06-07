@@ -13,9 +13,9 @@ export default function AdminLayout({
       <header className="bg-white border-b border-slate-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h1 className="text-xl font-bold text-slate-900">Gym Management</h1>
+            <h1 className="text-xl font-bold text-slate-900">Cultiva MANAGER</h1>
             <nav className="flex gap-4">
-              <a href="/admin" className="text-sm text-slate-600 hover:text-slate-900">Dashboard</a>
+              <a href="/admin" className="text-sm text-slate-600 hover:text-slate-900">Inicio</a>
               <a href="/admin/clientes" className="text-sm text-slate-600 hover:text-slate-900">Clientes</a>
               <a href="/admin/actividades" className="text-sm text-slate-600 hover:text-slate-900">Actividades</a>
               <a href="/admin/planes" className="text-sm text-slate-600 hover:text-slate-900">Planes</a>

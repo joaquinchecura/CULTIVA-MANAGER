@@ -1,7 +1,7 @@
 export default function AdminDashboard() {
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6">Dashboard</h2>
+      <h2 className="text-2xl font-bold mb-6">Menu de inicio</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
         <a href="/admin/clientes/nuevo" className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 hover:border-blue-400 transition-colors">

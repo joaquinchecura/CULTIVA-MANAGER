@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
-const createClientSchema = z.object({
+const createMemberSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   dni: z.string().min(1),
@@ -20,14 +20,13 @@ const createClientSchema = z.object({
 export async function GET() {
   try {
     const members = await prisma.member.findMany({
-      orderBy: { createdAt: 'desc' },
       include: {
         memberships: {
-          where: { status: 'ACTIVE' },
           include: { plan: true },
-          take: 1,
+          orderBy: { createdAt: 'desc' },
         },
       },
+      orderBy: { createdAt: 'desc' },
     })
 
     return NextResponse.json(members)
@@ -40,7 +39,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const validatedData = createClientSchema.parse(body)
+    const validatedData = createMemberSchema.parse(body)
 
     const member = await prisma.member.create({
       data: {
@@ -57,8 +56,25 @@ export async function POST(request: Request) {
     }
     console.error('Error creating member:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-    // Crear usuario en Clerk con metadata
-    // Nota: Esto requiere la API de Clerk, lo hacemos después
-    // Por ahora, el admin debe actualizar manualmente el metadata en Clerk
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID required' }, { status: 400 })
+    }
+
+    await prisma.member.delete({
+      where: { id },
+    })
+
+    return NextResponse.json({ message: 'Member deleted' })
+  } catch (error) {
+    console.error('Error deleting member:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -11,14 +11,6 @@ export async function GET(
       include: {
         memberships: {
           include: { plan: true },
-          orderBy: { createdAt: 'desc' },
-        },
-        payments: {
-          orderBy: { createdAt: 'desc' },
-        },
-        attendances: {
-          orderBy: { entryTime: 'desc' },
-          take: 10,
         },
       },
     })
@@ -29,7 +21,7 @@ export async function GET(
 
     return NextResponse.json(member)
   } catch (error) {
-    console.error('Error fetching member:', error)
+    console.error('Error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -40,31 +32,28 @@ export async function PUT(
 ) {
   try {
     const body = await request.json()
-    
+
     const member = await prisma.member.update({
       where: { id: params.id },
-      data: body,
+      data: {
+        firstName: body.firstName,
+        lastName: body.lastName,
+        dni: body.dni,
+        email: body.email,
+        phone: body.phone,
+        birthDate: new Date(body.birthDate),
+        address: body.address || null,
+        city: body.city || null,
+        emergencyContactName: body.emergencyContactName || null,
+        emergencyContactPhone: body.emergencyContactPhone || null,
+        medicalNotes: body.medicalNotes || null,
+        internalNotes: body.internalNotes || null,
+      },
     })
 
     return NextResponse.json(member)
   } catch (error) {
-    console.error('Error updating member:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    await prisma.member.delete({
-      where: { id: params.id },
-    })
-
-    return NextResponse.json({ message: 'Member deleted' })
-  } catch (error) {
-    console.error('Error deleting member:', error)
+    console.error('Error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

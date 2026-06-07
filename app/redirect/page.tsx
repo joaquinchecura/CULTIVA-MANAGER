@@ -11,7 +11,7 @@ export default async function RedirectPage() {
 
   // Buscar si el usuario es un cliente (member)
   const member = await prisma.member.findFirst({
-    where: { clerkId: userId },
+    where: { clerkUserId: userId },
   })
 
   if (member) {

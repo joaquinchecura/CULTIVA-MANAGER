@@ -38,7 +38,7 @@ export default function VincularPage() {
 
       if (membersRes.ok) {
         const membersData = await membersRes.json()
-        setMembers(membersData.filter((m: Member) => !m.clerkUserId)) // Solo no vinculados
+        setMembers(membersData.filter((m: Member) => !m.clerkUserId))
       }
 
       if (usersRes.ok) {
@@ -63,11 +63,14 @@ export default function VincularPage() {
 
       if (response.ok) {
         setMembers(prev => prev.filter(m => m.id !== memberId))
+        alert('Cliente vinculado correctamente')
       } else {
-        alert('Error al vincular')
+        const error = await response.json()
+        alert(error.error || 'Error al vincular')
       }
     } catch (error) {
       console.error('Error:', error)
+      alert('Error de conexión')
     } finally {
       setVinculando(null)
     }
@@ -79,21 +82,20 @@ export default function VincularPage() {
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6">Vincular Clientes con Clerk</h2>
+      <h2 className="text-2xl font-bold mb-6">Autorizar Clientes</h2>
       
       <p className="text-slate-600 mb-4">
-        Clientes sin cuenta de Clerk vinculada: {members.length}
+        Clientes pendientes de autorización: {members.length}
       </p>
 
       {members.length === 0 ? (
         <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
           <Check className="mx-auto mb-2 text-green-600" size={32} />
-          <p className="text-green-800 font-medium">Todos los clientes están vinculados</p>
+          <p className="text-green-800 font-medium">Todos los clientes están autorizados</p>
         </div>
       ) : (
         <div className="space-y-4">
           {members.map(member => {
-            // Buscar usuario de Clerk con mismo email
             const matchingUser = clerkUsers.find(u => 
               u.emailAddresses.some(e => e.emailAddress === member.email)
             )
@@ -113,18 +115,18 @@ export default function VincularPage() {
                       className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
                     >
                       <Link2 size={16} />
-                      {vinculando === member.id ? 'Vinculando...' : 'Vincular'}
+                      {vinculando === member.id ? 'Autorizando...' : 'Autorizar'}
                     </button>
                   ) : (
                     <span className="text-sm text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">
-                      No tiene cuenta en Clerk
+                      Sin cuenta en Clerk
                     </span>
                   )}
                 </div>
                 
                 {matchingUser && (
                   <p className="text-xs text-slate-400 mt-2">
-                    Coincide con: {matchingUser.firstName} {matchingUser.lastName} ({matchingUser.emailAddresses[0]?.emailAddress})
+                    Coincide con: {matchingUser.firstName} {matchingUser.lastName}
                   </p>
                 )}
               </div>

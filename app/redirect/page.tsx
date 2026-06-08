@@ -6,7 +6,7 @@ export default async function RedirectPage() {
   const { userId } = await auth()
   
   if (!userId) {
-    redirect('/login')
+    redirect('/')
   }
 
   // Buscar si el usuario es un cliente (member)
@@ -15,10 +15,11 @@ export default async function RedirectPage() {
   })
 
   if (member) {
-    // Es cliente → WebApp
+    // Es cliente autorizado → WebApp
     redirect('/clientes')
   } else {
-    // Es admin → Dashboard
+    // Verificar si es admin (no existe en members)
+    // TODO: Podríamos verificar si tiene un rol específico en Clerk
     redirect('/admin')
   }
 }

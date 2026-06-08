@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { clerkClient } from '@clerk/clerk-sdk-node'
 
 const createMemberSchema = z.object({
   firstName: z.string().min(1),
@@ -41,11 +42,31 @@ export async function POST(request: Request) {
     const body = await request.json()
     const validatedData = createMemberSchema.parse(body)
 
+    // 1. Crear usuario en Clerk
+    const clerkUser = await clerkClient.users.createUser({
+      emailAddress: [validatedData.email],
+      firstName: validatedData.firstName,
+      lastName: validatedData.lastName,
+      password: validatedData.dni, // Usamos el DNI como password inicial
+      publicMetadata: {
+        memberId: '', // Lo actualizamos después
+      },
+    })
+
+    // 2. Crear member en la base de datos con el clerkUserId
     const member = await prisma.member.create({
       data: {
         ...validatedData,
+        clerkUserId: clerkUser.id,
         status: 'ACTIVE',
         createdBy: 'admin',
+      },
+    })
+
+    // 3. Actualizar el metadata de Clerk con el memberId
+    await clerkClient.users.updateUser(clerkUser.id, {
+      publicMetadata: {
+        memberId: member.id,
       },
     })
 
@@ -68,6 +89,17 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'ID required' }, { status: 400 })
     }
 
+    // Buscar el member para obtener el clerkUserId
+    const member = await prisma.member.findUnique({
+      where: { id },
+    })
+
+    if (member?.clerkUserId) {
+      // Eliminar usuario de Clerk
+      await clerkClient.users.deleteUser(member.clerkUserId)
+    }
+
+    // Eliminar de la base de datos
     await prisma.member.delete({
       where: { id },
     })

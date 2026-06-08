@@ -21,6 +21,7 @@ export default function AdminLayout({
               <a href="/admin/planes" className="text-sm text-slate-600 hover:text-slate-900">Planes</a>
               <a href="/admin/agenda" className="text-sm text-slate-600 hover:text-slate-900">Agenda</a>
               <a href="/admin/pagos" className="text-sm text-slate-600 hover:text-slate-900">Pagos</a>
+              <a href="/admin/clientes/vincular" className="text-sm text-slate-600 hover:text-slate-900">Vincular</a>
             </nav>
           </div>
           <SignOutButton redirectUrl="/login">

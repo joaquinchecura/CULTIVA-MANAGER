@@ -9,17 +9,20 @@ export default async function RedirectPage() {
     redirect('/')
   }
 
-  // Buscar si el usuario es un cliente (member)
+  // Buscar si el usuario es un cliente
   const member = await prisma.member.findFirst({
     where: { clerkUserId: userId },
   })
 
   if (member) {
-    // Es cliente autorizado → WebApp
+    if (member.status === 'PENDING') {
+      // Cliente pendiente → mostrar mensaje de espera
+      redirect('/clientes/pendiente')
+    }
+    // Cliente autorizado → WebApp
     redirect('/clientes')
   } else {
-    // Verificar si es admin (no existe en members)
-    // TODO: Podríamos verificar si tiene un rol específico en Clerk
+    // No es cliente → asumimos admin
     redirect('/admin')
   }
 }

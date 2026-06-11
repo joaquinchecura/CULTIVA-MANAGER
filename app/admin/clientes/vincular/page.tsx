@@ -16,7 +16,7 @@ interface Member {
 }
 
 export default function VincularPage() {
-  const [pendingMembers, setPendingMembers] = useState<<Member[]>([])
+  const [pendingMembers, setPendingMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [autorizando, setAutorizando] = useState<string | null>(null)
 

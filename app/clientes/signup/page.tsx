@@ -13,7 +13,7 @@ export default function ClientesSignUpPage() {
           <SignUp 
             routing="path"
             path="/clientes/signup"
-            redirectUrl="/clientes/completar"
+            fallbackRedirectUrl="/clientes/completar"  // ← Cambiar redirectUrl por fallbackRedirectUrl
             signInUrl="/clientes/login"
             appearance={{
               elements: {

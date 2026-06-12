@@ -20,7 +20,7 @@ function LoginContent() {
         <SignIn 
           routing="path"
           path="/clientes/login"
-          redirectUrl="/redirect"
+          fallbackRedirectUrl="/redirect"  // ← Cambiar redirectUrl por fallbackRedirectUrl
           signUpUrl="/clientes/signup"
           appearance={{
             elements: {

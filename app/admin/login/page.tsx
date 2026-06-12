@@ -13,7 +13,7 @@ export default function AdminLoginPage() {
           <SignIn 
             routing="path"
             path="/admin/login"
-            redirectUrl="/redirect"
+            fallbackRedirectUrl="/redirect"  // ← Cambiar redirectUrl por fallbackRedirectUrl
             appearance={{
               elements: {
                 formButtonPrimary: 'bg-slate-900 hover:bg-slate-800',

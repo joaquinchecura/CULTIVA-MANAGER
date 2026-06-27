@@ -1,5 +1,3 @@
-'use client'
-
 import { SignIn } from '@clerk/nextjs'
 
 export default function LoginPage() {
@@ -17,7 +15,7 @@ export default function LoginPage() {
           <SignIn 
             routing="path"
             path="/login"
-            redirectUrl="/redirect"
+            fallbackRedirectUrl="/redirect"  // ← Cambiado de redirectUrl a fallbackRedirectUrl
             appearance={{
               elements: {
                 formButtonPrimary: 'bg-blue-600 hover:bg-blue-700',

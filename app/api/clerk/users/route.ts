@@ -3,9 +3,10 @@ import { clerkClient } from '@clerk/clerk-sdk-node'
 
 export async function GET() {
   try {
-    const users = await clerkClient.users.getUserList()
+    const response = await clerkClient.users.getUserList()
     
-    const simplifiedUsers = users.map(user => ({
+    // En la nueva versión, getUserList() devuelve { data: User[], totalCount: number }
+    const simplifiedUsers = response.data.map(user => ({
       id: user.id,
       emailAddresses: user.emailAddresses.map(e => ({ emailAddress: e.emailAddress })),
       firstName: user.firstName,

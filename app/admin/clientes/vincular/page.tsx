@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Link2, Check, UserCheck } from 'lucide-react'
+import { Check, UserCheck } from 'lucide-react'
 
 interface Member {
   id: string

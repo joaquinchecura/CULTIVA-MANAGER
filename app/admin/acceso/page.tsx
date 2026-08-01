@@ -1,46 +1,68 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
-import { Scan, UserCheck, UserX, Loader2 } from 'lucide-react'
+import { Scan, UserCheck, UserX, Loader2, Camera, CameraOff } from 'lucide-react'
 
 export default function AccesoPage() {
   const [scanning, setScanning] = useState(false)
   const [result, setResult] = useState<{success?: boolean; message?: string; member?: any} | null>(null)
   const [loading, setLoading] = useState(false)
+  const [cameraError, setCameraError] = useState<string | null>(null)
+  const [cameras, setCameras] = useState<any[]>([])
   const scannerRef = useRef<Html5Qrcode | null>(null)
 
-  async function startScan() {
+  // Listar cámaras disponibles
+  async function listCameras() {
+    try {
+      const devices = await Html5Qrcode.getCameras()
+      setCameras(devices)
+      console.log('Cámaras encontradas:', devices)
+      return devices
+    } catch (err) {
+      console.error('Error listando cámaras:', err)
+      setCameraError('No se pudieron detectar cámaras. Verificá los permisos.')
+      return []
+    }
+  }
+
+  async function startScan(cameraId?: string) {
     setScanning(true)
     setResult(null)
+    setCameraError(null)
     
+    // Si no hay cameraId, listar cámaras primero
+    let selectedCamera = cameraId
+    if (!selectedCamera) {
+      const devices = await listCameras()
+      if (devices.length === 0) {
+        setCameraError('No se encontraron cámaras. Verificá que tengas una webcam conectada.')
+        setScanning(false)
+        return
+      }
+      // En notebook/PC: usar la primera cámara (generalmente la frontal)
+      selectedCamera = devices[0].id
+    }
+
     scannerRef.current = new Html5Qrcode('qr-reader')
     
     try {
       await scannerRef.current.start(
-        { facingMode: 'environment' }, // Cámara trasera en mobile, webcam en PC
+        selectedCamera,
         { fps: 10, qrbox: { width: 250, height: 250 } },
         async (decodedText) => {
-          // QR escaneado
           await handleScan(decodedText)
         },
-        () => {} // Error callback (ignorar errores de lectura parcial)
+        (errorMessage) => {
+          // Ignorar errores de lectura parcial (es normal)
+          // console.log('QR scan error:', errorMessage)
+        }
       )
-    } catch (err) {
-      console.error('Error starting scanner:', err)
-      // Fallback a webcam si environment falla
-      try {
-        await scannerRef.current?.start(
-          { facingMode: 'user' },
-          { fps: 10, qrbox: { width: 250, height: 250 } },
-          async (decodedText) => {
-            await handleScan(decodedText)
-          },
-          () => {}
-        )
-      } catch (err2) {
-        console.error('Fallback also failed:', err2)
-      }
+      console.log('✅ Scanner iniciado con cámara:', selectedCamera)
+    } catch (err: any) {
+      console.error('Error iniciando scanner:', err)
+      setCameraError(`Error al iniciar la cámara: ${err.message || 'Desconocido'}`)
+      setScanning(false)
     }
   }
 
@@ -48,7 +70,6 @@ export default function AccesoPage() {
     if (loading) return
     setLoading(true)
     
-    // Detener scanner temporalmente
     await scannerRef.current?.pause()
 
     try {
@@ -65,7 +86,6 @@ export default function AccesoPage() {
         member: data.member,
       })
 
-      // Reanudar después de 3 segundos
       setTimeout(async () => {
         setResult(null)
         await scannerRef.current?.resume()
@@ -80,14 +100,18 @@ export default function AccesoPage() {
 
   async function stopScan() {
     if (scannerRef.current) {
-      await scannerRef.current.stop()
+      try {
+        await scannerRef.current.stop()
+      } catch (e) {
+        // Ignorar error si ya estaba detenido
+      }
       scannerRef.current = null
     }
     setScanning(false)
     setResult(null)
+    setCameraError(null)
   }
 
-  // Limpiar al desmontar
   useEffect(() => {
     return () => {
       if (scannerRef.current) {
@@ -110,15 +134,42 @@ export default function AccesoPage() {
           {!scanning ? (
             <div className="p-12 text-center">
               <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Scan className="text-blue-600" size={40} />
+                <Camera className="text-blue-600" size={40} />
               </div>
               <p className="text-slate-600 mb-4">Presioná el botón para iniciar la cámara</p>
+              
+              {cameras.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-sm text-slate-500 mb-2">Cámaras detectadas: {cameras.length}</p>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {cameras.map((cam) => (
+                      <button
+                        key={cam.id}
+                        onClick={() => startScan(cam.id)}
+                        className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm hover:bg-slate-200 transition-colors"
+                      >
+                        {cam.label || 'Cámara'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <button
-                onClick={startScan}
+                onClick={() => startScan()}
                 className="px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
               >
-                Iniciar Escáner
+                {cameras.length > 0 ? 'Reiniciar Cámara' : 'Iniciar Escáner'}
               </button>
+
+              {cameraError && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-red-600">
+                    <CameraOff size={18} />
+                    <p className="text-sm font-medium">{cameraError}</p>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="relative">
@@ -126,8 +177,8 @@ export default function AccesoPage() {
               
               {/* Overlay de resultado */}
               {result && (
-                <div className={`absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm`}>
-                  <div className={`p-6 rounded-2xl text-center ${result.success ? 'bg-green-500' : 'bg-red-500'} text-white`}>
+                <div className={`absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-10`}>
+                  <div className={`p-6 rounded-2xl text-center ${result.success ? 'bg-green-500' : 'bg-red-500'} text-white max-w-sm mx-4`}>
                     {result.success ? (
                       <UserCheck size={48} className="mx-auto mb-2" />
                     ) : (
@@ -143,7 +194,7 @@ export default function AccesoPage() {
 
               {/* Loading */}
               {loading && !result && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-10">
                   <Loader2 className="animate-spin text-white" size={48} />
                 </div>
               )}
@@ -151,7 +202,7 @@ export default function AccesoPage() {
               {/* Botón detener */}
               <button
                 onClick={stopScan}
-                className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-white/90 text-slate-700 rounded-lg font-medium hover:bg-white transition-colors"
+                className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-white/90 text-slate-700 rounded-lg font-medium hover:bg-white transition-colors z-20"
               >
                 Detener
               </button>
@@ -159,13 +210,20 @@ export default function AccesoPage() {
           )}
         </div>
 
+        {/* Debug info */}
+        {scanning && (
+          <div className="mt-4 p-3 bg-slate-100 rounded-lg">
+            <p className="text-xs text-slate-500">Estado: {loading ? 'Procesando...' : 'Escaneando...'}</p>
+          </div>
+        )}
+
         {/* Instrucciones */}
         <div className="mt-6 bg-blue-50 border border-blue-100 rounded-xl p-4">
           <h3 className="font-semibold text-blue-800 mb-2">Instrucciones</h3>
           <ul className="text-sm text-blue-700 space-y-1">
-            <li>• Asegurate de tener buena iluminación</li>
-            <li>• En PC: usa la webcam frontal</li>
-            <li>• En celular: usa la cámara trasera para mejor calidad</li>
+            <li>• Asegurate de permitir el acceso a la cámara cuando el navegador lo pida</li>
+            <li>• En PC/notebook: se usa la webcam frontal automáticamente</li>
+            <li>• En celular: se usa la cámara trasera para mejor calidad</li>
             <li>• El QR del alumno se regenera cada 2 minutos</li>
           </ul>
         </div>

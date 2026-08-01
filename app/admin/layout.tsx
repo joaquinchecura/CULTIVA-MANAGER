@@ -1,7 +1,18 @@
 'use client'
 
 import { SignOutButton } from '@clerk/nextjs'
-import { LogOut } from 'lucide-react'
+import { LogOut, Scan, Home, Users, Dumbbell, Calendar, CreditCard, Link2 } from 'lucide-react'
+
+const navItems = [
+  { href: "/admin", label: "Inicio", icon: Home },
+  { href: "/admin/clientes", label: "Clientes", icon: Users },
+  { href: "/admin/actividades", label: "Actividades", icon: Dumbbell },
+  { href: "/admin/planes", label: "Planes", icon: Calendar },
+  { href: "/admin/agenda", label: "Agenda", icon: Calendar },
+  { href: "/admin/pagos", label: "Pagos", icon: CreditCard },
+  { href: "/admin/clientes/vincular", label: "Vincular", icon: Link2 },
+  { href: "/admin/acceso", label: "Acceso", icon: Scan },
+]
 
 export default function AdminLayout({
   children,
@@ -15,13 +26,16 @@ export default function AdminLayout({
           <div className="flex items-center gap-4">
             <h1 className="text-xl font-bold text-slate-900">Cultiva MANAGER</h1>
             <nav className="flex gap-4">
-              <a href="/admin" className="text-sm text-slate-600 hover:text-slate-900">Inicio</a>
-              <a href="/admin/clientes" className="text-sm text-slate-600 hover:text-slate-900">Clientes</a>
-              <a href="/admin/actividades" className="text-sm text-slate-600 hover:text-slate-900">Actividades</a>
-              <a href="/admin/planes" className="text-sm text-slate-600 hover:text-slate-900">Planes</a>
-              <a href="/admin/agenda" className="text-sm text-slate-600 hover:text-slate-900">Agenda</a>
-              <a href="/admin/pagos" className="text-sm text-slate-600 hover:text-slate-900">Pagos</a>
-              <a href="/admin/clientes/vincular" className="text-sm text-slate-600 hover:text-slate-900">Vincular</a>
+              {navItems.map((item) => (
+                <a 
+                  key={item.href}
+                  href={item.href} 
+                  className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors"
+                >
+                  <item.icon size={14} />
+                  {item.label}
+                </a>
+              ))}
             </nav>
           </div>
           <SignOutButton redirectUrl="/login">

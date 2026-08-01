@@ -4,9 +4,12 @@ import { prisma } from '@/lib/prisma'
 import { ArrowLeft, Calendar, Clock } from 'lucide-react'
 import Link from 'next/link'
 
-export default async function ClienteAsistenciasPage({ params }: { params: { id: string } }) {
+// Next.js 15: params es Promise
+export default async function ClienteAsistenciasPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+
   const member = await prisma.member.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       attendances: {
         orderBy: { entryTime: 'desc' },

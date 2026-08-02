@@ -25,7 +25,10 @@ export default function AsignarClasePersonal({ memberId, activities }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!formData.activityId) return
+    if (!formData.activityId) {
+      alert('Seleccioná una actividad')
+      return
+    }
 
     setSaving(true)
     try {

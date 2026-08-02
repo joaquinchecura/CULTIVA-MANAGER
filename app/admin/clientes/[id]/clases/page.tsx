@@ -28,7 +28,7 @@ export default async function ClienteClasesPage({ params }: { params: Promise<{ 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/admin/clientes" className="text-slate-500 hover:text-slate-900">
+        <Link href={`/admin/clientes/${id}`} className="text-slate-500 hover:text-slate-900">
           <ArrowLeft size={20} />
         </Link>
         <div>
@@ -65,7 +65,11 @@ export default async function ClienteClasesPage({ params }: { params: Promise<{ 
                   </p>
                   {b.schedule.room && <p className="text-xs text-slate-400">Sala: {b.schedule.room}</p>}
                 </div>
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                <span className={`text-xs px-2 py-1 rounded-full ${
+                  b.schedule.maxCapacity === 1 
+                    ? 'bg-purple-100 text-purple-700' 
+                    : 'bg-green-100 text-green-700'
+                }`}>
                   {b.schedule.maxCapacity === 1 ? 'Personalizada' : 'Grupal'}
                 </span>
               </div>

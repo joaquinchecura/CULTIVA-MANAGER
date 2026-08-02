@@ -9,7 +9,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { memberId, activityId, date, startTime, endTime, room, trainerId } = await request.json()
+    const { memberId, activityId, date, startTime, endTime, room } = await request.json()
+
+    if (!memberId || !activityId || !date || !startTime || !endTime) {
+      return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
+    }
+
+    // Verificar que el member existe
+    const member = await prisma.member.findUnique({
+      where: { id: memberId },
+    })
+    if (!member) {
+      return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 })
+    }
 
     // Crear schedule personalizada (cupo = 1)
     const schedule = await prisma.schedule.create({
@@ -20,7 +32,6 @@ export async function POST(request: Request) {
         endTime,
         room: room || null,
         maxCapacity: 1,
-        trainerId: trainerId || null,
       },
     })
 

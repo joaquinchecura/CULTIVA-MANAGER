@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Pencil, Trash2, Plus } from 'lucide-react'
+import { Pencil, Trash2, Plus, Dumbbell } from 'lucide-react'
 
 interface Member {
   id: string
@@ -115,7 +115,9 @@ export default function ClientesPage() {
               return (
                 <tr key={member.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3">
-                    <div className="font-medium text-slate-900">{member.firstName} {member.lastName}</div>
+                    <Link href={`/admin/clientes/${member.id}`} className="font-medium text-slate-900 hover:text-blue-600">
+                      {member.firstName} {member.lastName}
+                    </Link>
                   </td>
                   <td className="px-4 py-3 text-slate-600">{member.dni}</td>
                   <td className="px-4 py-3 text-slate-600">{member.email}</td>
@@ -125,6 +127,7 @@ export default function ClientesPage() {
                       member.status === 'ACTIVE' ? 'bg-green-100 text-green-700' :
                       member.status === 'INACTIVE' ? 'bg-slate-100 text-slate-600' :
                       member.status === 'FROZEN' ? 'bg-blue-100 text-blue-700' :
+                      member.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
                       'bg-red-100 text-red-700'
                     }`}>
                       {member.status}
@@ -143,7 +146,14 @@ export default function ClientesPage() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex gap-2">
+                    <div className="flex gap-1">
+                      <Link
+                        href={`/admin/clientes/${member.id}/clases`}
+                        className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg"
+                        title="Clases"
+                      >
+                        <Dumbbell size={16} />
+                      </Link>
                       <Link
                         href={`/admin/clientes/${member.id}/editar`}
                         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"

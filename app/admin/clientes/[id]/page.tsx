@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { Dumbbell, Pencil, ArrowLeft } from 'lucide-react'
 
 interface Member {
   id: string
@@ -73,6 +74,13 @@ export default function ClienteDetallePage({ params }: { params: Promise<{ id: s
         <h2 className="text-2xl font-bold">{member.firstName} {member.lastName}</h2>
         <div className="flex gap-2">
           <Link 
+            href={`/admin/clientes/${member.id}/clases`}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center gap-2"
+          >
+            <Dumbbell size={18} />
+            Clases
+          </Link>
+          <Link 
             href={`/admin/clientes/${member.id}/membresia`}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
           >
@@ -80,8 +88,9 @@ export default function ClienteDetallePage({ params }: { params: Promise<{ id: s
           </Link>
           <Link 
             href="/admin/clientes"
-            className="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-300"
+            className="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-300 flex items-center gap-2"
           >
+            <ArrowLeft size={18} />
             Volver
           </Link>
         </div>
@@ -97,6 +106,15 @@ export default function ClienteDetallePage({ params }: { params: Promise<{ id: s
             <p><span className="font-medium">Fecha de Nacimiento:</span> {new Date(member.birthDate).toLocaleDateString('es-AR')}</p>
             <p><span className="font-medium">Dirección:</span> {member.address || '-'}</p>
             <p><span className="font-medium">Ciudad:</span> {member.city || '-'}</p>
+            <p><span className="font-medium">Estado:</span> 
+              <span className={`ml-2 inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+                member.status === 'ACTIVE' ? 'bg-green-100 text-green-700' :
+                member.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
+                'bg-red-100 text-red-700'
+              }`}>
+                {member.status}
+              </span>
+            </p>
           </div>
         </div>
 
@@ -106,6 +124,11 @@ export default function ClienteDetallePage({ params }: { params: Promise<{ id: s
             <p><span className="font-medium">Nombre:</span> {member.emergencyContactName || '-'}</p>
             <p><span className="font-medium">Teléfono:</span> {member.emergencyContactPhone || '-'}</p>
           </div>
+          {member.medicalNotes && (
+            <div className="mt-4 p-3 bg-amber-50 border border-amber-100 rounded-lg">
+              <p className="text-sm text-amber-800"><span className="font-medium">Notas médicas:</span> {member.medicalNotes}</p>
+            </div>
+          )}
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 md:col-span-2">

@@ -61,7 +61,8 @@ model Member {
   medicalCertificateExpiry DateTime?
   medicalNotes          String?
   internalNotes         String?
-  
+  bodyCompositions  BodyComposition[]
+
   status                MemberStatus @default(ACTIVE)
   
   createdAt             DateTime @default(now())
@@ -393,18 +394,6 @@ model ProgressLog {
 // 8. REGISTROS AUXILIARES
 // ============================================
 
-model WeightLog {
-  id          String   @id @default(cuid())
-  memberId    String
-  weight      Decimal  @db.Decimal(5, 2)
-  date        DateTime @default(now())
-  notes       String?
-  
-  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  
-  @@map("weight_logs")
-}
-
 model News {
   id          String   @id @default(cuid())
   title       String
@@ -424,4 +413,34 @@ model Holiday {
   description String?
   
   @@map("holidays")
+}
+
+model BodyComposition {
+  id                String   @id @default(cuid())
+  memberId          String
+  member            Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  
+  weight            Decimal  @db.Decimal(5, 2)
+  height            Decimal? @db.Decimal(5, 2)
+  bmi               Decimal? @db.Decimal(4, 2)
+  
+  bodyFatPercent    Decimal? @db.Decimal(4, 2)
+  musclePercent     Decimal? @db.Decimal(4, 2)
+  waterPercent      Decimal? @db.Decimal(4, 2)
+  visceralFat       Int?
+  basalMetabolism   Int?
+  metabolicAge      Int?
+  
+  waist             Decimal? @db.Decimal(5, 2)
+  hip               Decimal? @db.Decimal(5, 2)
+  arm               Decimal? @db.Decimal(5, 2)
+  chest             Decimal? @db.Decimal(5, 2)
+  
+  targetWeight      Decimal? @db.Decimal(5, 2)
+  notes             String?
+  recordedBy        String   @default("self")
+  
+  createdAt         DateTime @default(now())
+  
+  @@map("body_compositions")
 }

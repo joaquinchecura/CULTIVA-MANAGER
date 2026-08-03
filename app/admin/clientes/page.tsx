@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Pencil, Trash2, Plus, Dumbbell } from 'lucide-react'
+import { Pencil, Trash2, Plus, Dumbbell, TrendingUp } from 'lucide-react'
 
 interface Member {
   id: string
@@ -153,6 +153,13 @@ export default function ClientesPage() {
                         title="Clases"
                       >
                         <Dumbbell size={16} />
+                      </Link>
+                      <Link
+                        href={`/admin/clientes/${member.id}/progreso`}
+                        className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg"
+                        title="Progreso"
+                      >
+                        <TrendingUp size={16} />
                       </Link>
                       <Link
                         href={`/admin/clientes/${member.id}/editar`}

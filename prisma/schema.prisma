@@ -61,7 +61,6 @@ model Member {
   medicalCertificateExpiry DateTime?
   medicalNotes          String?
   internalNotes         String?
-  bodyCompositions  BodyComposition[]
 
   status                MemberStatus @default(ACTIVE)
   
@@ -74,7 +73,7 @@ model Member {
   bookings              Booking[]
   payments              Payment[]
   routines              Routine[]
-  weightLogs            WeightLog[]
+  bodyCompositions      BodyComposition[]
   
   @@map("members")
 }

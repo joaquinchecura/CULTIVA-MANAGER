@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Dumbbell, Pencil, ArrowLeft } from 'lucide-react'
+import { TrendingUp } from 'lucide-react'
 
 interface Member {
   id: string
@@ -79,6 +80,13 @@ export default function ClienteDetallePage({ params }: { params: Promise<{ id: s
           >
             <Dumbbell size={18} />
             Clases
+          </Link>
+          <Link 
+             href={`/admin/clientes/${member.id}/progreso`}
+              className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2"
+           >
+            <TrendingUp size={18} />
+             Progreso
           </Link>
           <Link 
             href={`/admin/clientes/${member.id}/membresia`}

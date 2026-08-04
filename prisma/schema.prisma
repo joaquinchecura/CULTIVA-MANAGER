@@ -116,8 +116,10 @@ enum PlanType {
 
 enum PlanPack {
   GYM_ONLY
+  CLASSES_ONLY
   GYM_CLASSES
-  GYM_CLASSES_TRAINER
+  PERSONAL_TRAINER
+  FULL
 }
 
 model Membership {

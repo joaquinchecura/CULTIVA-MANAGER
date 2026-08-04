@@ -49,9 +49,22 @@ export default function PlanesPage() {
   const getPackLabel = (pack: string) => {
     switch (pack) {
       case 'GYM_ONLY': return 'Solo gimnasio'
+      case 'CLASSES_ONLY': return 'Solo clases'
       case 'GYM_CLASSES': return 'Gimnasio + clases'
-      case 'GYM_CLASSES_TRAINER': return 'Gimnasio + clases + entrenador'
+      case 'PERSONAL_TRAINER': return 'Personal trainer'
+      case 'FULL': return 'Plan Full'
       default: return pack
+    }
+  }
+
+  const getPackColor = (pack: string) => {
+    switch (pack) {
+      case 'GYM_ONLY': return 'bg-blue-100 text-blue-800'
+      case 'CLASSES_ONLY': return 'bg-purple-100 text-purple-800'
+      case 'GYM_CLASSES': return 'bg-green-100 text-green-800'
+      case 'PERSONAL_TRAINER': return 'bg-orange-100 text-orange-800'
+      case 'FULL': return 'bg-red-100 text-red-800'
+      default: return 'bg-gray-100 text-gray-800'
     }
   }
 
@@ -76,15 +89,19 @@ export default function PlanesPage() {
           <div key={plan.id} className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
             <div className="flex justify-between items-start mb-4">
               <h3 className="text-lg font-bold text-slate-900">{plan.name}</h3>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${plan.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                {plan.isActive ? 'Activo' : 'Inactivo'}
-              </span>
+              <div className="flex flex-col gap-1 items-end">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${plan.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                  {plan.isActive ? 'Activo' : 'Inactivo'}
+                </span>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPackColor(plan.pack)}`}>
+                  {getPackLabel(plan.pack)}
+                </span>
+              </div>
             </div>
             
             <div className="space-y-2 text-sm text-slate-600">
               <p><span className="font-medium">Tipo:</span> {getTypeLabel(plan.type)}</p>
-              <p><span className="font-medium">Pack:</span> {getPackLabel(plan.pack)}</p>
-              <p><span className="font-medium">Precio:</span> ${plan.price}</p>
+              <p><span className="font-medium">Precio:</span> ${plan.price.toLocaleString('es-AR')}</p>
               <p><span className="font-medium">Duración:</span> {plan.durationDays} días</p>
               <p><span className="font-medium">Clases:</span> {plan.classesIncluded === 0 ? 'Ilimitadas' : plan.classesIncluded}</p>
             </div>

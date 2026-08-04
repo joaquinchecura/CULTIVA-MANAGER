@@ -75,6 +75,7 @@ export default function NuevoPlanPage() {
             value={formData.name}
             onChange={handleChange}
             className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Ej: Plan Full Mensual"
           />
         </div>
 
@@ -104,8 +105,10 @@ export default function NuevoPlanPage() {
               className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="GYM_ONLY">Solo gimnasio</option>
+              <option value="CLASSES_ONLY">Solo clases</option>
               <option value="GYM_CLASSES">Gimnasio + clases</option>
-              <option value="GYM_CLASSES_TRAINER">Gimnasio + clases + entrenador</option>
+              <option value="PERSONAL_TRAINER">Personal trainer</option>
+              <option value="FULL">Plan Full (todo incluido)</option>
             </select>
           </div>
         </div>
@@ -121,6 +124,7 @@ export default function NuevoPlanPage() {
               value={formData.price}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="15000"
             />
           </div>
           <div>
@@ -155,6 +159,7 @@ export default function NuevoPlanPage() {
             value={formData.description}
             onChange={handleChange}
             className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Descripción del plan..."
           />
         </div>
 

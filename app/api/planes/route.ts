@@ -5,7 +5,7 @@ import { z } from 'zod'
 const createPlanSchema = z.object({
   name: z.string().min(1),
   type: z.enum(['MONTHLY', 'QUARTERLY', 'ANNUAL', 'PER_CLASS']),
-  pack: z.enum(['GYM_ONLY', 'GYM_CLASSES', 'GYM_CLASSES_TRAINER']),
+  pack: z.enum(['GYM_ONLY', 'CLASSES_ONLY', 'GYM_CLASSES', 'PERSONAL_TRAINER', 'FULL']),
   price: z.number().positive(),
   durationDays: z.number().int().positive(),
   classesIncluded: z.number().int().min(0),

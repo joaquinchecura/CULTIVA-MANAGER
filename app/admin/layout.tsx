@@ -7,7 +7,7 @@ const navItems = [
   { href: "/admin", label: "Inicio", icon: Home },
   { href: "/admin/clientes", label: "Clientes", icon: Users },
   { href: "/admin/actividades", label: "Actividades", icon: Dumbbell },
-  { href: "/admin/planes", label: "Planes", icon: Calendar },
+  { href: "/admin/planes", label: "Membresías", icon: Calendar },
   { href: "/admin/agenda", label: "Agenda", icon: Calendar },
   { href: "/admin/pagos", label: "Pagos", icon: CreditCard },
   { href: "/admin/clientes/vincular", label: "Vincular", icon: Link2 },

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Dumbbell, Pencil, ArrowLeft } from 'lucide-react'
+import { Dumbbell, Pencil, ArrowLeft, DollarSign } from 'lucide-react'
 import { TrendingUp } from 'lucide-react'
 
 interface Member {
@@ -88,6 +88,15 @@ export default function ClienteDetallePage({ params }: { params: Promise<{ id: s
             <TrendingUp size={18} />
              Progreso
           </Link>
+
+          <Link 
+  href={`/admin/clientes/${member.id}/pagos`}
+  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
+>
+  <DollarSign size={18} />
+  Pagos
+</Link>
+
           <Link 
             href={`/admin/clientes/${member.id}/membresia`}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"

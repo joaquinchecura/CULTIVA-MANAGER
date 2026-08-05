@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
 import { Scan, UserCheck, UserX, Loader2, Camera, CameraOff } from 'lucide-react'
 
@@ -53,10 +53,22 @@ export default function AccesoPage() {
     
     let selectedCamera = cameraId
 
+    // Si no viene cameraId, listar y seleccionar la mejor
     if (!selectedCamera) {
-      setCameraError('No se pudo seleccionar una cámara válida')
-      setScanning(false)
-      return
+      const devices = await listCameras()
+      if (devices.length === 0) {
+        setCameraError('No se encontraron cámaras. Verificá que tengas una webcam conectada.')
+        setScanning(false)
+        return
+      }
+      selectedCamera = getBackCamera(devices)
+      
+      // Si después de todo sigue sin haber cámara
+      if (!selectedCamera) {
+        setCameraError('No se pudo seleccionar una cámara válida')
+        setScanning(false)
+        return
+      }
     }
 
     scannerRef.current = new Html5Qrcode('qr-reader')
@@ -75,7 +87,7 @@ export default function AccesoPage() {
       console.log('✅ Scanner iniciado con cámara:', selectedCamera)
     } catch (err: any) {
       console.error('Error iniciando scanner:', err)
-      setCameraError(`Error al iniciar la cámara: ${err.message || 'Desconido'}`)
+      setCameraError(`Error al iniciar la cámara: ${err.message || 'Desconocido'}`)
       setScanning(false)
     }
   }

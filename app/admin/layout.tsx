@@ -2,6 +2,7 @@
 
 import { SignOutButton } from '@clerk/nextjs'
 import { LogOut, Scan, Home, Users, Dumbbell, Calendar, CreditCard, Link2 } from 'lucide-react'
+import { Newspaper } from 'lucide-react'
 
 const navItems = [
   { href: "/admin", label: "Inicio", icon: Home },
@@ -12,6 +13,7 @@ const navItems = [
   { href: "/admin/pagos", label: "Pagos", icon: CreditCard },
   { href: "/admin/clientes/vincular", label: "Vincular", icon: Link2 },
   { href: "/admin/acceso", label: "Acceso", icon: Scan },
+  { href: "/admin/noticias", label: "Noticias", icon: Newspaper },
 ]
 
 export default function AdminLayout({

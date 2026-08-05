@@ -13,6 +13,7 @@ interface Plan {
   durationDays: number
   classesIncluded: number
   isActive: boolean
+  description?: string
 }
 
 export default function PlanesPage() {

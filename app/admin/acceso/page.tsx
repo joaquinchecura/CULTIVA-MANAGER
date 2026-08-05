@@ -12,6 +12,9 @@ export default function AccesoPage() {
   const [cameras, setCameras] = useState<any[]>([])
   const scannerRef = useRef<Html5Qrcode | null>(null)
 
+  // Detectar si es mobile
+  const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+
   // Listar cámaras disponibles
   async function listCameras() {
     try {
@@ -26,22 +29,34 @@ export default function AccesoPage() {
     }
   }
 
+  // Encontrar la cámara trasera (back/environment)
+  function getBackCamera(devices: any[]) {
+    // Primero buscar por label que contenga "back" o "environment"
+    const backCamera = devices.find(d => 
+      /back|environment|trasera|rear/i.test(d.label)
+    )
+    if (backCamera) return backCamera.id
+
+    // En mobile, si hay más de una cámara, usar la última (generalmente la trasera)
+    if (isMobile && devices.length > 1) {
+      return devices[devices.length - 1].id
+    }
+
+    // Fallback: usar la primera
+    return devices[0]?.id
+  }
+
   async function startScan(cameraId?: string) {
     setScanning(true)
     setResult(null)
     setCameraError(null)
     
-    // Si no hay cameraId, listar cámaras primero
     let selectedCamera = cameraId
+
     if (!selectedCamera) {
-      const devices = await listCameras()
-      if (devices.length === 0) {
-        setCameraError('No se encontraron cámaras. Verificá que tengas una webcam conectada.')
-        setScanning(false)
-        return
-      }
-      // En notebook/PC: usar la primera cámara (generalmente la frontal)
-      selectedCamera = devices[0].id
+      setCameraError('No se pudo seleccionar una cámara válida')
+      setScanning(false)
+      return
     }
 
     scannerRef.current = new Html5Qrcode('qr-reader')
@@ -54,14 +69,13 @@ export default function AccesoPage() {
           await handleScan(decodedText)
         },
         (errorMessage) => {
-          // Ignorar errores de lectura parcial (es normal)
-          // console.log('QR scan error:', errorMessage)
+          // Ignorar errores de lectura parcial
         }
       )
       console.log('✅ Scanner iniciado con cámara:', selectedCamera)
     } catch (err: any) {
       console.error('Error iniciando scanner:', err)
-      setCameraError(`Error al iniciar la cámara: ${err.message || 'Desconocido'}`)
+      setCameraError(`Error al iniciar la cámara: ${err.message || 'Desconido'}`)
       setScanning(false)
     }
   }
@@ -146,9 +160,14 @@ export default function AccesoPage() {
                       <button
                         key={cam.id}
                         onClick={() => startScan(cam.id)}
-                        className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm hover:bg-slate-200 transition-colors"
+                        className={`px-4 py-2 rounded-lg text-sm transition-colors ${
+                          /back|environment|trasera/i.test(cam.label)
+                            ? 'bg-green-100 text-green-700 hover:bg-green-200 font-medium'
+                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        }`}
                       >
                         {cam.label || 'Cámara'}
+                        {/back|environment|trasera/i.test(cam.label) && ' (Recomendada)'}
                       </button>
                     ))}
                   </div>
@@ -214,6 +233,7 @@ export default function AccesoPage() {
         {scanning && (
           <div className="mt-4 p-3 bg-slate-100 rounded-lg">
             <p className="text-xs text-slate-500">Estado: {loading ? 'Procesando...' : 'Escaneando...'}</p>
+            {isMobile && <p className="text-xs text-slate-500">Modo: Mobile (cámara trasera prioritaria)</p>}
           </div>
         )}
 
@@ -222,8 +242,8 @@ export default function AccesoPage() {
           <h3 className="font-semibold text-blue-800 mb-2">Instrucciones</h3>
           <ul className="text-sm text-blue-700 space-y-1">
             <li>• Asegurate de permitir el acceso a la cámara cuando el navegador lo pida</li>
-            <li>• En PC/notebook: se usa la webcam frontal automáticamente</li>
-            <li>• En celular: se usa la cámara trasera para mejor calidad</li>
+            <li>• En celular: se usa automáticamente la cámara trasera</li>
+            <li>• Si tenés problemas, probá reiniciar la cámara</li>
             <li>• El QR del alumno se regenera cada 2 minutos</li>
           </ul>
         </div>

@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Dumbbell, Pencil, ArrowLeft, DollarSign } from 'lucide-react'
-import { TrendingUp } from 'lucide-react'
+import { 
+  Dumbbell, Pencil, ArrowLeft, DollarSign, TrendingUp, 
+  Calendar, UserCheck 
+} from 'lucide-react'
 
 interface Member {
   id: string
@@ -73,7 +75,7 @@ export default function ClienteDetallePage({ params }: { params: Promise<{ id: s
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">{member.firstName} {member.lastName}</h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Link 
             href={`/admin/clientes/${member.id}/clases`}
             className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center gap-2"
@@ -81,21 +83,30 @@ export default function ClienteDetallePage({ params }: { params: Promise<{ id: s
             <Dumbbell size={18} />
             Clases
           </Link>
+          
           <Link 
-             href={`/admin/clientes/${member.id}/progreso`}
-              className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2"
-           >
+            href={`/admin/clientes/${member.id}/asistencias`}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center gap-2"
+          >
+            <UserCheck size={18} />
+            Asistencias
+          </Link>
+          
+          <Link 
+            href={`/admin/clientes/${member.id}/progreso`}
+            className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2"
+          >
             <TrendingUp size={18} />
-             Progreso
+            Progreso
           </Link>
 
           <Link 
-  href={`/admin/clientes/${member.id}/pagos`}
-  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
->
-  <DollarSign size={18} />
-  Pagos
-</Link>
+            href={`/admin/clientes/${member.id}/pagos`}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
+          >
+            <DollarSign size={18} />
+            Pagos
+          </Link>
 
           <Link 
             href={`/admin/clientes/${member.id}/membresia`}
@@ -103,6 +114,7 @@ export default function ClienteDetallePage({ params }: { params: Promise<{ id: s
           >
             Asignar Plan
           </Link>
+          
           <Link 
             href="/admin/clientes"
             className="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-300 flex items-center gap-2"

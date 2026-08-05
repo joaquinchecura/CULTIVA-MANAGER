@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Pencil, Trash2, Plus, Dumbbell, TrendingUp, DollarSign } from 'lucide-react'
+import { UserCheck } from 'lucide-react'
 
 interface Member {
   id: string
@@ -154,13 +155,22 @@ export default function ClientesPage() {
                       >
                         <Dumbbell size={16} />
                       </Link>
+
                       <Link
-  href={`/admin/clientes/${member.id}/pagos`}
-  className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg"
-  title="Pagos"
->
-  <DollarSign size={16} />
-</Link>
+                      href={`/admin/clientes/${member.id}/asistencias`}
+                      className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg"
+                      title="Asistencias"
+                       >
+                      <UserCheck size={16} />
+                      </Link>
+
+                      <Link
+                        href={`/admin/clientes/${member.id}/pagos`}
+                        className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg"
+                        title="Pagos"
+                     >
+                      <DollarSign size={16} />
+                      </Link>
                       <Link
                         href={`/admin/clientes/${member.id}/progreso`}
                         className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg"

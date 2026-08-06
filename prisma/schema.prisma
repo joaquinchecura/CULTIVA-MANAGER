@@ -74,19 +74,27 @@ enum MovementType {
   EXPENSE
 }
 
-// NUEVO: Enum flexible para cualquier tipo de entrenamiento
+enum RoutineGoal {
+  HYPERTROPHY
+  STRENGTH
+  ENDURANCE
+  WEIGHT_LOSS
+  MAINTENANCE
+  REHABILITATION
+}
+
 enum ExerciseType {
-  STRENGTH        // Musculación, powerlifting, halterofilia
-  CARDIO          // Correr, bicicleta, elíptica, remo
-  FUNCTIONAL      // Entrenamiento funcional, crossfit-style
-  MOBILITY        // Movilidad articular, yoga, pilates
-  STRETCHING      // Elongación, flexibilidad
-  PLYOMETRIC      // Pliometría, salto, explosividad
-  BALANCE         // Equilibrio, estabilidad, core
-  TECHNIQUE       // Técnica deportiva, drills
-  WARMUP          // Calentamiento específico
-  COOLDOWN        // Vuelta a la calma
-  OTHER           // Otro / personalizado
+  STRENGTH
+  CARDIO
+  FUNCTIONAL
+  MOBILITY
+  STRETCHING
+  PLYOMETRIC
+  BALANCE
+  TECHNIQUE
+  WARMUP
+  COOLDOWN
+  OTHER
 }
 
 // ============================================
@@ -154,9 +162,9 @@ model Member {
   attendances           Attendance[]
   bookings              Booking[]
   payments              Payment[]
-  routines              Routine[]        // NUEVO
+  routines              Routine[]
   bodyCompositions      BodyComposition[]
-  progressLogs          ProgressLog[]    // NUEVO
+  progressLogs          ProgressLog[]
 
   @@map("members")
 }
@@ -323,14 +331,14 @@ model CashMovement {
 model Exercise {
   id          String            @id @default(cuid())
   name        String
-  type        ExerciseType      // Enum flexible: STRENGTH, CARDIO, FUNCTIONAL, etc.
+  type        ExerciseType
   description String?
-  muscleGroup String?           // Opcional, para musculación
-  equipment   String?           // Opcional, para cualquier tipo
+  muscleGroup String?
+  equipment   String?
   videoUrl    String?
   imageUrl    String?
-  tags        String[]          // Array de tags: ["funcional", "kettlebell", "hiit", etc.]
-  isPublic    Boolean           @default(true) // ejercicios de la biblioteca
+  tags        String[]
+  isPublic    Boolean           @default(true)
   createdAt   DateTime          @default(now())
 
   routineExercises RoutineExercise[]
@@ -339,17 +347,19 @@ model Exercise {
 }
 
 model Routine {
-  id          String        @id @default(cuid())
-  memberId    String
-  member      Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  name        String
-  description String?
-  isActive    Boolean       @default(true)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id               String        @id @default(cuid())
+  memberId         String
+  member           Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  name             String
+  description      String?
+  goal             RoutineGoal?
+  frequencyPerWeek Int?
+  isActive         Boolean       @default(true)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
-  days        RoutineDay[]
-  progressLogs ProgressLog[]
+  days             RoutineDay[]
+  progressLogs     ProgressLog[]
 
   @@map("routines")
 }
@@ -358,8 +368,8 @@ model RoutineDay {
   id        String             @id @default(cuid())
   routineId String
   routine   Routine            @relation(fields: [routineId], references: [id], onDelete: Cascade)
-  dayName   String             // "Lunes", "Martes", etc. o "Día 1", "Día 2"
-  order     Int                // para ordenar los días
+  dayName   String
+  order     Int
 
   exercises RoutineExercise[]
 
@@ -373,10 +383,10 @@ model RoutineExercise {
   exerciseId String
   exercise   Exercise    @relation(fields: [exerciseId], references: [id])
   sets       Int         @default(3)
-  reps       String      @default("10") // puede ser "10", "8-12", "Al fallo", etc.
-  rest       String?     @default("60s") // descanso entre series
-  order      Int         // orden dentro del día
-  notes      String?     // notas del entrenador para este ejercicio
+  reps       String      @default("10")
+  rest       String?     @default("60s")
+  order      Int
+  notes      String?
 
   @@map("routine_exercises")
 }

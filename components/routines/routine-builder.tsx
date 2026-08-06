@@ -115,23 +115,19 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
       id: d.id,
       dayName: d.dayName,
       order: d.order,
-      exercises: d.exercises.map((e) => ({
-        id: e.id,
-        exerciseId: e.exerciseId,
-        exercise: e.exercise,
-        sets: e.sets,
-        reps: e.reps,
-        rest: e.rest || "",
-        order: e.order,
-        notes: e.notes || "",
+      exercises: d.exercises.map((ex) => ({
+        id: ex.id,
+        exerciseId: ex.exerciseId,
+        exercise: ex.exercise,
+        sets: ex.sets,
+        reps: ex.reps,
+        rest: ex.rest || "",
+        order: ex.order,
+        notes: ex.notes || "",
       })),
     })) || []
   );
   const [saving, setSaving] = useState(false);
-
-  // ============================================
-  // DAY OPERATIONS
-  // ============================================
 
   function addDay() {
     const usedNames = days.map((d) => d.dayName);
@@ -167,10 +163,6 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
     setDays(newDays);
   }
 
-  // ============================================
-  // EXERCISE OPERATIONS
-  // ============================================
-
   function addExercise(dayIndex: number, exercise: Exercise) {
     const newDays = [...days];
     newDays[dayIndex].exercises.push({
@@ -189,7 +181,7 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
     const newDays = [...days];
     newDays[dayIndex].exercises = newDays[dayIndex].exercises
       .filter((_, i) => i !== exIndex)
-      .map((e, i) => ({ ...e, order: i }));
+      .map((ex, i) => ({ ...ex, order: i }));
     setDays(newDays);
   }
 
@@ -202,8 +194,8 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
     newDays[dayIndex].exercises[exIndex] =
       newDays[dayIndex].exercises[direction === "up" ? exIndex - 1 : exIndex + 1];
     newDays[dayIndex].exercises[direction === "up" ? exIndex - 1 : exIndex + 1] = temp;
-    newDays[dayIndex].exercises = newDays[dayIndex].exercises.map((e, i) => ({
-      ...e,
+    newDays[dayIndex].exercises = newDays[dayIndex].exercises.map((ex, i) => ({
+      ...ex,
       order: i,
     }));
     setDays(newDays);
@@ -214,10 +206,6 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
     (newDays[dayIndex].exercises[exIndex] as any)[field] = value;
     setDays(newDays);
   }
-
-  // ============================================
-  // SAVE
-  // ============================================
 
   async function handleSave() {
     if (!memberId || !name || days.length === 0) {
@@ -253,7 +241,7 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
       } else {
         await createRoutine(payload);
       }
-      router.push("/routines");
+      router.push("/admin/rutinas");
       router.refresh();
     } catch (err) {
       console.error(err);
@@ -267,7 +255,7 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
     <div className="space-y-6 max-w-4xl mx-auto pb-20">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">
+        <h1 className="text-2xl font-bold text-slate-900">
           {isEditing ? "✏️ Editar rutina" : "🎯 Nueva rutina"}
         </h1>
         <Button onClick={handleSave} disabled={saving} className="gap-2">
@@ -277,19 +265,19 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
       </div>
 
       {/* Basic Info */}
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-white border-slate-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base">Información básica</CardTitle>
+          <CardTitle className="text-base text-slate-900">Información básica</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Cliente</Label>
+              <Label className="text-slate-700">Cliente</Label>
               <Select value={memberId} onValueChange={(value) => setMemberId(value || "")}>
-                <SelectTrigger className="bg-zinc-950 border-zinc-700">
+                <SelectTrigger className="bg-white border-slate-200">
                   <SelectValue placeholder="Seleccionar cliente..." />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700">
+                <SelectContent className="bg-white border-slate-200">
                   {members.map((m) => (
                     <SelectItem key={m.id} value={m.id}>
                       {m.firstName} {m.lastName}
@@ -300,24 +288,24 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>Nombre de la rutina</Label>
+              <Label className="text-slate-700">Nombre de la rutina</Label>
               <Input
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
                 placeholder="Ej: Rutina de fuerza - Upper/Lower"
-                className="bg-zinc-950 border-zinc-700"
+                className="bg-white border-slate-200"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label>Objetivo</Label>
+              <Label className="text-slate-700">Objetivo</Label>
               <Select value={goal} onValueChange={(value) => setGoal(value || "")}>
-                <SelectTrigger className="bg-zinc-950 border-zinc-700">
+                <SelectTrigger className="bg-white border-slate-200">
                   <SelectValue placeholder="Objetivo..." />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700">
+                <SelectContent className="bg-white border-slate-200">
                   {goals.map((g) => (
                     <SelectItem key={g.value} value={g.value}>
                       {g.label}
@@ -328,25 +316,25 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>Frecuencia (días/semana)</Label>
+              <Label className="text-slate-700">Frecuencia (días/semana)</Label>
               <Input
                 type="number"
                 min={1}
                 max={7}
                 value={frequency}
-                onChange={(e) => setFrequency(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFrequency(e.target.value)}
                 placeholder="3"
-                className="bg-zinc-950 border-zinc-700"
+                className="bg-white border-slate-200"
               />
             </div>
 
             <div className="space-y-2 md:col-span-1">
-              <Label>Descripción</Label>
+              <Label className="text-slate-700">Descripción</Label>
               <Textarea
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
                 placeholder="Notas generales sobre la rutina..."
-                className="bg-zinc-950 border-zinc-700 min-h-[60px]"
+                className="bg-white border-slate-200 min-h-[60px]"
               />
             </div>
           </div>
@@ -356,33 +344,33 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
       {/* Days */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Días de entrenamiento</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Días de entrenamiento</h2>
           <Button onClick={addDay} variant="outline" size="sm" className="gap-2">
             <Plus size={14} /> Agregar día
           </Button>
         </div>
 
         {days.length === 0 && (
-          <div className="text-center py-12 border-2 border-dashed border-zinc-800 rounded-xl">
-            <Dumbbell className="mx-auto text-zinc-600 mb-3" size={32} />
-            <p className="text-zinc-500">Agregá el primer día de entrenamiento</p>
+          <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50">
+            <Dumbbell className="mx-auto text-slate-400 mb-3" size={32} />
+            <p className="text-slate-500">Agregá el primer día de entrenamiento</p>
           </div>
         )}
 
         {days.map((day, dayIndex) => (
-          <Card key={dayIndex} className="bg-zinc-900 border-zinc-800">
+          <Card key={dayIndex} className="bg-white border-slate-200 shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <GripVertical size={18} className="text-zinc-600 cursor-grab" />
+                  <GripVertical size={18} className="text-slate-400 cursor-grab" />
                   <div>
                     <Input
                       value={day.dayName}
-                      onChange={(e) => updateDayName(dayIndex, e.target.value)}
-                      className="bg-zinc-950 border-zinc-700 w-48 font-medium"
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateDayName(dayIndex, e.target.value)}
+                      className="bg-white border-slate-200 w-48 font-medium text-slate-900"
                     />
                   </div>
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="secondary" className="text-xs bg-slate-100 text-slate-600">
                     {day.exercises.length} ejercicios
                   </Badge>
                 </div>
@@ -392,7 +380,7 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
                     size="icon"
                     onClick={() => moveDay(dayIndex, "up")}
                     disabled={dayIndex === 0}
-                    className="h-8 w-8"
+                    className="h-8 w-8 text-slate-600 hover:text-slate-900"
                   >
                     <ChevronUp size={14} />
                   </Button>
@@ -401,7 +389,7 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
                     size="icon"
                     onClick={() => moveDay(dayIndex, "down")}
                     disabled={dayIndex === days.length - 1}
-                    className="h-8 w-8"
+                    className="h-8 w-8 text-slate-600 hover:text-slate-900"
                   >
                     <ChevronDown size={14} />
                   </Button>
@@ -409,7 +397,7 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
                     variant="ghost"
                     size="icon"
                     onClick={() => removeDay(dayIndex)}
-                    className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-950"
+                    className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
                   >
                     <Trash2 size={14} />
                   </Button>
@@ -419,7 +407,7 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
 
             <CardContent className="space-y-3">
               {day.exercises.length === 0 ? (
-                <p className="text-zinc-500 text-sm text-center py-4">
+                <p className="text-slate-500 text-sm text-center py-4">
                   Este día no tiene ejercicios
                 </p>
               ) : (
@@ -427,63 +415,63 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
                   {day.exercises.map((ex, exIndex) => (
                     <div
                       key={exIndex}
-                      className="flex items-center gap-3 p-3 bg-zinc-950 rounded-lg border border-zinc-800"
+                      className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200"
                     >
-                      <GripVertical size={14} className="text-zinc-600 shrink-0" />
+                      <GripVertical size={14} className="text-slate-400 shrink-0" />
                       
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm text-white truncate">
+                        <p className="font-medium text-sm text-slate-900 truncate">
                           {ex.exercise.name}
                         </p>
-                        <p className="text-xs text-zinc-500">
+                        <p className="text-xs text-slate-500">
                           {ex.exercise.muscleGroup || ex.exercise.type}
                         </p>
                       </div>
 
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1">
-                          <Label className="text-[10px] text-zinc-500 whitespace-nowrap">Series</Label>
+                          <Label className="text-[10px] text-slate-500 whitespace-nowrap">Series</Label>
                           <Input
                             type="number"
                             min={1}
                             value={ex.sets}
-                            onChange={(e) =>
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                               updateExercise(dayIndex, exIndex, "sets", parseInt(e.target.value) || 1)
                             }
-                            className="w-14 h-8 bg-zinc-900 border-zinc-700 text-center text-sm"
+                            className="w-14 h-8 bg-white border-slate-200 text-center text-sm"
                           />
                         </div>
 
                         <div className="flex items-center gap-1">
-                          <Label className="text-[10px] text-zinc-500 whitespace-nowrap">Reps</Label>
+                          <Label className="text-[10px] text-slate-500 whitespace-nowrap">Reps</Label>
                           <Input
                             value={ex.reps}
-                            onChange={(e) =>
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                               updateExercise(dayIndex, exIndex, "reps", e.target.value)
                             }
-                            className="w-16 h-8 bg-zinc-900 border-zinc-700 text-center text-sm"
+                            className="w-16 h-8 bg-white border-slate-200 text-center text-sm"
                             placeholder="10"
                           />
                         </div>
 
                         <div className="flex items-center gap-1">
-                          <Label className="text-[10px] text-zinc-500 whitespace-nowrap">Desc</Label>
+                          <Label className="text-[10px] text-slate-500 whitespace-nowrap">Desc</Label>
                           <Input
                             value={ex.rest}
-                            onChange={(e) =>
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                               updateExercise(dayIndex, exIndex, "rest", e.target.value)
                             }
-                            className="w-16 h-8 bg-zinc-900 border-zinc-700 text-center text-sm"
+                            className="w-16 h-8 bg-white border-slate-200 text-center text-sm"
                             placeholder="60s"
                           />
                         </div>
 
                         <Input
                           value={ex.notes}
-                          onChange={(e) =>
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                             updateExercise(dayIndex, exIndex, "notes", e.target.value)
                           }
-                          className="w-32 h-8 bg-zinc-900 border-zinc-700 text-sm hidden md:block"
+                          className="w-32 h-8 bg-white border-slate-200 text-sm hidden md:block"
                           placeholder="Notas..."
                         />
                       </div>
@@ -494,7 +482,7 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
                           size="icon"
                           onClick={() => moveExercise(dayIndex, exIndex, "up")}
                           disabled={exIndex === 0}
-                          className="h-7 w-7"
+                          className="h-7 w-7 text-slate-600"
                         >
                           <ChevronUp size={12} />
                         </Button>
@@ -503,7 +491,7 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
                           size="icon"
                           onClick={() => moveExercise(dayIndex, exIndex, "down")}
                           disabled={exIndex === day.exercises.length - 1}
-                          className="h-7 w-7"
+                          className="h-7 w-7 text-slate-600"
                         >
                           <ChevronDown size={12} />
                         </Button>
@@ -511,7 +499,7 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
                           variant="ghost"
                           size="icon"
                           onClick={() => removeExercise(dayIndex, exIndex)}
-                          className="h-7 w-7 text-red-400 hover:text-red-300"
+                          className="h-7 w-7 text-red-500 hover:text-red-600"
                         >
                           <X size={12} />
                         </Button>
@@ -523,7 +511,7 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
 
               <ExerciseSelector
                 onSelect={(exercise) => addExercise(dayIndex, exercise)}
-                selectedIds={day.exercises.map((e) => e.exerciseId)}
+                selectedIds={day.exercises.map((ex) => ex.exerciseId)}
               />
             </CardContent>
           </Card>

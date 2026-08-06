@@ -66,31 +66,31 @@ export function ExerciseSelector({ onSelect, selectedIds = [] }: ExerciseSelecto
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger>
-  <Button variant="outline" size="sm" className="gap-2">
-    <Plus size={14} /> Agregar ejercicio
-  </Button>
-</DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+        <Button variant="outline" size="sm" className="gap-2">
+          <Plus size={14} /> Agregar ejercicio
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col bg-white border-slate-200">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-slate-900">
             <Dumbbell size={18} /> Biblioteca de ejercicios
           </DialogTitle>
         </DialogHeader>
 
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={14} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
             <Input
               placeholder="Buscar ejercicio..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+              className="pl-9 bg-white border-slate-200"
             />
           </div>
           <select
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="bg-zinc-900 border border-zinc-700 rounded-md px-3 text-sm text-zinc-300"
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setTypeFilter(e.target.value)}
+            className="bg-white border border-slate-200 rounded-md px-3 text-sm text-slate-900"
           >
             <option value="">Todos</option>
             {types.map((t) => (
@@ -104,9 +104,9 @@ export function ExerciseSelector({ onSelect, selectedIds = [] }: ExerciseSelecto
         <ScrollArea className="flex-1 min-h-0">
           <div className="space-y-2 py-2">
             {loading ? (
-              <p className="text-zinc-500 text-center py-8">Cargando...</p>
+              <p className="text-slate-500 text-center py-8">Cargando...</p>
             ) : exercises.length === 0 ? (
-              <p className="text-zinc-500 text-center py-8">No se encontraron ejercicios</p>
+              <p className="text-slate-500 text-center py-8">No se encontraron ejercicios</p>
             ) : (
               exercises.map((ex) => (
                 <button
@@ -118,31 +118,31 @@ export function ExerciseSelector({ onSelect, selectedIds = [] }: ExerciseSelecto
                   disabled={selectedIds.includes(ex.id)}
                   className={`w-full text-left p-3 rounded-lg border transition-colors ${
                     selectedIds.includes(ex.id)
-                      ? "border-zinc-700 bg-zinc-900/50 opacity-50 cursor-not-allowed"
-                      : "border-zinc-800 bg-zinc-900 hover:border-zinc-600 hover:bg-zinc-800"
+                      ? "border-slate-200 bg-slate-50 opacity-50 cursor-not-allowed"
+                      : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-white text-sm">{ex.name}</p>
+                      <p className="font-medium text-slate-900 text-sm">{ex.name}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className="text-xs bg-slate-100">
                           {exerciseTypeLabels[ex.type] || ex.type}
                         </Badge>
                         {ex.muscleGroup && (
-                          <span className="text-xs text-zinc-500">{ex.muscleGroup}</span>
+                          <span className="text-xs text-slate-500">{ex.muscleGroup}</span>
                         )}
                         {ex.equipment && (
-                          <span className="text-xs text-zinc-500">• {ex.equipment}</span>
+                          <span className="text-xs text-slate-500">• {ex.equipment}</span>
                         )}
                       </div>
                     </div>
-                    {!selectedIds.includes(ex.id) && <Plus size={16} className="text-zinc-400" />}
+                    {!selectedIds.includes(ex.id) && <Plus size={16} className="text-slate-400" />}
                   </div>
                   {ex.tags.length > 0 && (
                     <div className="flex gap-1 mt-2 flex-wrap">
                       {ex.tags.slice(0, 3).map((tag) => (
-                        <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-400">
+                        <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-slate-100 rounded text-slate-500">
                           {tag}
                         </span>
                       ))}

@@ -3,9 +3,90 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum MemberStatus {
+  ACTIVE
+  INACTIVE
+  FROZEN
+  OVERDUE
+  PENDING
+}
+
+enum PlanType {
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+  PER_CLASS
+}
+
+enum PlanPack {
+  GYM_ONLY
+  CLASSES_ONLY
+  GYM_CLASSES
+  PERSONAL_TRAINER
+  FULL
+}
+
+enum MembershipStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  FROZEN
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  NO_SHOW
+  COMPLETED
+}
+
+enum AttendanceStatus {
+  ALLOWED
+  WARNING
+  DENIED
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  MERCADOPAGO
+  CARD
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum MovementType {
+  INCOME
+  EXPENSE
+}
+
+// NUEVO: Enum flexible para cualquier tipo de entrenamiento
+enum ExerciseType {
+  STRENGTH        // Musculación, powerlifting, halterofilia
+  CARDIO          // Correr, bicicleta, elíptica, remo
+  FUNCTIONAL      // Entrenamiento funcional, crossfit-style
+  MOBILITY        // Movilidad articular, yoga, pilates
+  STRETCHING      // Elongación, flexibilidad
+  PLYOMETRIC      // Pliometría, salto, explosividad
+  BALANCE         // Equilibrio, estabilidad, core
+  TECHNIQUE       // Técnica deportiva, drills
+  WARMUP          // Calentamiento específico
+  COOLDOWN        // Vuelta a la calma
+  OTHER           // Otro / personalizado
 }
 
 // ============================================
@@ -42,7 +123,7 @@ model GymConfig {
 model Member {
   id                    String   @id @default(cuid())
   clerkUserId           String?  @unique
-  
+
   firstName             String
   lastName              String
   dni                   String   @unique
@@ -54,37 +135,30 @@ model Member {
   latitude              Float?
   longitude             Float?
   photoUrl              String?
-  
+
   emergencyContactName  String?
   emergencyContactPhone String?
-  
+
   medicalCertificateUrl String?
   medicalCertificateExpiry DateTime?
   medicalNotes          String?
   internalNotes         String?
 
   status                MemberStatus @default(ACTIVE)
-  
+
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
   createdBy             String
-  
+
   memberships           Membership[]
   attendances           Attendance[]
   bookings              Booking[]
   payments              Payment[]
-  routines              Routine[]
+  routines              Routine[]        // NUEVO
   bodyCompositions      BodyComposition[]
-  
-  @@map("members")
-}
+  progressLogs          ProgressLog[]    // NUEVO
 
-enum MemberStatus {
-  ACTIVE
-  INACTIVE
-  FROZEN
-  OVERDUE
-  PENDING
+  @@map("members")
 }
 
 // ============================================
@@ -102,25 +176,10 @@ model Plan {
   description     String?
   isActive        Boolean    @default(true)
   createdAt       DateTime   @default(now())
-  
+
   memberships     Membership[]
-  
+
   @@map("plans")
-}
-
-enum PlanType {
-  MONTHLY
-  QUARTERLY
-  ANNUAL
-  PER_CLASS
-}
-
-enum PlanPack {
-  GYM_ONLY
-  CLASSES_ONLY
-  GYM_CLASSES
-  PERSONAL_TRAINER
-  FULL
 }
 
 model Membership {
@@ -132,20 +191,13 @@ model Membership {
   status            MembershipStatus @default(ACTIVE)
   autoRenew         Boolean  @default(false)
   classesRemaining  Int?
-  
+
   createdAt         DateTime @default(now())
-  
+
   member            Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
   plan              Plan     @relation(fields: [planId], references: [id])
-  
-  @@map("memberships")
-}
 
-enum MembershipStatus {
-  ACTIVE
-  EXPIRED
-  CANCELLED
-  FROZEN
+  @@map("memberships")
 }
 
 // ============================================
@@ -160,9 +212,9 @@ model Activity {
   maxCapacity     Int
   color           String?
   isActive        Boolean    @default(true)
-  
+
   schedules       Schedule[]
-  
+
   @@map("activities")
 }
 
@@ -177,10 +229,10 @@ model Schedule {
   maxCapacity Int
   isCancelled Boolean @default(false)
   isHoliday   Boolean @default(false)
-  
+
   activity    Activity @relation(fields: [activityId], references: [id])
   bookings    Booking[]
-  
+
   @@unique([activityId, date, startTime])
   @@map("schedules")
 }
@@ -192,19 +244,12 @@ model Booking {
   bookingDate     DateTime      @default(now())
   status          BookingStatus @default(CONFIRMED)
   waitlistPosition Int?
-  
+
   member          Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
   schedule        Schedule      @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
-  
+
   @@unique([memberId, scheduleId])
   @@map("bookings")
-}
-
-enum BookingStatus {
-  CONFIRMED
-  CANCELLED
-  NO_SHOW
-  COMPLETED
 }
 
 // ============================================
@@ -217,16 +262,10 @@ model Attendance {
   entryTime   DateTime @default(now())
   qrToken     String
   status      AttendanceStatus @default(ALLOWED)
-  
-  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  
-  @@map("attendances")
-}
 
-enum AttendanceStatus {
-  ALLOWED
-  WARNING
-  DENIED
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@map("attendances")
 }
 
 // ============================================
@@ -243,25 +282,10 @@ model Payment {
   reference   String?
   notes       String?
   createdAt   DateTime      @default(now())
-  
+
   member      Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  
+
   @@map("payments")
-}
-
-enum PaymentMethod {
-  CASH
-  TRANSFER
-  MERCADOPAGO
-  CARD
-  OTHER
-}
-
-enum PaymentStatus {
-  PENDING
-  COMPLETED
-  FAILED
-  REFUNDED
 }
 
 model CashRegister {
@@ -272,9 +296,9 @@ model CashRegister {
   isClosed      Boolean  @default(false)
   closedAt      DateTime?
   notes         String?
-  
+
   movements     CashMovement[]
-  
+
   @@map("cash_registers")
 }
 
@@ -286,109 +310,91 @@ model CashMovement {
   concept        String
   category       String?
   createdAt      DateTime     @default(now())
-  
+
   cashRegister   CashRegister @relation(fields: [cashRegisterId], references: [id], onDelete: Cascade)
-  
+
   @@map("cash_movements")
 }
 
-enum MovementType {
-  INCOME
-  EXPENSE
-}
-
 // ============================================
-// 7. RUTINAS Y EJERCICIOS
+// 7. RUTINAS Y EJERCICIOS (REDISEÑADO - FLEXIBLE)
 // ============================================
 
 model Exercise {
-  id          String   @id @default(cuid())
+  id          String            @id @default(cuid())
   name        String
-  category    ExerciseCategory
+  type        ExerciseType      // Enum flexible: STRENGTH, CARDIO, FUNCTIONAL, etc.
   description String?
+  muscleGroup String?           // Opcional, para musculación
+  equipment   String?           // Opcional, para cualquier tipo
   videoUrl    String?
   imageUrl    String?
-  muscles     String[]
-  equipment   String?
-  isActive    Boolean  @default(true)
-  
+  tags        String[]          // Array de tags: ["funcional", "kettlebell", "hiit", etc.]
+  isPublic    Boolean           @default(true) // ejercicios de la biblioteca
+  createdAt   DateTime          @default(now())
+
   routineExercises RoutineExercise[]
-  
+
   @@map("exercises")
 }
 
-enum ExerciseCategory {
-  CHEST
-  BACK
-  LEGS
-  SHOULDERS
-  ARMS
-  CORE
-  CARDIO
-  FULL_BODY
-  OTHER
-}
-
 model Routine {
-  id          String   @id @default(cuid())
-  name        String
+  id          String        @id @default(cuid())
   memberId    String
-  trainerId   String
-  goal        RoutineGoal
-  frequencyPerWeek Int
-  estimatedDuration Int?
-  notes       String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  
-  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  exercises   RoutineExercise[]
+  member      Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  days        RoutineDay[]
   progressLogs ProgressLog[]
-  
+
   @@map("routines")
 }
 
-enum RoutineGoal {
-  HYPERTROPHY
-  STRENGTH
-  ENDURANCE
-  WEIGHT_LOSS
-  MAINTENANCE
-  REHABILITATION
+model RoutineDay {
+  id        String             @id @default(cuid())
+  routineId String
+  routine   Routine            @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  dayName   String             // "Lunes", "Martes", etc. o "Día 1", "Día 2"
+  order     Int                // para ordenar los días
+
+  exercises RoutineExercise[]
+
+  @@map("routine_days")
 }
 
 model RoutineExercise {
-  id          String   @id @default(cuid())
-  routineId   String
-  exerciseId  String
-  dayOfWeek   Int
-  order       Int
-  sets        Int
-  reps        String
-  weight      Decimal? @db.Decimal(5, 2)
-  restSeconds Int?
-  notes       String?
-  
-  routine     Routine  @relation(fields: [routineId], references: [id], onDelete: Cascade)
-  exercise    Exercise @relation(fields: [exerciseId], references: [id])
-  
+  id         String      @id @default(cuid())
+  dayId      String
+  day        RoutineDay  @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  exerciseId String
+  exercise   Exercise    @relation(fields: [exerciseId], references: [id])
+  sets       Int         @default(3)
+  reps       String      @default("10") // puede ser "10", "8-12", "Al fallo", etc.
+  rest       String?     @default("60s") // descanso entre series
+  order      Int         // orden dentro del día
+  notes      String?     // notas del entrenador para este ejercicio
+
   @@map("routine_exercises")
 }
 
 model ProgressLog {
   id              String   @id @default(cuid())
   routineId       String
+  routine         Routine  @relation(fields: [routineId], references: [id], onDelete: Cascade)
   exerciseId      String
   memberId        String
+  member          Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
   date            DateTime @default(now())
   setsCompleted   Int
   repsCompleted   String
   weightUsed      Decimal  @db.Decimal(5, 2)
   rm              Decimal? @db.Decimal(5, 2)
   notes           String?
-  
-  routine         Routine  @relation(fields: [routineId], references: [id], onDelete: Cascade)
-  
+
   @@map("progress_logs")
 }
 
@@ -404,7 +410,7 @@ model News {
   isActive    Boolean  @default(true)
   sentAt      DateTime?
   createdAt   DateTime @default(now())
-  
+
   @@map("news")
 }
 
@@ -413,7 +419,7 @@ model Holiday {
   date        DateTime @db.Date @unique
   name        String
   description String?
-  
+
   @@map("holidays")
 }
 
@@ -421,28 +427,28 @@ model BodyComposition {
   id                String   @id @default(cuid())
   memberId          String
   member            Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  
+
   weight            Decimal  @db.Decimal(5, 2)
   height            Decimal? @db.Decimal(5, 2)
   bmi               Decimal? @db.Decimal(4, 2)
-  
+
   bodyFatPercent    Decimal? @db.Decimal(4, 2)
   musclePercent     Decimal? @db.Decimal(4, 2)
   waterPercent      Decimal? @db.Decimal(4, 2)
   visceralFat       Int?
   basalMetabolism   Int?
   metabolicAge      Int?
-  
+
   waist             Decimal? @db.Decimal(5, 2)
   hip               Decimal? @db.Decimal(5, 2)
   arm               Decimal? @db.Decimal(5, 2)
   chest             Decimal? @db.Decimal(5, 2)
-  
+
   targetWeight      Decimal? @db.Decimal(5, 2)
   notes             String?
   recordedBy        String   @default("self")
-  
+
   createdAt         DateTime @default(now())
-  
+
   @@map("body_compositions")
 }

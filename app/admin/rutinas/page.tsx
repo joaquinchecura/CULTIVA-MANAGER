@@ -22,7 +22,8 @@ export default async function RutinasPage({
 }: {
   searchParams: { search?: string };
 }) {
-  const routines = await getRoutines(searchParams.search);
+  const params = await searchParams;
+  const routines = await getRoutines(params.search);
 
   return (
     <div className="space-y-6">

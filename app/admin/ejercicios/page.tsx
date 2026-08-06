@@ -28,7 +28,8 @@ export default async function EjerciciosPage({
 }: {
   searchParams: { search?: string; type?: string };
 }) {
-  const exercises = await getExercises(searchParams.search, searchParams.type);
+  const params = await searchParams;
+  const exercises = await getExercises(params.search, params.type);
 
   return (
     <div className="space-y-6">

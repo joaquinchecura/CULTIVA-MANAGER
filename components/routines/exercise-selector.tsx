@@ -65,11 +65,11 @@ export function ExerciseSelector({ onSelect, selectedIds = [] }: ExerciseSelecto
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <Plus size={14} /> Agregar ejercicio
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger>
+  <Button variant="outline" size="sm" className="gap-2">
+    <Plus size={14} /> Agregar ejercicio
+  </Button>
+</DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

@@ -285,7 +285,7 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Cliente</Label>
-              <Select value={memberId} onValueChange={setMemberId}>
+              <Select value={memberId} onValueChange={(value) => setMemberId(value || "")}>
                 <SelectTrigger className="bg-zinc-950 border-zinc-700">
                   <SelectValue placeholder="Seleccionar cliente..." />
                 </SelectTrigger>
@@ -313,7 +313,7 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Objetivo</Label>
-              <Select value={goal} onValueChange={setGoal}>
+              <Select value={goal} onValueChange={(value) => setGoal(value || "")}>
                 <SelectTrigger className="bg-zinc-950 border-zinc-700">
                   <SelectValue placeholder="Objetivo..." />
                 </SelectTrigger>

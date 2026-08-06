@@ -38,7 +38,7 @@ export default async function EjerciciosPage({
           <p className="text-slate-500 mt-1">Biblioteca de ejercicios disponibles</p>
         </div>
         <Dialog>
-          <DialogTrigger asChild>
+          <DialogTrigger>
             <Button className="gap-2">
               <Plus size={16} /> Nuevo ejercicio
             </Button>

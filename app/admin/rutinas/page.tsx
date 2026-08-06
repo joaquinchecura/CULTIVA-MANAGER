@@ -20,7 +20,7 @@ const goalLabels: Record<string, string> = {
 export default async function RutinasPage({
   searchParams,
 }: {
-  searchParams: { search?: string };
+  searchParams: Promise<{ search?: string }>;
 }) {
   const params = await searchParams;
   const routines = await getRoutines(params.search);
@@ -44,7 +44,7 @@ export default async function RutinasPage({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
           <Input
             name="search"
-            defaultValue={searchParams.search}
+            defaultValue={params.search}
             placeholder="Buscar por nombre o cliente..."
             className="pl-9 bg-white border-slate-200"
           />

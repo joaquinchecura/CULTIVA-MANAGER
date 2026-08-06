@@ -26,7 +26,7 @@ const exerciseTypeLabels: Record<string, string> = {
 export default async function EjerciciosPage({
   searchParams,
 }: {
-  searchParams: { search?: string; type?: string };
+  searchParams: Promise<{ search?: string; type?: string }>;
 }) {
   const params = await searchParams;
   const exercises = await getExercises(params.search, params.type);
@@ -114,14 +114,14 @@ export default async function EjerciciosPage({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
           <Input
             name="search"
-            defaultValue={searchParams.search}
+            defaultValue={params.search}
             placeholder="Buscar ejercicio..."
             className="pl-9 bg-white border-slate-200"
           />
         </div>
         <select
           name="type"
-          defaultValue={searchParams.type || ""}
+          defaultValue={params.type || ""}
           className="bg-white border border-slate-200 rounded-md px-3 text-sm text-slate-900"
         >
           <option value="">Todos</option>

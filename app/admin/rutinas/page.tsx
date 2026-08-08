@@ -1,11 +1,12 @@
 export const dynamic = "force-dynamic";
 
-import { getRoutines, toggleRoutineActive, deleteRoutine } from "@/app/actions/routines";
+import { getRoutines } from "@/app/actions/routines";
+import { RoutineActions } from "@/components/routines/routine-actions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Dumbbell, Plus, Search, Pencil, Trash2, Calendar } from "lucide-react";
+import { Dumbbell, Plus, Search, Calendar } from "lucide-react";
 import Link from "next/link";
 
 const goalLabels: Record<string, string> = {
@@ -114,37 +115,7 @@ export default async function RutinasPage({
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Link href={`/admin/rutinas/${routine.id}/editar`}>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Pencil size={14} />
-                      </Button>
-                    </Link>
-                    <form
-                      action={async () => {
-                        "use server";
-                        await toggleRoutineActive(routine.id, !routine.isActive);
-                      }}
-                    >
-                      <Button variant="ghost" size="sm" className="h-8 text-xs">
-                        {routine.isActive ? "Desactivar" : "Activar"}
-                      </Button>
-                    </form>
-                    <form
-                      action={async () => {
-                        "use server";
-                        await deleteRoutine(routine.id);
-                      }}
-                    >
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-red-500 hover:text-red-600"
-                      >
-                        <Trash2 size={14} />
-                      </Button>
-                    </form>
-                  </div>
+                  <RoutineActions routineId={routine.id} isActive={routine.isActive} />
                 </div>
               </CardContent>
             </Card>

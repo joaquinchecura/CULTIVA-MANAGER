@@ -70,14 +70,14 @@ export function ExerciseSelector({ onSelect, selectedIds = [] }: ExerciseSelecto
           <Plus size={14} /> Agregar ejercicio
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col bg-white border-slate-200">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl h-[80vh] flex flex-col bg-white border-slate-200 p-0">
+        <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
           <DialogTitle className="flex items-center gap-2 text-slate-900">
             <Dumbbell size={18} /> Biblioteca de ejercicios
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex gap-2">
+        <div className="px-6 py-2 flex gap-2 shrink-0">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
             <Input
@@ -101,7 +101,7 @@ export function ExerciseSelector({ onSelect, selectedIds = [] }: ExerciseSelecto
           </select>
         </div>
 
-        <ScrollArea className="flex-1 min-h-0">
+        <ScrollArea className="flex-1 px-6 pb-6">
           <div className="space-y-2 py-2">
             {loading ? (
               <p className="text-slate-500 text-center py-8">Cargando...</p>

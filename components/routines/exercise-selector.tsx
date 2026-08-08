@@ -70,7 +70,7 @@ export function ExerciseSelector({ onSelect, selectedIds = [] }: ExerciseSelecto
           <Plus size={14} /> Agregar ejercicio
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl h-[80vh] flex flex-col bg-white border-slate-200 p-0">
+      <DialogContent className="max-w-2xl h-[80vh] flex flex-col bg-white border-slate-200 p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
           <DialogTitle className="flex items-center gap-2 text-slate-900">
             <Dumbbell size={18} /> Biblioteca de ejercicios
@@ -101,58 +101,60 @@ export function ExerciseSelector({ onSelect, selectedIds = [] }: ExerciseSelecto
           </select>
         </div>
 
-        <ScrollArea className="flex-1 px-6 pb-6">
-          <div className="space-y-2 py-2">
-            {loading ? (
-              <p className="text-slate-500 text-center py-8">Cargando...</p>
-            ) : exercises.length === 0 ? (
-              <p className="text-slate-500 text-center py-8">No se encontraron ejercicios</p>
-            ) : (
-              exercises.map((ex) => (
-                <button
-                  key={ex.id}
-                  onClick={() => {
-                    onSelect(ex);
-                    setOpen(false);
-                  }}
-                  disabled={selectedIds.includes(ex.id)}
-                  className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                    selectedIds.includes(ex.id)
-                      ? "border-slate-200 bg-slate-50 opacity-50 cursor-not-allowed"
-                      : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-slate-900 text-sm">{ex.name}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="secondary" className="text-xs bg-slate-100">
-                          {exerciseTypeLabels[ex.type] || ex.type}
-                        </Badge>
-                        {ex.muscleGroup && (
-                          <span className="text-xs text-slate-500">{ex.muscleGroup}</span>
-                        )}
-                        {ex.equipment && (
-                          <span className="text-xs text-slate-500">• {ex.equipment}</span>
-                        )}
+        <div className="flex-1 overflow-hidden px-6 pb-6">
+          <ScrollArea className="h-full">
+            <div className="space-y-2 py-2">
+              {loading ? (
+                <p className="text-slate-500 text-center py-8">Cargando...</p>
+              ) : exercises.length === 0 ? (
+                <p className="text-slate-500 text-center py-8">No se encontraron ejercicios</p>
+              ) : (
+                exercises.map((ex) => (
+                  <button
+                    key={ex.id}
+                    onClick={() => {
+                      onSelect(ex);
+                      setOpen(false);
+                    }}
+                    disabled={selectedIds.includes(ex.id)}
+                    className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                      selectedIds.includes(ex.id)
+                        ? "border-slate-200 bg-slate-50 opacity-50 cursor-not-allowed"
+                        : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-slate-900 text-sm">{ex.name}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="secondary" className="text-xs bg-slate-100">
+                            {exerciseTypeLabels[ex.type] || ex.type}
+                          </Badge>
+                          {ex.muscleGroup && (
+                            <span className="text-xs text-slate-500">{ex.muscleGroup}</span>
+                          )}
+                          {ex.equipment && (
+                            <span className="text-xs text-slate-500">• {ex.equipment}</span>
+                          )}
+                        </div>
                       </div>
+                      {!selectedIds.includes(ex.id) && <Plus size={16} className="text-slate-400" />}
                     </div>
-                    {!selectedIds.includes(ex.id) && <Plus size={16} className="text-slate-400" />}
-                  </div>
-                  {ex.tags.length > 0 && (
-                    <div className="flex gap-1 mt-2 flex-wrap">
-                      {ex.tags.slice(0, 3).map((tag) => (
-                        <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-slate-100 rounded text-slate-500">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </button>
-              ))
-            )}
-          </div>
-        </ScrollArea>
+                    {ex.tags.length > 0 && (
+                      <div className="flex gap-1 mt-2 flex-wrap">
+                        {ex.tags.slice(0, 3).map((tag) => (
+                          <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-slate-100 rounded text-slate-500">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </button>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );

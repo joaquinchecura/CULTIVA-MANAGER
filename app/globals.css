@@ -91,20 +91,24 @@
     --sidebar-ring: 160 84% 39%;
   }
 
+  /* FIX: Usamos CSS puro en vez de @apply para evitar el error de build */
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
 
   body {
-    @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 
   html {
-    @apply font-sans;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   }
 }
 
-/* Estilos para react-big-calendar - FUERA del @layer base */
+/* ============================================
+   react-big-calendar — ESTILOS LIGHT
+   ============================================ */
 .rbc-calendar {
   font-family: 'Inter', sans-serif;
 }
@@ -165,7 +169,9 @@
   background-color: #F0F9FF;
 }
 
-/* Dark mode para react-big-calendar */
+/* ============================================
+   react-big-calendar — ESTILOS DARK MODE
+   ============================================ */
 .dark .rbc-calendar {
   background-color: #0B0F19;
   color: #f1f5f9;

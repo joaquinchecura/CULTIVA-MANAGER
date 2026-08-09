@@ -56,205 +56,29 @@
     --ring: 142 71% 45%;
   }
 
-  .dark {
-    --background: 220 25% 5%;
-    --foreground: 210 40% 96%;
-    --card: 220 20% 9%;
-    --card-foreground: 210 40% 96%;
-    --popover: 220 20% 9%;
-    --popover-foreground: 210 40% 96%;
-    --primary: 160 84% 39%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 15% 15%;
-    --secondary-foreground: 210 40% 96%;
-    --muted: 220 15% 15%;
-    --muted-foreground: 215 16% 57%;
-    --accent: 160 84% 39%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 220 15% 18%;
-    --input: 220 15% 18%;
-    --ring: 160 84% 39%;
-    --chart-1: 160 84% 39%;
-    --chart-2: 217 91% 60%;
-    --chart-3: 43 96% 56%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar: 220 25% 5%;
-    --sidebar-foreground: 210 40% 96%;
-    --sidebar-primary: 160 84% 39%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 15%;
-    --sidebar-accent-foreground: 210 40% 96%;
-    --sidebar-border: 220 15% 18%;
-    --sidebar-ring: 160 84% 39%;
-  }
-
-  /* FIX: Usamos CSS puro en vez de @apply para evitar el error de build */
   * {
-    border-color: hsl(var(--border));
+    @apply border-border;
   }
 
   body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
+    @apply bg-background text-foreground;
   }
 
   html {
-    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    @apply font-sans;
   }
 }
 
-/* ============================================
-   react-big-calendar — ESTILOS LIGHT
-   ============================================ */
-.rbc-calendar {
-  font-family: 'Inter', sans-serif;
-}
-
-.rbc-header {
-  padding: 8px 4px;
-  font-weight: 600;
-  font-size: 12px;
-  text-transform: uppercase;
-  color: #64748B;
-  border-bottom: 1px solid #E2E8F0;
-}
-
-.rbc-time-header-content {
-  border-left: 1px solid #E2E8F0;
-}
-
-.rbc-time-content {
-  border-top: 1px solid #E2E8F0;
-}
-
-.rbc-time-slot {
-  font-size: 12px;
-  color: #64748B;
-}
-
-.rbc-event {
-  border-radius: 6px;
-  padding: 2px 4px;
-  font-size: 12px;
-  border: none;
-}
-
-.rbc-today {
-  background-color: #F0F9FF;
-}
-
-.rbc-current-time-indicator {
-  background-color: #3B82F6;
-  height: 2px;
-}
-
-.rbc-button-link {
-  color: #0F172A;
-  font-weight: 600;
-}
-
-.rbc-month-view .rbc-date-cell {
-  padding: 4px;
-  text-align: center;
-}
-
-.rbc-month-view .rbc-off-range-bg {
-  background-color: #F8FAFC;
-}
-
-.rbc-month-view .rbc-today {
-  background-color: #F0F9FF;
-}
-
-/* ============================================
-   react-big-calendar — ESTILOS DARK MODE
-   ============================================ */
-.dark .rbc-calendar {
-  background-color: #0B0F19;
-  color: #f1f5f9;
-}
-
-.dark .rbc-header {
-  color: #94a3b8;
-  border-bottom: 1px solid #1e293b;
-}
-
-.dark .rbc-time-header-content {
-  border-left: 1px solid #1e293b;
-}
-
-.dark .rbc-time-content {
-  border-top: 1px solid #1e293b;
-}
-
-.dark .rbc-time-slot {
-  color: #64748b;
-}
-
-.dark .rbc-event {
-  background-color: rgba(16, 185, 129, 0.2);
-  color: #34D399;
-}
-
-.dark .rbc-today {
-  background-color: rgba(16, 185, 129, 0.08);
-}
-
-.dark .rbc-current-time-indicator {
-  background-color: #10B981;
-}
-
-.dark .rbc-button-link {
-  color: #f1f5f9;
-}
-
-.dark .rbc-month-view .rbc-off-range-bg {
-  background-color: #0f172a;
-}
-
-.dark .rbc-month-view .rbc-today {
-  background-color: rgba(16, 185, 129, 0.08);
-}
-
-.dark .rbc-day-bg {
-  border-left: 1px solid #1e293b;
-}
-
-.dark .rbc-time-header {
-  border-bottom: 1px solid #1e293b;
-}
-
-.dark .rbc-time-view {
-  border: 1px solid #1e293b;
-}
-
-.dark .rbc-month-view {
-  border: 1px solid #1e293b;
-}
-
-.dark .rbc-toolbar button {
-  background-color: #111827;
-  color: #f1f5f9;
-  border: 1px solid #1e293b;
-}
-
-.dark .rbc-toolbar button:hover {
-  background-color: #1e293b;
-}
-
-.dark .rbc-toolbar button.rbc-active {
-  background-color: #10B981;
-  color: #fff;
-  border-color: #10B981;
-}
-
-.dark .rbc-show-more {
-  color: #34D399;
-}
-
-.dark .rbc-off-range {
-  color: #475569;
-}
+/* react-big-calendar */
+.rbc-calendar { font-family: 'Inter', sans-serif; }
+.rbc-header { padding: 8px 4px; font-weight: 600; font-size: 12px; text-transform: uppercase; color: #64748B; border-bottom: 1px solid #E2E8F0; }
+.rbc-time-header-content { border-left: 1px solid #E2E8F0; }
+.rbc-time-content { border-top: 1px solid #E2E8F0; }
+.rbc-time-slot { font-size: 12px; color: #64748B; }
+.rbc-event { border-radius: 6px; padding: 2px 4px; font-size: 12px; border: none; }
+.rbc-today { background-color: #F0F9FF; }
+.rbc-current-time-indicator { background-color: #3B82F6; height: 2px; }
+.rbc-button-link { color: #0F172A; font-weight: 600; }
+.rbc-month-view .rbc-date-cell { padding: 4px; text-align: center; }
+.rbc-month-view .rbc-off-range-bg { background-color: #F8FAFC; }
+.rbc-month-view .rbc-today { background-color: #F0F9FF; }

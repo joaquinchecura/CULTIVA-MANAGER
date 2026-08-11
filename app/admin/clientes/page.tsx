@@ -54,6 +54,9 @@ export default function ClientesPage() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [cityFilter, setCityFilter] = useState('all')
   const router = useRouter()
+  const [attendances, setAttendances] = useState<any[]>([])
+  const [attendanceFilter, setAttendanceFilter] = useState('all') // 'all' | 'today' | 'week' | 'month'
+
 
   const tabs = [
     { id: 'listado' as Tab, label: 'Listado', icon: Users },
@@ -65,7 +68,20 @@ export default function ClientesPage() {
   useEffect(() => {
     fetchMembers()
     fetchStats()
+    fetchAttendances()
   }, [])
+
+  const fetchAttendances = async () => {
+    try {
+      const res = await fetch('/api/admin/attendances')
+      if (res.ok) {
+        const data = await res.json()
+        setAttendances(data)
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   const fetchMembers = async () => {
     try {
@@ -181,8 +197,8 @@ export default function ClientesPage() {
         />
       )}
       {activeTab === 'nuevo' && <NuevoCliente onSuccess={() => { fetchMembers(); setActiveTab('listado') }} />}
-      {activeTab === 'accesos' && <AccesosApp />}
       {activeTab === 'estadisticas' && <EstadisticasClientes stats={stats} members={members} />}
+      {activeTab === 'accesos' && <AccesosApp attendances={attendances} members={members} />}
     </div>
   )
 }
@@ -439,35 +455,219 @@ function NuevoCliente({ onSuccess }: { onSuccess: () => void }) {
 // ============================================
 // TAB: ACCESOS A LA APP
 // ============================================
-function AccesosApp() {
+function AccesosApp({ attendances, members }: { attendances: any[], members: Member[] }) {
+  const [filter, setFilter] = useState<'all' | 'today' | 'week' | 'month'>('all')
+  const [searchMember, setSearchMember] = useState('')
+
+  const now = new Date()
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+
+  const filteredAttendances = attendances.filter((a: any) => {
+    const entryDate = new Date(a.entryTime)
+    const matchesFilter = 
+      filter === 'all' ? true :
+      filter === 'today' ? entryDate >= startOfDay :
+      filter === 'week' ? entryDate >= startOfWeek :
+      entryDate >= startOfMonth
+
+    const member = members.find(m => m.id === a.memberId)
+    const matchesSearch = !searchMember || 
+      (member && (
+        member.firstName.toLowerCase().includes(searchMember.toLowerCase()) ||
+        member.lastName.toLowerCase().includes(searchMember.toLowerCase()) ||
+        member.dni.includes(searchMember)
+      ))
+
+    return matchesFilter && matchesSearch
+  })
+
+  const getMemberName = (memberId: string) => {
+    const member = members.find(m => m.id === memberId)
+    return member ? `${member.firstName} ${member.lastName}` : 'Desconocido'
+  }
+
+  const getMemberDni = (memberId: string) => {
+    const member = members.find(m => m.id === memberId)
+    return member?.dni || '—'
+  }
+
+  const getStatusBadge = (status: string) => {
+    const styles: Record<string, string> = {
+      ALLOWED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      WARNING: 'bg-amber-50 text-amber-700 border-amber-200',
+      DENIED: 'bg-red-50 text-red-700 border-red-200',
+    }
+    const labels: Record<string, string> = {
+      ALLOWED: '✓ Permitido',
+      WARNING: '⚠ Advertencia',
+      DENIED: '✗ Denegado',
+    }
+    return (
+      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${styles[status] || styles.DENIED}`}>
+        {labels[status] || status}
+      </span>
+    )
+  }
+
+  // Estadísticas
+  const totalHoy = attendances.filter((a: any) => new Date(a.entryTime) >= startOfDay).length
+  const totalSemana = attendances.filter((a: any) => new Date(a.entryTime) >= startOfWeek).length
+  const totalMes = attendances.filter((a: any) => new Date(a.entryTime) >= startOfMonth).length
+  const permitidos = filteredAttendances.filter((a: any) => a.status === 'ALLOWED').length
+  const denegados = filteredAttendances.filter((a: any) => a.status === 'DENIED').length
+
   return (
-    <div className="space-y-4">
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-          <div>
-            <h3 className="font-semibold text-slate-900">🚪 Accesos a la app</h3>
-            <p className="text-sm text-slate-500">Historial de inicios de sesión (integración con Clerk próximamente)</p>
+    <div className="space-y-6">
+      {/* KPIs de asistencias */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-500">Hoy</p>
+              <p className="text-2xl font-bold text-slate-900 mt-1">{totalHoy}</p>
+            </div>
+            <div className="p-2.5 bg-emerald-50 rounded-xl">
+              <DoorOpen size={20} className="text-emerald-600" />
+            </div>
           </div>
         </div>
-        <div className="p-8 text-center">
-          <DoorOpen size={48} className="mx-auto mb-4 text-slate-300" />
-          <h4 className="text-lg font-medium text-slate-700">Integración con Clerk</h4>
-          <p className="text-sm text-slate-500 mt-2 max-w-md mx-auto">
-            Para ver los logs de acceso completos, se puede integrar con la API de Clerk 
-            o crear un modelo de sesiones en la base de datos.
-          </p>
-          <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg max-w-lg mx-auto">
-            <p className="text-sm text-amber-800">
-              <strong>Datos disponibles ahora:</strong> Los clientes se autentican con Clerk. 
-              Podés ver la última actividad en el dashboard principal.
-            </p>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-500">Esta semana</p>
+              <p className="text-2xl font-bold text-slate-900 mt-1">{totalSemana}</p>
+            </div>
+            <div className="p-2.5 bg-blue-50 rounded-xl">
+              <Calendar size={20} className="text-blue-600" />
+            </div>
           </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-500">Este mes</p>
+              <p className="text-2xl font-bold text-slate-900 mt-1">{totalMes}</p>
+            </div>
+            <div className="p-2.5 bg-violet-50 rounded-xl">
+              <TrendingUp size={20} className="text-violet-600" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-500">Tasa de éxito</p>
+              <p className="text-2xl font-bold text-slate-900 mt-1">
+                {filteredAttendances.length > 0 
+                  ? Math.round((permitidos / filteredAttendances.length) * 100) 
+                  : 0}%
+              </p>
+            </div>
+            <div className="p-2.5 bg-emerald-50 rounded-xl">
+              <CheckCircle size={20} className="text-emerald-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabla de asistencias */}
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div className="p-4 border-b border-slate-100 flex flex-wrap gap-3 items-center">
+          <div className="relative flex-1 min-w-[240px]">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Input 
+              placeholder="Buscar por cliente o DNI..." 
+              value={searchMember}
+              onChange={(e) => setSearchMember(e.target.value)}
+              className="pl-9 h-9 text-sm"
+            />
+          </div>
+          <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
+            {([
+              { id: 'all', label: 'Todo' },
+              { id: 'today', label: 'Hoy' },
+              { id: 'week', label: 'Semana' },
+              { id: 'month', label: 'Mes' },
+            ] as const).map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setFilter(f.id)}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  filter === f.id 
+                    ? 'bg-white text-slate-900 shadow-sm' 
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          <Button variant="outline" size="sm" className="gap-2 h-9">
+            <Download size={14} /> Exportar
+          </Button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-100">
+                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Cliente</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">DNI</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Fecha</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Hora</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Token QR</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Estado</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredAttendances.map((a: any) => (
+                <tr key={a.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-5 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-semibold text-xs">
+                        {getMemberName(a.memberId).split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                      </div>
+                      <span className="font-medium text-slate-900">{getMemberName(a.memberId)}</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-3 text-slate-600 text-xs font-mono">{getMemberDni(a.memberId)}</td>
+                  <td className="px-5 py-3 text-slate-600 text-xs">
+                    {new Date(a.entryTime).toLocaleDateString('es-AR')}
+                  </td>
+                  <td className="px-5 py-3 text-slate-600 text-xs">
+                    {new Date(a.entryTime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                  </td>
+                  <td className="px-5 py-3">
+                    <code className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded font-mono">
+                      {a.qrToken.slice(0, 12)}...
+                    </code>
+                  </td>
+                  <td className="px-5 py-3">{getStatusBadge(a.status)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {filteredAttendances.length === 0 && (
+          <div className="p-8 text-center text-slate-500">
+            <DoorOpen size={32} className="mx-auto mb-3 text-slate-300" />
+            <p>No hay registros de asistencia</p>
+            <p className="text-sm text-slate-400 mt-1">Usá el scanner QR para registrar entradas</p>
+          </div>
+        )}
+
+        <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between text-sm">
+          <span className="text-slate-500">
+            {permitidos} permitidos · {denegados} denegados · Total: {filteredAttendances.length}
+          </span>
         </div>
       </div>
     </div>
   )
 }
-
 // ============================================
 // TAB: ESTADÍSTICAS
 // ============================================

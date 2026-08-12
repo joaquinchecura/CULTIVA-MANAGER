@@ -1,6 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import {
+  Dumbbell, Plus, Search, Filter, MoreHorizontal,
+  Edit2, Trash2, Clock, Users, Power, X, CheckCircle,
+  LayoutGrid, List, ArrowUpDown
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 interface Activity {
   id: string
@@ -9,18 +17,29 @@ interface Activity {
   defaultDuration: number
   maxCapacity: number
   isActive: boolean
+  createdAt: string
+  _count?: { schedules: number }
 }
+
+type ViewMode = 'grid' | 'list'
 
 export default function ActividadesPage() {
   const [activities, setActivities] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<ViewMode>('grid')
+  const [search, setSearch] = useState('')
+  const [filterActive, setFilterActive] = useState<'all' | 'active' | 'inactive'>('all')
+  const [sortBy, setSortBy] = useState<'name' | 'duration' | 'capacity'>('name')
+  const [saving, setSaving] = useState(false)
 
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     defaultDuration: '60',
     maxCapacity: '20',
+    isActive: true,
   })
 
   useEffect(() => {
@@ -41,12 +60,39 @@ export default function ActividadesPage() {
     }
   }
 
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      defaultDuration: '60',
+      maxCapacity: '20',
+      isActive: true,
+    })
+    setEditingId(null)
+  }
+
+  const handleEdit = (activity: Activity) => {
+    setFormData({
+      name: activity.name,
+      description: activity.description || '',
+      defaultDuration: String(activity.defaultDuration),
+      maxCapacity: String(activity.maxCapacity),
+      isActive: activity.isActive,
+    })
+    setEditingId(activity.id)
+    setShowForm(true)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+    setSaving(true)
+
     try {
-      const response = await fetch('/api/actividades', {
-        method: 'POST',
+      const url = editingId ? `/api/actividades/${editingId}` : '/api/actividades'
+      const method = editingId ? 'PUT' : 'POST'
+
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
@@ -56,101 +102,368 @@ export default function ActividadesPage() {
       })
 
       if (response.ok) {
-        setFormData({ name: '', description: '', defaultDuration: '60', maxCapacity: '20' })
+        resetForm()
         setShowForm(false)
         fetchActivities()
+      } else {
+        const err = await response.json()
+        alert(err.error?.[0]?.message || 'Error al guardar')
       }
     } catch (error) {
       console.error('Error:', error)
+      alert('Error de conexión')
+    } finally {
+      setSaving(false)
     }
   }
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('¿Eliminar esta actividad?')) return
+    try {
+      const response = await fetch(`/api/actividades/${id}`, { method: 'DELETE' })
+      if (response.ok) {
+        fetchActivities()
+      } else {
+        alert('Error al eliminar')
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const handleToggleActive = async (id: string, current: boolean) => {
+    try {
+      const response = await fetch(`/api/actividades/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !current }),
+      })
+      if (response.ok) fetchActivities()
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  // Filtros y ordenamiento
+  const filteredActivities = activities
+    .filter(a => {
+      const matchesSearch = 
+        a.name.toLowerCase().includes(search.toLowerCase()) ||
+        (a.description && a.description.toLowerCase().includes(search.toLowerCase()))
+      const matchesFilter = 
+        filterActive === 'all' ? true :
+        filterActive === 'active' ? a.isActive : !a.isActive
+      return matchesSearch && matchesFilter
+    })
+    .sort((a, b) => {
+      if (sortBy === 'name') return a.name.localeCompare(b.name)
+      if (sortBy === 'duration') return a.defaultDuration - b.defaultDuration
+      return a.maxCapacity - b.maxCapacity
+    })
+
+  const stats = {
+    total: activities.length,
+    active: activities.filter(a => a.isActive).length,
+    inactive: activities.filter(a => !a.isActive).length,
+  }
+
   if (loading) {
-    return <div className="p-6">Cargando...</div>
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      </div>
+    )
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Actividades</h2>
-        <button 
-          onClick={() => setShowForm(!showForm)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-        >
-          {showForm ? 'Cancelar' : '+ Nueva Actividad'}
-        </button>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <Dumbbell size={24} className="text-blue-600" />
+            Actividades
+          </h2>
+          <p className="text-slate-500 mt-1">Gestión de actividades y disciplinas del gimnasio</p>
+        </div>
+        <Button onClick={() => { resetForm(); setShowForm(true); }} className="gap-2">
+          <Plus size={16} /> Nueva Actividad
+        </Button>
       </div>
 
-      {showForm && (
-        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mb-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Nombre *</label>
-              <input
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Duración (min) *</label>
-              <input
-                type="number"
-                required
-                value={formData.defaultDuration}
-                onChange={(e) => setFormData({...formData, defaultDuration: e.target.value})}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Descripción</label>
-            <input
-              type="text"
-              value={formData.description}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Cupo por defecto *</label>
-            <input
-              type="number"
-              required
-              value={formData.maxCapacity}
-              onChange={(e) => setFormData({...formData, maxCapacity: e.target.value})}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-            />
-          </div>
-          <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-            Guardar Actividad
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="bg-white border border-slate-200 rounded-xl p-4">
+          <p className="text-sm text-slate-500">Total</p>
+          <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-4">
+          <p className="text-sm text-slate-500">Activas</p>
+          <p className="text-2xl font-bold text-emerald-600">{stats.active}</p>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-4">
+          <p className="text-sm text-slate-500">Inactivas</p>
+          <p className="text-2xl font-bold text-slate-400">{stats.inactive}</p>
+        </div>
+      </div>
+
+      {/* Toolbar */}
+      <div className="flex flex-wrap gap-3 items-center bg-white border border-slate-200 rounded-xl p-3">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Input
+            placeholder="Buscar actividad..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 h-9 text-sm"
+          />
+        </div>
+        <select
+          value={filterActive}
+          onChange={(e) => setFilterActive(e.target.value as any)}
+          className="h-9 px-3 border border-slate-200 rounded-lg text-sm bg-white text-slate-600"
+        >
+          <option value="all">Todos los estados</option>
+          <option value="active">Activas</option>
+          <option value="inactive">Inactivas</option>
+        </select>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as any)}
+          className="h-9 px-3 border border-slate-200 rounded-lg text-sm bg-white text-slate-600"
+        >
+          <option value="name">Ordenar: Nombre</option>
+          <option value="duration">Ordenar: Duración</option>
+          <option value="capacity">Ordenar: Cupo</option>
+        </select>
+        <div className="flex gap-1 bg-slate-100 rounded-lg p-1 ml-auto">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`p-1.5 rounded-md ${viewMode === 'grid' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-400'}`}
+          >
+            <LayoutGrid size={16} />
           </button>
-        </form>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-1.5 rounded-md ${viewMode === 'list' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-400'}`}
+          >
+            <List size={16} />
+          </button>
+        </div>
+      </div>
+
+      {/* Form Modal */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-900">
+                {editingId ? 'Editar Actividad' : 'Nueva Actividad'}
+              </h3>
+              <button onClick={() => { setShowForm(false); resetForm(); }} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400">
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium text-slate-700">Nombre *</Label>
+                  <Input
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Ej: Funcional"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium text-slate-700">Duración (min) *</Label>
+                  <Input
+                    type="number"
+                    required
+                    value={formData.defaultDuration}
+                    onChange={(e) => setFormData({ ...formData, defaultDuration: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-slate-700">Descripción</Label>
+                <Input
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Breve descripción de la actividad"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium text-slate-700">Cupo por defecto *</Label>
+                  <Input
+                    type="number"
+                    required
+                    value={formData.maxCapacity}
+                    onChange={(e) => setFormData({ ...formData, maxCapacity: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium text-slate-700">Estado</Label>
+                  <div className="flex items-center gap-2 h-10">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                        formData.isActive
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-slate-100 text-slate-500 border border-slate-200'
+                      }`}
+                    >
+                      <Power size={14} />
+                      {formData.isActive ? 'Activa' : 'Inactiva'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="pt-2 flex gap-3">
+                <Button type="submit" disabled={saving} className="flex-1 gap-2">
+                  {saving ? <div className="animate-spin h-4 w-4 border-2 border-white rounded-full" /> : <CheckCircle size={16} />}
+                  {saving ? 'Guardando...' : (editingId ? 'Actualizar' : 'Crear Actividad')}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => { setShowForm(false); resetForm(); }}>
+                  Cancelar
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {activities.map((activity) => (
-          <div key={activity.id} className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="text-lg font-bold">{activity.name}</h3>
-              <span className={`px-2 py-1 rounded-full text-xs ${activity.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                {activity.isActive ? 'Activa' : 'Inactiva'}
-              </span>
+      {/* Grid View */}
+      {viewMode === 'grid' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredActivities.map((activity) => (
+            <div
+              key={activity.id}
+              className={`bg-white rounded-xl border p-5 transition-all hover:shadow-lg hover:-translate-y-0.5 ${
+                activity.isActive ? 'border-slate-200' : 'border-slate-200 opacity-60'
+              }`}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                  activity.isActive ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-400'
+                }`}>
+                  <Dumbbell size={24} />
+                </div>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => handleEdit(activity)}
+                    className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-blue-600 transition-colors"
+                  >
+                    <Edit2 size={14} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(activity.id)}
+                    className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-red-600 transition-colors"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">{activity.name}</h3>
+              <p className="text-sm text-slate-500 mt-1 line-clamp-2">{activity.description || 'Sin descripción'}</p>
+              <div className="flex items-center gap-4 mt-4 text-sm text-slate-600">
+                <span className="flex items-center gap-1.5">
+                  <Clock size={14} className="text-slate-400" />
+                  {activity.defaultDuration} min
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Users size={14} className="text-slate-400" />
+                  {activity.maxCapacity} cupo
+                </span>
+              </div>
+              <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+                <button
+                  onClick={() => handleToggleActive(activity.id, activity.isActive)}
+                  className={`text-xs font-medium px-2.5 py-1 rounded-full transition-colors ${
+                    activity.isActive
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : 'bg-slate-100 text-slate-500'
+                  }`}
+                >
+                  {activity.isActive ? '● Activa' : '○ Inactiva'}
+                </button>
+                <span className="text-xs text-slate-400">
+                  {activity._count?.schedules || 0} clases programadas
+                </span>
+              </div>
             </div>
-            <p className="text-sm text-slate-600 mb-2">{activity.description || 'Sin descripción'}</p>
-            <div className="text-sm text-slate-500">
-              <p>Duración: {activity.defaultDuration} min</p>
-              <p>Cupo: {activity.maxCapacity}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {activities.length === 0 && (
-        <div className="text-center py-8 text-slate-500">
-          No hay actividades. Creá las primeras: Funcional, Musculación, Personal Trainer.
+      {/* List View */}
+      {viewMode === 'list' && (
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-100">
+                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Actividad</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Descripción</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Duración</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Cupo</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Estado</th>
+                <th className="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredActivities.map((activity) => (
+                <tr key={activity.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                        activity.isActive ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-400'
+                      }`}>
+                        <Dumbbell size={16} />
+                      </div>
+                      <span className="font-medium text-slate-900">{activity.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 text-slate-500 text-xs max-w-[200px] truncate">
+                    {activity.description || '—'}
+                  </td>
+                  <td className="px-5 py-4 text-slate-600">{activity.defaultDuration} min</td>
+                  <td className="px-5 py-4 text-slate-600">{activity.maxCapacity}</td>
+                  <td className="px-5 py-4">
+                    <button
+                      onClick={() => handleToggleActive(activity.id, activity.isActive)}
+                      className={`text-xs font-medium px-2.5 py-1 rounded-full transition-colors ${
+                        activity.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
+                      }`}
+                    >
+                      {activity.isActive ? 'Activa' : 'Inactiva'}
+                    </button>
+                  </td>
+                  <td className="px-5 py-4 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <button onClick={() => handleEdit(activity)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-blue-600">
+                        <Edit2 size={14} />
+                      </button>
+                      <button onClick={() => handleDelete(activity.id)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-red-600">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {filteredActivities.length === 0 && (
+        <div className="text-center py-12 bg-white border border-slate-200 rounded-xl">
+          <Dumbbell size={40} className="mx-auto mb-3 text-slate-300" />
+          <p className="text-slate-500">No se encontraron actividades</p>
+          <p className="text-sm text-slate-400 mt-1">
+            {search ? 'Probá con otra búsqueda' : 'Creá la primera actividad para empezar'}
+          </p>
         </div>
       )}
     </div>

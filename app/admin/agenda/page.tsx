@@ -2,9 +2,15 @@
 
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { Calendar, dateFnsLocalizer, Views, View } from 'react-big-calendar'
-import { format, parse, startOfWeek, getDay, addDays, startOfMonth, endOfMonth, parseISO } from 'date-fns'
+import { format, parse, startOfWeek, getDay, addDays, startOfMonth, endOfMonth, parseISO, isSameDay } from 'date-fns'
 import { es } from 'date-fns/locale'
 import Link from 'next/link'
+import {
+  Calendar as CalendarIcon, Plus, Filter, Grid3X3, List,
+  Clock, Users, MapPin, AlertCircle, X, CheckCircle,
+  ChevronLeft, ChevronRight, CalendarCheck
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 
 const locales = { es }
@@ -24,22 +30,32 @@ interface Schedule {
   room: string | null
   maxCapacity: number
   isCancelled: boolean
+  isHoliday: boolean
   activity: {
+    id: string
     name: string
     color: string | null
+    defaultDuration: number
   }
   bookings: {
     id: string
+    memberId: string
   }[]
+  _count?: { bookings: number }
 }
+
+type SideView = 'none' | 'day-detail' | 'upcoming'
 
 export default function AgendaPage() {
   const [schedules, setSchedules] = useState<Schedule[]>([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState<View>(Views.WEEK)
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [sideView, setSideView] = useState<SideView>('upcoming')
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null)
+  const [filterActivity, setFilterActivity] = useState<string>('all')
+  const [filterRoom, setFilterRoom] = useState<string>('all')
 
-  // Usar useCallback para que la función siempre tenga los valores actualizados
   const fetchSchedules = useCallback(async (currentView: View, currentDateValue: Date) => {
     setLoading(true)
     try {
@@ -57,32 +73,45 @@ export default function AgendaPage() {
         endDate = format(currentDateValue, 'yyyy-MM-dd')
       }
 
-      console.log('Fetching:', { view: currentView, startDate, endDate }) // Para debug
-
       const response = await fetch(`/api/agenda?startDate=${startDate}&endDate=${endDate}`)
       if (response.ok) {
         const data = await response.json()
-        console.log('Received:', data.length, 'schedules') // Para debug
         setSchedules(data)
-      } else {
-        console.error('Error response:', await response.text())
-        setSchedules([])
       }
     } catch (error) {
       console.error('Error fetching:', error)
-      setSchedules([])
     } finally {
       setLoading(false)
     }
-  }, []) // Sin dependencias, usa los parámetros
+  }, [])
 
-  // Efecto que se dispara cuando cambia view o currentDate
   useEffect(() => {
     fetchSchedules(view, currentDate)
   }, [view, currentDate, fetchSchedules])
 
+  // Extraer actividades y salas únicas para filtros
+  const activities = useMemo(() => {
+    const map = new Map<string, string>()
+    schedules.forEach(s => map.set(s.activity.id, s.activity.name))
+    return Array.from(map.entries())
+  }, [schedules])
+
+  const rooms = useMemo(() => {
+    const set = new Set<string>()
+    schedules.forEach(s => { if (s.room) set.add(s.room) })
+    return Array.from(set)
+  }, [schedules])
+
+  const filteredSchedules = useMemo(() => {
+    return schedules.filter(s => {
+      const matchesActivity = filterActivity === 'all' || s.activity.id === filterActivity
+      const matchesRoom = filterRoom === 'all' || s.room === filterRoom
+      return matchesActivity && matchesRoom
+    })
+  }, [schedules, filterActivity, filterRoom])
+
   const events = useMemo(() => {
-    return schedules.map((schedule: Schedule) => {
+    return filteredSchedules.map((schedule) => {
       const [startHour, startMin] = schedule.startTime.split(':').map(Number)
       const [endHour, endMin] = schedule.endTime.split(':').map(Number)
       
@@ -94,145 +123,308 @@ export default function AgendaPage() {
 
       return {
         id: schedule.id,
-        title: `${schedule.activity.name} ${schedule.isCancelled ? '(CANCELADA)' : ''} - ${schedule.bookings.length}/${schedule.maxCapacity}`,
+        title: `${schedule.activity.name}`,
         start,
         end,
         resource: schedule,
       }
     })
-  }, [schedules])
+  }, [filteredSchedules])
 
   const eventStyleGetter = (event: any) => {
     const schedule = event.resource as Schedule
-    const isFull = schedule.bookings.length >= schedule.maxCapacity
+    const occupancy = schedule.bookings.length / schedule.maxCapacity
+    const isFull = occupancy >= 1
+    const isAlmostFull = occupancy >= 0.8
     const isCancelled = schedule.isCancelled
     
     let backgroundColor = schedule.activity.color || '#3B82F6'
     if (isCancelled) backgroundColor = '#EF4444'
     else if (isFull) backgroundColor = '#F59E0B'
+    else if (isAlmostFull) backgroundColor = '#F97316'
 
     return {
       style: {
         backgroundColor,
-        borderRadius: '6px',
-        opacity: isCancelled ? 0.7 : 1,
+        borderRadius: '8px',
+        opacity: isCancelled ? 0.6 : 1,
         color: 'white',
         border: 'none',
         fontSize: '12px',
-        padding: '2px 4px',
+        fontWeight: 500,
+        padding: '4px 8px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
       }
     }
   }
 
+  // Próximas clases (sidebar)
+  const upcomingClasses = useMemo(() => {
+    const now = new Date()
+    return schedules
+      .filter(s => !s.isCancelled && new Date(s.date) >= now)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .slice(0, 10)
+  }, [schedules])
+
+  // Clases del día seleccionado
+  const dayClasses = useMemo(() => {
+    if (!selectedDay) return []
+    return schedules.filter(s => isSameDay(new Date(s.date), selectedDay))
+      .sort((a, b) => a.startTime.localeCompare(b.startTime))
+  }, [schedules, selectedDay])
+
   const CustomToolbar = ({ label, onNavigate, onView }: any) => (
-    <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
       <div className="flex items-center gap-2">
-        <button onClick={() => onNavigate('TODAY')} className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
-          Hoy
-        </button>
-        <button onClick={() => onNavigate('PREV')} className="px-3 py-1 bg-slate-200 text-slate-700 rounded-lg text-sm hover:bg-slate-300">
-          ←
-        </button>
-        <button onClick={() => onNavigate('NEXT')} className="px-3 py-1 bg-slate-200 text-slate-700 rounded-lg text-sm hover:bg-slate-300">
-          →
-        </button>
-        <span className="text-lg font-semibold ml-2">{label}</span>
+        <Button variant="outline" size="sm" onClick={() => onNavigate('TODAY')} className="gap-1">
+          <CalendarCheck size={14} /> Hoy
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => onNavigate('PREV')}>
+          <ChevronLeft size={16} />
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => onNavigate('NEXT')}>
+          <ChevronRight size={16} />
+        </Button>
+        <span className="text-lg font-bold text-slate-900 ml-2">{label}</span>
       </div>
       
       <div className="flex items-center gap-2">
         <div className="flex bg-slate-100 rounded-lg p-1">
           <button 
             onClick={() => onView('day')}
-            className={`px-3 py-1 rounded-md text-sm ${view === 'day' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600'}`}
+            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${view === 'day' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600 hover:text-slate-900'}`}
           >
             Día
           </button>
           <button 
             onClick={() => onView('week')}
-            className={`px-3 py-1 rounded-md text-sm ${view === 'week' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600'}`}
+            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${view === 'week' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600 hover:text-slate-900'}`}
           >
             Semana
           </button>
           <button 
             onClick={() => onView('month')}
-            className={`px-3 py-1 rounded-md text-sm ${view === 'month' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600'}`}
+            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${view === 'month' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600 hover:text-slate-900'}`}
           >
             Mes
           </button>
         </div>
-        <Link 
-          href="/admin/agenda/nuevo"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
-        >
-          + Nueva Clase
+        <Link href="/admin/agenda/nuevo">
+          <Button size="sm" className="gap-1">
+            <Plus size={14} /> Nueva
+          </Button>
         </Link>
       </div>
     </div>
   )
 
-  if (loading) {
-    return <div className="p-6">Cargando...</div>
+  const CustomEvent = ({ event }: any) => {
+    const s = event.resource as Schedule
+    return (
+      <div className="h-full flex flex-col justify-center gap-0.5">
+        <span className="font-medium truncate">{event.title}</span>
+        <span className="text-[10px] opacity-90 truncate">
+          {s.room ? `📍 ${s.room} · ` : ''}{s.bookings.length}/{s.maxCapacity}
+        </span>
+      </div>
+    )
+  }
+
+  const handleSelectSlot = (slotInfo: any) => {
+    setSelectedDay(slotInfo.start)
+    setSideView('day-detail')
+  }
+
+  const handleSelectEvent = (event: any) => {
+    window.location.href = `/admin/agenda/${event.id}`
+  }
+
+  if (loading && schedules.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      </div>
+    )
   }
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Agenda</h2>
-      
-      <div className="flex gap-4 mb-4 text-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-          <span>Disponible</span>
+    <div className="space-y-4 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <CalendarIcon size={24} className="text-blue-600" />
+            Agenda
+          </h2>
+          <p className="text-slate-500 mt-1">Programación de clases y reservas</p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-          <span>Completa</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-red-500"></div>
-          <span>Cancelada</span>
+          <Link href="/admin/agenda/nuevo">
+            <Button className="gap-2">
+              <Plus size={16} /> Nueva Clase
+            </Button>
+          </Link>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
-        <Calendar
-          localizer={localizer}
-          events={events}
-          startAccessor="start"
-          endAccessor="end"
-          style={{ height: 600 }}
-          view={view}
-          onView={(newView: View) => {
-            console.log('Changing view to:', newView)
-            setView(newView)
-          }}
-          date={currentDate}
-          onNavigate={(newDate: Date) => {
-            console.log('Navigating to:', newDate)
-            setCurrentDate(newDate)
-          }}
-          eventPropGetter={eventStyleGetter}
-          components={{ toolbar: CustomToolbar }}
-          views={['day', 'week', 'month']}
-          min={new Date(0, 0, 0, 7, 0)}
-          max={new Date(0, 0, 0, 22, 0)}
-          formats={{
-            timeGutterFormat: 'HH:mm',
-            eventTimeRangeFormat: ({ start, end }: any) => 
-              `${format(start, 'HH:mm')} - ${format(end, 'HH:mm')}`,
-          }}
-          messages={{
-            today: 'Hoy',
-            previous: 'Anterior',
-            next: 'Siguiente',
-            day: 'Día',
-            week: 'Semana',
-            month: 'Mes',
-            noEventsInRange: 'No hay clases programadas',
-          }}
-          onSelectEvent={(event) => {
-            window.location.href = `/admin/agenda/${event.id}`
-          }}
-        />
+      {/* Filtros */}
+      <div className="flex flex-wrap gap-3 items-center bg-white border border-slate-200 rounded-xl p-3">
+        <Filter size={16} className="text-slate-400" />
+        <select
+          value={filterActivity}
+          onChange={(e) => setFilterActivity(e.target.value)}
+          className="h-9 px-3 border border-slate-200 rounded-lg text-sm bg-white text-slate-600"
+        >
+          <option value="all">Todas las actividades</option>
+          {activities.map(([id, name]) => (
+            <option key={id} value={id}>{name}</option>
+          ))}
+        </select>
+        {rooms.length > 0 && (
+          <select
+            value={filterRoom}
+            onChange={(e) => setFilterRoom(e.target.value)}
+            className="h-9 px-3 border border-slate-200 rounded-lg text-sm bg-white text-slate-600"
+          >
+            <option value="all">Todas las salas</option>
+            {rooms.map(room => (
+              <option key={room} value={room}>{room}</option>
+            ))}
+          </select>
+        )}
+        <div className="flex items-center gap-4 ml-auto text-xs text-slate-500">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> Disponible
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-orange-500" /> Casi llena
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> Completa
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500" /> Cancelada
+          </span>
+        </div>
+      </div>
+
+      {/* Layout principal: Calendario + Sidebar */}
+      <div className="flex gap-4">
+        {/* Calendario */}
+        <div className={`bg-white rounded-xl shadow-sm border border-slate-200 p-4 ${sideView !== 'none' ? 'flex-1' : 'w-full'}`}>
+          <Calendar
+            localizer={localizer}
+            events={events}
+            startAccessor="start"
+            endAccessor="end"
+            style={{ height: 650 }}
+            view={view}
+            onView={(newView: View) => setView(newView)}
+            date={currentDate}
+            onNavigate={(newDate: Date) => setCurrentDate(newDate)}
+            eventPropGetter={eventStyleGetter}
+            components={{ 
+              toolbar: CustomToolbar,
+              event: CustomEvent,
+            }}
+            views={['day', 'week', 'month']}
+            min={new Date(0, 0, 0, 7, 0)}
+            max={new Date(0, 0, 0, 22, 0)}
+            formats={{
+              timeGutterFormat: 'HH:mm',
+              eventTimeRangeFormat: ({ start, end }: any) => 
+                `${format(start, 'HH:mm')} - ${format(end, 'HH:mm')}`,
+            }}
+            messages={{
+              today: 'Hoy',
+              previous: 'Anterior',
+              next: 'Siguiente',
+              day: 'Día',
+              week: 'Semana',
+              month: 'Mes',
+              noEventsInRange: 'No hay clases programadas',
+            }}
+            onSelectEvent={handleSelectEvent}
+            onSelectSlot={handleSelectSlot}
+            selectable
+            popup
+          />
+        </div>
+
+        {/* Sidebar */}
+        {sideView !== 'none' && (
+          <div className="w-80 bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-slate-900">
+                {sideView === 'day-detail' && selectedDay
+                  ? format(selectedDay, 'EEEE d MMM', { locale: es })
+                  : 'Próximas Clases'}
+              </h3>
+              <button 
+                onClick={() => setSideView('none')}
+                className="p-1 rounded-lg hover:bg-slate-100 text-slate-400"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-2">
+              {sideView === 'day-detail' ? (
+                dayClasses.length === 0 ? (
+                  <p className="text-sm text-slate-400 text-center py-8">Sin clases este día</p>
+                ) : (
+                  dayClasses.map((s) => (
+                    <Link
+                      key={s.id}
+                      href={`/admin/agenda/${s.id}`}
+                      className="block p-3 rounded-lg border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-slate-900 text-sm">{s.activity.name}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          s.isCancelled ? 'bg-red-50 text-red-600' :
+                          s.bookings.length >= s.maxCapacity ? 'bg-amber-50 text-amber-600' :
+                          'bg-emerald-50 text-emerald-600'
+                        }`}>
+                          {s.isCancelled ? 'Cancelada' : `${s.bookings.length}/${s.maxCapacity}`}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500">
+                        <span className="flex items-center gap-1"><Clock size={12} /> {s.startTime.slice(0,5)} - {s.endTime.slice(0,5)}</span>
+                        {s.room && <span className="flex items-center gap-1"><MapPin size={12} /> {s.room}</span>}
+                      </div>
+                    </Link>
+                  ))
+                )
+              ) : (
+                upcomingClasses.length === 0 ? (
+                  <p className="text-sm text-slate-400 text-center py-8">Sin clases próximas</p>
+                ) : (
+                  upcomingClasses.map((s) => (
+                    <Link
+                      key={s.id}
+                      href={`/admin/agenda/${s.id}`}
+                      className="block p-3 rounded-lg border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-slate-900 text-sm">{s.activity.name}</span>
+                        <span className="text-xs text-slate-400">
+                          {format(new Date(s.date), 'dd/MM')}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500">
+                        <span className="flex items-center gap-1"><Clock size={12} /> {s.startTime.slice(0,5)}</span>
+                        <span className="flex items-center gap-1"><Users size={12} /> {s.bookings.length}/{s.maxCapacity}</span>
+                        {s.room && <span className="flex items-center gap-1"><MapPin size={12} /> {s.room}</span>}
+                      </div>
+                    </Link>
+                  ))
+                )
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

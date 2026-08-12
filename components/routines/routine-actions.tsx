@@ -4,17 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  MoreHorizontal, Edit2, Copy, Trash2, Power,
-  Eye, Send, X, CheckCircle
+  Edit2, Copy, Trash2, Power, Eye, Send, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface RoutineActionsProps {
   routineId: string;
@@ -112,52 +104,54 @@ export function RoutineActions({ routineId, isActive, routineName }: RoutineActi
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-            <MoreHorizontal size={16} className="text-slate-400" />
+      <div className="flex items-center gap-1">
+        <Link href={`/admin/rutinas/${routineId}`}>
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-blue-600">
+            <Eye size={14} />
           </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem asChild>
-            <Link href={`/admin/rutinas/${routineId}`} className="flex items-center gap-2 cursor-pointer">
-              <Eye size={14} /> Ver detalle
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href={`/admin/rutinas/${routineId}/editar`} className="flex items-center gap-2 cursor-pointer">
-              <Edit2 size={14} /> Editar
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => { fetchMembers(); setShowAssignModal(true); }}
-            className="flex items-center gap-2 cursor-pointer"
-          >
-            <Send size={14} /> Asignar a cliente
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => setShowDuplicateModal(true)}
-            className="flex items-center gap-2 cursor-pointer"
-          >
-            <Copy size={14} /> Duplicar
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={handleToggleActive}
-            className="flex items-center gap-2 cursor-pointer"
-          >
-            <Power size={14} />
-            {isActive ? "Desactivar" : "Activar"}
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => setShowDeleteModal(true)}
-            className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600"
-          >
-            <Trash2 size={14} /> Eliminar
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        </Link>
+        <Link href={`/admin/rutinas/${routineId}/editar`}>
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-blue-600">
+            <Edit2 size={14} />
+          </Button>
+        </Link>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 text-slate-400 hover:text-emerald-600"
+          onClick={() => { fetchMembers(); setShowAssignModal(true); }}
+          title="Asignar a cliente"
+        >
+          <Send size={14} />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 text-slate-400 hover:text-violet-600"
+          onClick={() => setShowDuplicateModal(true)}
+          title="Duplicar"
+        >
+          <Copy size={14} />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 text-slate-400 hover:text-amber-600"
+          onClick={handleToggleActive}
+          title={isActive ? "Desactivar" : "Activar"}
+        >
+          <Power size={14} />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 text-slate-400 hover:text-red-600"
+          onClick={() => setShowDeleteModal(true)}
+          title="Eliminar"
+        >
+          <Trash2 size={14} />
+        </Button>
+      </div>
 
       {/* Modal: Duplicar */}
       {showDuplicateModal && (
@@ -165,7 +159,7 @@ export function RoutineActions({ routineId, isActive, routineName }: RoutineActi
           <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-5">
             <h3 className="text-lg font-semibold text-slate-900 mb-2">Duplicar rutina</h3>
             <p className="text-sm text-slate-500 mb-4">
-              Se creará una copia de <strong>"{routineName}"</strong> con todos sus días y ejercicios.
+              Se creará una copia de <strong>&quot;{routineName}&quot;</strong> con todos sus días y ejercicios.
             </p>
             <div className="flex gap-3">
               <Button onClick={handleDuplicate} disabled={loading} className="flex-1 gap-2">
@@ -186,7 +180,7 @@ export function RoutineActions({ routineId, isActive, routineName }: RoutineActi
           <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-5">
             <h3 className="text-lg font-semibold text-slate-900 mb-2">Eliminar rutina</h3>
             <p className="text-sm text-slate-500 mb-4">
-              ¿Estás seguro de eliminar <strong>"{routineName}"</strong>? Esta acción no se puede deshacer.
+              ¿Estás seguro de eliminar <strong>&quot;{routineName}&quot;</strong>? Esta acción no se puede deshacer.
             </p>
             <div className="flex gap-3">
               <Button onClick={handleDelete} disabled={loading} variant="destructive" className="flex-1 gap-2">
@@ -205,9 +199,14 @@ export function RoutineActions({ routineId, isActive, routineName }: RoutineActi
       {showAssignModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-5">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">Asignar rutina</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-slate-900">Asignar rutina</h3>
+              <button onClick={() => setShowAssignModal(false)} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400">
+                <X size={18} />
+              </button>
+            </div>
             <p className="text-sm text-slate-500 mb-4">
-              Seleccioná el cliente al que querés asignar <strong>"{routineName}"</strong>
+              Seleccioná el cliente al que querés asignar <strong>&quot;{routineName}&quot;</strong>
             </p>
             <div className="space-y-2 max-h-60 overflow-y-auto mb-4">
               {members.map((m) => (

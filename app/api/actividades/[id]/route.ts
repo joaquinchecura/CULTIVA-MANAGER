@@ -10,12 +10,18 @@ const updateSchema = z.object({
   isActive: z.boolean().optional(),
 })
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+// FIX: params es Promise<{ id: string }> en Next.js 15
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id } = await params
     const body = await req.json()
     const data = updateSchema.parse(body)
+    
     const activity = await prisma.activity.update({
-      where: { id: params.id },
+      where: { id },
       data,
     })
     return NextResponse.json(activity)
@@ -27,11 +33,16 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id } = await params
     const body = await req.json()
+    
     const activity = await prisma.activity.update({
-      where: { id: params.id },
+      where: { id },
       data: body,
     })
     return NextResponse.json(activity)
@@ -40,9 +51,13 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 }
 
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    await prisma.activity.delete({ where: { id: params.id } })
+    const { id } = await params
+    await prisma.activity.delete({ where: { id } })
     return NextResponse.json({ success: true })
   } catch (error) {
     return NextResponse.json({ error: 'Error deleting activity' }, { status: 500 })

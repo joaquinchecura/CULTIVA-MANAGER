@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { RoutineBuilder } from "@/components/routines/routine-builder";
 import { notFound } from "next/navigation";
+import { mapPrismaExercise } from "@/types/exercise";
 
 export default async function EditarRutinaPage({
   params,
@@ -32,13 +33,25 @@ export default async function EditarRutinaPage({
     orderBy: { lastName: "asc" },
   });
 
+  // ✅ MAPEAMOS los datos de Prisma para que exercise use undefined en vez de null
+  const mappedRoutine = {
+    ...routine,
+    days: routine.days.map((day) => ({
+      ...day,
+      exercises: day.exercises.map((ex) => ({
+        ...ex,
+        exercise: mapPrismaExercise(ex.exercise),
+      })),
+    })),
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-slate-900">✏️ Editar rutina</h2>
         <p className="text-slate-500 mt-1">Modificá la rutina de {routine.name}</p>
       </div>
-      <RoutineBuilder members={members} initialData={routine} />
+      <RoutineBuilder members={members} initialData={mappedRoutine} />
     </div>
   );
 }

@@ -329,19 +329,21 @@ model CashMovement {
 // ============================================
 
 model Exercise {
-  id          String            @id @default(cuid())
-  name        String
-  type        ExerciseType
-  description String?
-  muscleGroup String?
-  equipment   String?
-  videoUrl    String?
-  imageUrl    String?
-  tags        String[]
-  isPublic    Boolean           @default(true)
-  createdAt   DateTime          @default(now())
+  id                String       @id @default(cuid())
+  name              String
+  type              ExerciseType
+  description       String?      // Técnico, para el coach
+  clientDescription String?      // Amigable, para el usuario final
+  muscleGroup       String?
+  equipment         String?
+  videoUrl          String?
+  imageUrl          String?
+  gifUrl            String?      // GIF de demostración
+  tags              String[]
+  isPublic          Boolean      @default(true)
+  createdAt         DateTime     @default(now())
 
-  routineExercises RoutineExercise[]
+  routineExercises  RoutineExercise[]
 
   @@map("exercises")
 }

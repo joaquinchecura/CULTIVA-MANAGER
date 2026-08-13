@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { ExerciseType } from "@prisma/client";
 
 // GET /api/exercises - Listar ejercicios con filtros
 export async function GET(req: NextRequest) {
@@ -12,15 +13,25 @@ export async function GET(req: NextRequest) {
   const tag = searchParams.get("tag");
   const search = searchParams.get("search");
   const isPublic = searchParams.get("isPublic");
+  const muscleGroup = searchParams.get("muscleGroup");
+  const equipment = searchParams.get("equipment");
 
   const where: any = {};
-  if (type) where.type = type;
+  
+  if (type && type !== "all") where.type = type as ExerciseType;
   if (isPublic !== null) where.isPublic = isPublic === "true";
-  if (tag) where.tags = { has: tag };
+  if (muscleGroup && muscleGroup !== "all") where.muscleGroup = muscleGroup;
+  if (equipment && equipment !== "all") where.equipment = equipment;
+  
+  if (tag && tag !== "all") {
+    where.tags = { has: tag };
+  }
+  
   if (search) {
     where.OR = [
       { name: { contains: search, mode: "insensitive" } },
       { description: { contains: search, mode: "insensitive" } },
+      { clientDescription: { contains: search, mode: "insensitive" } },
     ];
   }
 
@@ -39,7 +50,18 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, type, description, muscleGroup, equipment, videoUrl, imageUrl, tags } = body;
+    const { 
+      name, 
+      type, 
+      description, 
+      clientDescription,
+      muscleGroup, 
+      equipment, 
+      videoUrl, 
+      imageUrl, 
+      gifUrl,
+      tags 
+    } = body;
 
     if (!name || !type) {
       return NextResponse.json({ error: "Nombre y tipo son obligatorios" }, { status: 400 });
@@ -48,12 +70,14 @@ export async function POST(req: NextRequest) {
     const exercise = await prisma.exercise.create({
       data: {
         name,
-        type,
+        type: type as ExerciseType,
         description,
+        clientDescription,
         muscleGroup,
         equipment,
         videoUrl,
         imageUrl,
+        gifUrl,
         tags: tags || [],
         isPublic: true,
       },

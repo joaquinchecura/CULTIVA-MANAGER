@@ -10,7 +10,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { ExerciseType } from "@prisma/client";
+// ✅ IMPORTAMOS EL TIPO COMPARTIDO
+import { Exercise } from "@/types/exercise";
 
 const EXERCISE_TYPE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   STRENGTH: { label: "Fuerza", color: "text-blue-700", bg: "bg-blue-100" },
@@ -26,19 +27,7 @@ const EXERCISE_TYPE_CONFIG: Record<string, { label: string; color: string; bg: s
   OTHER: { label: "Otro", color: "text-gray-700", bg: "bg-gray-100" },
 };
 
-interface Exercise {
-  id: string;
-  name: string;
-  type: ExerciseType;
-  description?: string;
-  clientDescription?: string;
-  muscleGroup?: string;
-  equipment?: string;
-  videoUrl?: string;
-  imageUrl?: string;
-  gifUrl?: string;
-  tags: string[];
-}
+// ✅ YA NO DEFINIMOS Exercise LOCALMENTE — usamos el importado
 
 interface ExerciseCardProps {
   exercise: Exercise;

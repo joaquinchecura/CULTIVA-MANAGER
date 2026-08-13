@@ -48,6 +48,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ExerciseType } from "@prisma/client";
+// ✅ IMPORTAMOS EL TIPO COMPARTIDO
+import { Exercise, mapPrismaExercise, mapExerciseToPrisma } from "@/types/exercise";
 
 const EXERCISE_TYPES: { value: ExerciseType; label: string; icon: React.ReactNode; color: string; bg: string }[] = [
   { value: "STRENGTH", label: "Fuerza", icon: <Dumbbell className="h-4 w-4" />, color: "text-blue-700", bg: "bg-blue-100" },
@@ -76,20 +78,7 @@ const ALL_MUSCLE_GROUPS = [
   "Cuello", "Antebrazos", "Piso pélvico", "Mental"
 ];
 
-interface Exercise {
-  id: string;
-  name: string;
-  type: ExerciseType;
-  description?: string;
-  clientDescription?: string;
-  muscleGroup?: string;
-  equipment?: string;
-  videoUrl?: string;
-  imageUrl?: string;
-  gifUrl?: string;
-  tags: string[];
-  createdAt: string;
-}
+// ✅ YA NO DEFINIMOS Exercise LOCALMENTE — usamos el importado
 
 export default function ExerciseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -101,8 +90,7 @@ export default function ExerciseDetailPage({ params }: { params: Promise<{ id: s
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [newTag, setNewTag] = useState("");
 
-  // Form state for editing
-  const [form, setForm] = useState<Partial<Exercise> & { muscleGroup?: string | null; equipment?: string | null }>({});
+  const [form, setForm] = useState<Partial<Exercise>>({});
 
   const fetchExercise = useCallback(async () => {
     try {
@@ -110,8 +98,10 @@ export default function ExerciseDetailPage({ params }: { params: Promise<{ id: s
       const res = await fetch(`/api/exercises/${id}`);
       if (!res.ok) throw new Error("No se pudo cargar el ejercicio");
       const data = await res.json();
-      setExercise(data);
-      setForm(data);
+      // ✅ USAMOS EL HELPER
+      const mappedData = mapPrismaExercise(data);
+      setExercise(mappedData);
+      setForm(mappedData);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -128,14 +118,16 @@ export default function ExerciseDetailPage({ params }: { params: Promise<{ id: s
     setIsSaving(true);
     try {
       const { id } = await params;
+      // ✅ USAMOS EL HELPER para mapear undefined → null
+      const payload = mapExerciseToPrisma(form);
       const res = await fetch(`/api/exercises/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("Error guardando");
       const updated = await res.json();
-      setExercise(updated);
+      setExercise(mapPrismaExercise(updated));
       setIsEditing(false);
     } catch (err: any) {
       setError(err.message);
@@ -414,7 +406,7 @@ export default function ExerciseDetailPage({ params }: { params: Promise<{ id: s
                       <Label>Grupo muscular</Label>
                       <Select
                         value={form.muscleGroup || undefined}
-                        onValueChange={v => setForm(prev => ({ ...prev, muscleGroup: v }))}
+                        onValueChange={v => setForm(prev => ({ ...prev, muscleGroup: v ?? undefined }))}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccionar..." />
@@ -430,7 +422,7 @@ export default function ExerciseDetailPage({ params }: { params: Promise<{ id: s
                       <Label>Equipamiento</Label>
                       <Select
                         value={form.equipment || undefined}
-                        onValueChange={v => setForm(prev => ({ ...prev, equipment: v }))}
+                        onValueChange={v => setForm(prev => ({ ...prev, equipment: v ?? undefined }))}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccionar..." />
@@ -460,7 +452,7 @@ export default function ExerciseDetailPage({ params }: { params: Promise<{ id: s
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Creado</span>
                       <span className="font-medium">
-                        {new Date(exercise.createdAt).toLocaleDateString("es-AR")}
+                        {exercise.createdAt ? new Date(exercise.createdAt).toLocaleDateString("es-AR") : "—"}
                       </span>
                     </div>
                   </div>

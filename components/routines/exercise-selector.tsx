@@ -5,7 +5,6 @@ import { getExercises } from "@/app/actions/routines";
 import { Search, Plus, Dumbbell, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -20,20 +19,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+// ✅ IMPORTAMOS EL TIPO COMPARTIDO y el helper
+import { Exercise, mapPrismaExercise } from "@/types/exercise";
 
-interface Exercise {
-  id: string;
-  name: string;
-  type: string;
-  muscleGroup?: string;
-  equipment?: string;
-  tags: string[];
-  description?: string;
-  clientDescription?: string;
-  imageUrl?: string;
-  gifUrl?: string;
-  videoUrl?: string;
-}
+// ✅ YA NO DEFINIMOS Exercise LOCALMENTE — usamos el importado
 
 interface ExerciseSelectorProps {
   onSelect: (exercise: Exercise) => void;
@@ -69,16 +58,8 @@ export function ExerciseSelector({ onSelect, selectedIds = [] }: ExerciseSelecto
     setLoading(true);
     try {
       const data = await getExercises(search || undefined, typeFilter || undefined);
-      setExercises(data.map((ex: any) => ({
-          ...ex,
-          muscleGroup: ex.muscleGroup || undefined,
-          equipment: ex.equipment || undefined,
-          description: ex.description || undefined,
-          clientDescription: ex.clientDescription || undefined,
-          imageUrl: ex.imageUrl || undefined,
-          gifUrl: ex.gifUrl || undefined,
-          videoUrl: ex.videoUrl || undefined,
-        })));
+      // ✅ USAMOS EL HELPER para mapear null → undefined
+      setExercises(data.map((ex: any) => mapPrismaExercise(ex)));
     } catch (err) {
       console.error("Error cargando ejercicios:", err);
     } finally {

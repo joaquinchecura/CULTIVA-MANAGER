@@ -28,21 +28,10 @@ import {
   ChevronDown,
   X,
 } from "lucide-react";
-import { ExerciseType } from "@prisma/client";
+// ✅ IMPORTAMOS EL TIPO COMPARTIDO y el helper
+import { Exercise, mapPrismaExercise } from "@/types/exercise";
 
-interface Exercise {
-  id: string;
-  name: string;
-  type: ExerciseType;
-  muscleGroup: string | null;
-  equipment: string | null;
-  tags: string[];
-  description?: string;
-  clientDescription?: string;
-  imageUrl?: string;
-  gifUrl?: string;
-  videoUrl?: string;
-}
+// ✅ YA NO DEFINIMOS Exercise LOCALMENTE — usamos el importado
 
 interface RoutineExercise {
   id?: string;
@@ -125,7 +114,8 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
       exercises: d.exercises.map((ex) => ({
         id: ex.id,
         exerciseId: ex.exerciseId,
-        exercise: ex.exercise,
+        // ✅ USAMOS EL HELPER para mapear null → undefined
+        exercise: mapPrismaExercise(ex.exercise),
         sets: ex.sets,
         reps: ex.reps,
         rest: ex.rest || "",

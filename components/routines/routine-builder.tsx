@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createRoutine, updateRoutine } from "@/app/actions/routines";
 import { ExerciseSelector } from "./exercise-selector";
+import { ExerciseCard } from "./ExerciseCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,14 +28,20 @@ import {
   ChevronDown,
   X,
 } from "lucide-react";
+import { ExerciseType } from "@prisma/client";
 
 interface Exercise {
   id: string;
   name: string;
-  type: string;
+  type: ExerciseType;
   muscleGroup: string | null;
   equipment: string | null;
   tags: string[];
+  description?: string;
+  clientDescription?: string;
+  imageUrl?: string;
+  gifUrl?: string;
+  videoUrl?: string;
 }
 
 interface RoutineExercise {
@@ -413,24 +420,15 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
               ) : (
                 <div className="space-y-2">
                   {day.exercises.map((ex, exIndex) => (
-                    <div
+                    <ExerciseCard
                       key={exIndex}
-                      className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200"
+                      exercise={ex.exercise}
+                      showDragHandle={true}
                     >
-                      <GripVertical size={14} className="text-slate-400 shrink-0" />
-                      
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm text-slate-900 truncate">
-                          {ex.exercise.name}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {ex.exercise.muscleGroup || ex.exercise.type}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1">
-                          <Label className="text-[10px] text-slate-500 whitespace-nowrap">Series</Label>
+                      {/* Configuración de sets/reps/rest */}
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <div className="flex items-center gap-1.5">
+                          <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Series</Label>
                           <Input
                             type="number"
                             min={1}
@@ -438,31 +436,34 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                               updateExercise(dayIndex, exIndex, "sets", parseInt(e.target.value) || 1)
                             }
-                            className="w-14 h-8 bg-white border-slate-200 text-center text-sm"
+                            className="w-14 h-7 bg-background border text-center text-xs"
+                            onClick={(e) => e.stopPropagation()}
                           />
                         </div>
 
-                        <div className="flex items-center gap-1">
-                          <Label className="text-[10px] text-slate-500 whitespace-nowrap">Reps</Label>
+                        <div className="flex items-center gap-1.5">
+                          <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Reps</Label>
                           <Input
                             value={ex.reps}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                               updateExercise(dayIndex, exIndex, "reps", e.target.value)
                             }
-                            className="w-16 h-8 bg-white border-slate-200 text-center text-sm"
+                            className="w-16 h-7 bg-background border text-center text-xs"
                             placeholder="10"
+                            onClick={(e) => e.stopPropagation()}
                           />
                         </div>
 
-                        <div className="flex items-center gap-1">
-                          <Label className="text-[10px] text-slate-500 whitespace-nowrap">Desc</Label>
+                        <div className="flex items-center gap-1.5">
+                          <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Desc</Label>
                           <Input
                             value={ex.rest}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                               updateExercise(dayIndex, exIndex, "rest", e.target.value)
                             }
-                            className="w-16 h-8 bg-white border-slate-200 text-center text-sm"
+                            className="w-16 h-7 bg-background border text-center text-xs"
                             placeholder="60s"
+                            onClick={(e) => e.stopPropagation()}
                           />
                         </div>
 
@@ -471,46 +472,47 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                             updateExercise(dayIndex, exIndex, "notes", e.target.value)
                           }
-                          className="w-32 h-8 bg-white border-slate-200 text-sm hidden md:block"
+                          className="w-40 h-7 bg-background border text-xs hidden md:block"
                           placeholder="Notas..."
+                          onClick={(e) => e.stopPropagation()}
                         />
-                      </div>
 
-                      <div className="flex items-center gap-0.5 shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => moveExercise(dayIndex, exIndex, "up")}
-                          disabled={exIndex === 0}
-                          className="h-7 w-7 text-slate-600"
-                        >
-                          <ChevronUp size={12} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => moveExercise(dayIndex, exIndex, "down")}
-                          disabled={exIndex === day.exercises.length - 1}
-                          className="h-7 w-7 text-slate-600"
-                        >
-                          <ChevronDown size={12} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeExercise(dayIndex, exIndex)}
-                          className="h-7 w-7 text-red-500 hover:text-red-600"
-                        >
-                          <X size={12} />
-                        </Button>
+                        <div className="flex items-center gap-0.5 ml-auto">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => { e.stopPropagation(); moveExercise(dayIndex, exIndex, "up"); }}
+                            disabled={exIndex === 0}
+                            className="h-7 w-7"
+                          >
+                            <ChevronUp size={12} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => { e.stopPropagation(); moveExercise(dayIndex, exIndex, "down"); }}
+                            disabled={exIndex === day.exercises.length - 1}
+                            className="h-7 w-7"
+                          >
+                            <ChevronDown size={12} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => { e.stopPropagation(); removeExercise(dayIndex, exIndex); }}
+                            className="h-7 w-7 text-destructive hover:text-destructive"
+                          >
+                            <X size={12} />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
+                    </ExerciseCard>
                   ))}
                 </div>
               )}
 
               <ExerciseSelector
-                onSelect={(exercise) => addExercise(dayIndex, exercise)}
+                onSelect={(exercise: Exercise) => addExercise(dayIndex, exercise)}
                 selectedIds={day.exercises.map((ex) => ex.exerciseId)}
               />
             </CardContent>

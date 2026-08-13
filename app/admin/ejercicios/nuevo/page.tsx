@@ -91,8 +91,8 @@ export default function NewExercisePage() {
     type: "" as ExerciseType | "",
     description: "",
     clientDescription: "",
-    muscleGroup: "",
-    equipment: "",
+    muscleGroup: "" as string | null,
+    equipment: "" as string | null,
     videoUrl: "",
     imageUrl: "",
     gifUrl: "",
@@ -223,7 +223,7 @@ export default function NewExercisePage() {
                   <Label>Grupo muscular</Label>
                   <Select 
                     value={form.muscleGroup || undefined} 
-                    onValueChange={v => setForm(prev => ({ ...prev, muscleGroup: v || "" }))}
+                    onValueChange={v => setForm(prev => ({ ...prev, muscleGroup: v }))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Seleccionar..." />
@@ -240,7 +240,7 @@ export default function NewExercisePage() {
                   <Label>Equipamiento</Label>
                   <Select 
                     value={form.equipment || undefined} 
-                    onValueChange={v => setForm(prev => ({ ...prev, equipment: v || "" }))}
+                    onValueChange={v => setForm(prev => ({ ...prev, equipment: v }))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Seleccionar..." />

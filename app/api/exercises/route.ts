@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
       where.OR = [
         { name: { contains: search, mode: "insensitive" } },
         { description: { contains: search, mode: "insensitive" } },
-        { clientDescription: { contains: search, mode: "insensitive" } },
+        // clientDescription omitido hasta migrar la DB
       ];
     }
 
@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(exercises);
 
   } catch (error: any) {
-    console.error("❌ [API] Error en GET:", error.message, error.stack);
+    console.error("❌ [API] Error en GET:", error.message);
     return NextResponse.json(
       { error: "Error interno del servidor", details: error.message },
       { status: 500 }
@@ -78,12 +78,10 @@ export async function POST(req: NextRequest) {
       name, 
       type, 
       description, 
-      clientDescription,
       muscleGroup, 
       equipment, 
       videoUrl, 
       imageUrl, 
-      gifUrl,
       tags 
     } = body;
 
@@ -96,12 +94,10 @@ export async function POST(req: NextRequest) {
         name,
         type: type as ExerciseType,
         description: description || null,
-        clientDescription: clientDescription || null,
         muscleGroup: muscleGroup || null,
         equipment: equipment || null,
         videoUrl: videoUrl || null,
         imageUrl: imageUrl || null,
-        gifUrl: gifUrl || null,
         tags: tags || [],
         isPublic: true,
       },
@@ -111,7 +107,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(exercise, { status: 201 });
 
   } catch (error: any) {
-    console.error("❌ [API] Error en POST:", error.message, error.stack);
+    console.error("❌ [API] Error en POST:", error.message);
     return NextResponse.json(
       { error: "Error interno", details: error.message },
       { status: 500 }

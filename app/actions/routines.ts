@@ -224,17 +224,32 @@ export async function toggleRoutineActive(id: string, isActive: boolean) {
 // ============================================
 
 export async function getExercises(search?: string, type?: string) {
-  const exercises = await prisma.exercise.findMany({
-    where: {
-      AND: [
-        search ? { name: { contains: search, mode: "insensitive" } } : {},
-        type ? { type: type as any } : {},
-      ],
-    },
-    orderBy: { name: "asc" },
-  });
+  const where: any = {};
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: "insensitive" } },
+      { clientDescription: { contains: search, mode: "insensitive" } },
+    ];
+  }
+  if (type) where.type = type;
 
-  return exercises;
+  return prisma.exercise.findMany({
+    where,
+    orderBy: { name: "asc" },
+    select: {
+      id: true,
+      name: true,
+      type: true,
+      muscleGroup: true,
+      equipment: true,
+      tags: true,
+      description: true,
+      clientDescription: true,
+      imageUrl: true,
+      gifUrl: true,
+      videoUrl: true,
+    },
+  });
 }
 
 export async function createExercise(data: {

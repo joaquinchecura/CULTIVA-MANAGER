@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, ExerciseType } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
@@ -1171,7 +1171,15 @@ async function main() {
 
     if (!existing) {
       await prisma.exercise.create({
-        data: exercise
+        data: {
+          name: exercise.name,
+          type: exercise.type as ExerciseType,
+          muscleGroup: exercise.muscleGroup,
+          equipment: exercise.equipment,
+          tags: exercise.tags,
+          clientDescription: exercise.clientDescription,
+          isPublic: true,
+        }
       })
       created++
       console.log(`✅ Creado: ${exercise.name} (${exercise.type})`)

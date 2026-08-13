@@ -10,7 +10,6 @@ import {
   Heart, 
   Zap, 
   Wind, 
-  Activity,
   ImageIcon,
   Video,
   FileText,
@@ -35,8 +34,6 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
 import { ExerciseType } from "@prisma/client";
 
 const EXERCISE_TYPES: { value: ExerciseType; label: string; icon: React.ReactNode }[] = [
@@ -88,6 +85,7 @@ const ALL_MUSCLE_GROUPS = [
 export default function NewExercisePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [form, setForm] = useState({
     name: "",
     type: "" as ExerciseType | "",
@@ -118,8 +116,10 @@ export default function NewExercisePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+
     if (!form.name || !form.type) {
-      toast.error("Nombre y tipo son obligatorios");
+      setError("Nombre y tipo son obligatorios");
       return;
     }
 
@@ -131,23 +131,25 @@ export default function NewExercisePage() {
         body: JSON.stringify({
           name: form.name,
           type: form.type,
-          description: form.description,
-          clientDescription: form.clientDescription,
-          muscleGroup: form.muscleGroup,
-          equipment: form.equipment,
-          videoUrl: form.videoUrl,
-          imageUrl: form.imageUrl,
-          gifUrl: form.gifUrl,
+          description: form.description || undefined,
+          clientDescription: form.clientDescription || undefined,
+          muscleGroup: form.muscleGroup || undefined,
+          equipment: form.equipment || undefined,
+          videoUrl: form.videoUrl || undefined,
+          imageUrl: form.imageUrl || undefined,
+          gifUrl: form.gifUrl || undefined,
           tags: form.tags,
         }),
       });
 
-      if (!res.ok) throw new Error("Error creando ejercicio");
-      
-      toast.success("Ejercicio creado correctamente");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Error creando ejercicio");
+      }
+
       router.push("/admin/ejercicios");
-    } catch (error) {
-      toast.error("Error al crear el ejercicio");
+    } catch (err: any) {
+      setError(err.message || "Error al crear el ejercicio");
     } finally {
       setLoading(false);
     }
@@ -172,6 +174,12 @@ export default function NewExercisePage() {
       </div>
 
       <form onSubmit={handleSubmit} className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
+        {error && (
+          <div className="mb-6 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+            {error}
+          </div>
+        )}
+
         <div className="space-y-6">
           {/* Info básica */}
           <Card>
@@ -214,8 +222,8 @@ export default function NewExercisePage() {
                 <div className="space-y-2">
                   <Label>Grupo muscular</Label>
                   <Select 
-                    value={form.muscleGroup} 
-                    onValueChange={v => setForm(prev => ({ ...prev, muscleGroup: v }))}
+                    value={form.muscleGroup || undefined} 
+                    onValueChange={v => setForm(prev => ({ ...prev, muscleGroup: v || "" }))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Seleccionar..." />
@@ -231,8 +239,8 @@ export default function NewExercisePage() {
                 <div className="space-y-2">
                   <Label>Equipamiento</Label>
                   <Select 
-                    value={form.equipment} 
-                    onValueChange={v => setForm(prev => ({ ...prev, equipment: v }))}
+                    value={form.equipment || undefined} 
+                    onValueChange={v => setForm(prev => ({ ...prev, equipment: v || "" }))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Seleccionar..." />
@@ -271,7 +279,7 @@ export default function NewExercisePage() {
               <div className="space-y-2">
                 <Label htmlFor="clientDescription" className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-blue-500" />
-                  Descripción para el usuario *
+                  Descripción para el usuario
                 </Label>
                 <Textarea
                   id="clientDescription"

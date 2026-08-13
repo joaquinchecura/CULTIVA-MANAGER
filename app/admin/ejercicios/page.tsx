@@ -10,8 +10,6 @@ import {
   Heart, 
   Zap, 
   Wind, 
-  Activity,
-  Tag,
   X,
   ChevronDown,
   Flame,
@@ -32,7 +30,6 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ExerciseMedia } from "@/app/components/ExerciseMedia";
 import { ExerciseType } from "@prisma/client";
 
 // ─── Tipos ─────────────────────────────────────────────
@@ -50,7 +47,7 @@ interface Exercise {
   tags: string[];
 }
 
-// ─── Configuración de tipos (alineado con enum Prisma) ──
+// ─── Configuración de tipos ────────────────────────────
 const EXERCISE_TYPE_CONFIG: Record<string, { label: string; icon: React.ReactNode; color: string; bg: string }> = {
   STRENGTH: { label: "Fuerza", icon: <Dumbbell className="h-3.5 w-3.5" />, color: "text-blue-700", bg: "bg-blue-100" },
   CARDIO: { label: "Cardio", icon: <Heart className="h-3.5 w-3.5" />, color: "text-red-700", bg: "bg-red-100" },
@@ -67,24 +64,10 @@ const EXERCISE_TYPE_CONFIG: Record<string, { label: string; icon: React.ReactNod
 
 const EXERCISE_TYPES = Object.keys(EXERCISE_TYPE_CONFIG);
 
-// Tags y equipamiento únicos extraídos del seed
-const ALL_KNOWN_TAGS = [
-  "press", "pecho", "compound", "inclinado", "declinado", "aperturas", "aislado", "cruces", "fondos", "pullover",
-  "dominadas", "espalda", "jalon", "remo", "unilateral", "maquina", "peso muerto", "hiperextensiones", "espalda baja",
-  "hombros", "posterior", "elevaciones", "pajaro", "face pull", "biceps", "curl", "martillo", "predicador", "concentrado",
-  "triceps", "press frances", "extensiones", "patada", "sentadilla", "piernas", "frontal", "prensa", "extensiones", "cuadriceps",
-  "curl", "femoral", "rumano", "hip thrust", "gluteos", "elevacion", "pantorrilla", "plancha", "core", "isometrico", "crunch",
-  "abdominales", "oblicuos", "russian twist", "cinta", "bajo impacto", "running", "eliptica", "bicicleta", "soga", "burpees",
-  "hiit", "escaladores", "sprint", "zancadas", "dinamico", "kettlebell", "swing", "get up", "movilidad", "lunge", "rotacion",
-  "funcional", "desplante", "lateral", "thrusters", "crossfit", "clean", "olimpico", "snatch", "potencia", "wall ball", "box jump",
-  "plyometrico", "farmer walk", "agarre", "sled", "empuje", "battle ropes", "puente", "gato vaca", "cadera", "foam roller",
-  "recuperacion", "dislocaciones", "tobillos", "calentamiento", "toracica", "90 90", "estiramiento", "isquiotibiales", "flexibilidad",
-  "pectorales", "mariposa", "aductores", "yoga", "relajacion", "cobra", "salto", "longitud", "tuck jump", "depth jump", "skater",
-  "bosu", "equilibrio", "single leg", "deadlift", "propiocepcion", "fitball", "tecnica", "rack", "overhead squat", "snatch balance",
-  "clean pull", "snatch pull", "jumping jacks", "skipping", "pies", "arm circles", "leg swings", "trotar", "cuello", "munecas",
-  "oso", "caminata", "inchworm", "high knees", "caminata", "vuelta a la calma", "respiracion", "shavasana", "meditacion", "mental",
-  "vacio abdominal", "transverso", "kegel", "piso pelvico", "rehabilitacion", "costal", "activacion", "prehab", "escapulas", "postura",
-  "masaje", "automasaje"
+const ALL_KNOWN_MUSCLE_GROUPS = [
+  "Pecho", "Espalda", "Hombros", "Bíceps", "Tríceps", "Cuádriceps", "Femoral",
+  "Glúteos", "Pantorrilla", "Core", "Full body", "Piernas", "Cadera", "Tobillos",
+  "Cuello", "Antebrazos", "Piso pélvico", "Mental"
 ];
 
 const ALL_KNOWN_EQUIPMENT = [
@@ -94,11 +77,88 @@ const ALL_KNOWN_EQUIPMENT = [
   "Peso corporal", "Pista"
 ];
 
-const ALL_KNOWN_MUSCLE_GROUPS = [
-  "Pecho", "Espalda", "Hombros", "Bíceps", "Tríceps", "Cuádriceps", "Femoral",
-  "Glúteos", "Pantorrilla", "Core", "Full body", "Piernas", "Cadera", "Tobillos",
-  "Cuello", "Antebrazos", "Piso pélvico", "Mental"
-];
+// ─── ExerciseMedia inline (no necesita archivo separado) ──
+function ExerciseMedia({ 
+  imageUrl, 
+  gifUrl, 
+  videoUrl, 
+  name, 
+  className 
+}: { 
+  imageUrl?: string | null; 
+  gifUrl?: string | null; 
+  videoUrl?: string | null; 
+  name: string; 
+  className?: string;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [mediaError, setMediaError] = useState(false);
+  const hasMedia = imageUrl || gifUrl || videoUrl;
+
+  if (!hasMedia || mediaError) {
+    return (
+      <div className={`flex items-center justify-center bg-muted rounded-lg ${className || ""}`}>
+        <Dumbbell className="h-8 w-8 text-muted-foreground/50" />
+      </div>
+    );
+  }
+
+  if (gifUrl) {
+    return (
+      <div 
+        className={`relative overflow-hidden rounded-lg bg-muted ${className || ""}`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={isHovered ? gifUrl : (imageUrl || gifUrl)}
+          alt={name}
+          className="h-full w-full object-cover transition-all duration-300"
+          onError={() => setMediaError(true)}
+        />
+        {!isHovered && (
+          <div className="absolute bottom-2 right-2">
+            <span className="bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full font-medium">
+              GIF
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (videoUrl) {
+    return (
+      <div className={`relative overflow-hidden rounded-lg bg-muted group ${className || ""}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={imageUrl || ""}
+          alt={name}
+          className="h-full w-full object-cover"
+          onError={() => setMediaError(true)}
+        />
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="bg-white/90 rounded-full p-2">
+            <svg className="h-5 w-5 text-primary fill-primary" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`overflow-hidden rounded-lg bg-muted ${className || ""}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={imageUrl!}
+        alt={name}
+        className="h-full w-full object-cover"
+        onError={() => setMediaError(true)}
+      />
+    </div>
+  );
+}
 
 export default function ExercisesPage() {
   const router = useRouter();
@@ -156,11 +216,13 @@ export default function ExercisesPage() {
     (selectedMuscle !== "all" ? 1 : 0) +
     (selectedEquipment !== "all" ? 1 : 0);
 
-  // Filtrado local por múltiples tags
   const filteredExercises = exercises.filter(ex => {
     if (selectedTags.length === 0) return true;
     return selectedTags.every(tag => ex.tags.includes(tag));
   });
+
+  // Extraer todos los tags únicos de los ejercicios
+  const allTags = Array.from(new Set(exercises.flatMap(ex => ex.tags))).sort();
 
   return (
     <div className="min-h-screen bg-background">
@@ -221,7 +283,6 @@ export default function ExercisesPage() {
           {/* Filtros expandidos */}
           {showFilters && (
             <div className="bg-card border rounded-lg p-4 space-y-4">
-              {/* Tipo */}
               <div>
                 <label className="text-sm font-medium mb-2 block">Tipo de ejercicio</label>
                 <div className="flex flex-wrap gap-2">
@@ -256,88 +317,86 @@ export default function ExercisesPage() {
                 </div>
               </div>
 
-              {/* Grupo muscular */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Grupo muscular</label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-full sm:w-auto justify-between">
-                      {selectedMuscle === "all" ? "Todos los grupos" : selectedMuscle}
-                      <ChevronDown className="h-4 w-4 ml-2" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56 max-h-64 overflow-auto">
-                    <DropdownMenuCheckboxItem
-                      checked={selectedMuscle === "all"}
-                      onCheckedChange={() => setSelectedMuscle("all")}
-                    >
-                      Todos
-                    </DropdownMenuCheckboxItem>
-                    {ALL_KNOWN_MUSCLE_GROUPS.map(mg => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Grupo muscular</label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger>
+                      <Button variant="outline" className="w-full justify-between">
+                        {selectedMuscle === "all" ? "Todos los grupos" : selectedMuscle}
+                        <ChevronDown className="h-4 w-4 ml-2" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56 max-h-64 overflow-auto">
                       <DropdownMenuCheckboxItem
-                        key={mg}
-                        checked={selectedMuscle === mg}
-                        onCheckedChange={() => setSelectedMuscle(mg)}
+                        checked={selectedMuscle === "all"}
+                        onCheckedChange={() => setSelectedMuscle("all")}
                       >
-                        {mg}
+                        Todos
                       </DropdownMenuCheckboxItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+                      {ALL_KNOWN_MUSCLE_GROUPS.map(mg => (
+                        <DropdownMenuCheckboxItem
+                          key={mg}
+                          checked={selectedMuscle === mg}
+                          onCheckedChange={() => setSelectedMuscle(mg)}
+                        >
+                          {mg}
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
 
-              {/* Equipamiento */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Equipamiento</label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-full sm:w-auto justify-between">
-                      {selectedEquipment === "all" ? "Todo el equipamiento" : selectedEquipment}
-                      <ChevronDown className="h-4 w-4 ml-2" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56 max-h-64 overflow-auto">
-                    <DropdownMenuCheckboxItem
-                      checked={selectedEquipment === "all"}
-                      onCheckedChange={() => setSelectedEquipment("all")}
-                    >
-                      Todos
-                    </DropdownMenuCheckboxItem>
-                    {ALL_KNOWN_EQUIPMENT.map(eq => (
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Equipamiento</label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger>
+                      <Button variant="outline" className="w-full justify-between">
+                        {selectedEquipment === "all" ? "Todo el equipamiento" : selectedEquipment}
+                        <ChevronDown className="h-4 w-4 ml-2" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56 max-h-64 overflow-auto">
                       <DropdownMenuCheckboxItem
-                        key={eq}
-                        checked={selectedEquipment === eq}
-                        onCheckedChange={() => setSelectedEquipment(eq)}
+                        checked={selectedEquipment === "all"}
+                        onCheckedChange={() => setSelectedEquipment("all")}
                       >
-                        {eq}
+                        Todos
                       </DropdownMenuCheckboxItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              {/* Tags */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Tags</label>
-                <div className="flex flex-wrap gap-1.5">
-                  {ALL_KNOWN_TAGS.slice(0, 30).map(tag => (
-                    <button
-                      key={tag}
-                      onClick={() => toggleTag(tag)}
-                      className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
-                        selectedTags.includes(tag)
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground hover:bg-muted/80"
-                      }`}
-                    >
-                      {tag}
-                    </button>
-                  ))}
-                  {ALL_KNOWN_TAGS.length > 30 && (
-                    <span className="text-xs text-muted-foreground self-center">+{ALL_KNOWN_TAGS.length - 30} más</span>
-                  )}
+                      {ALL_KNOWN_EQUIPMENT.map(eq => (
+                        <DropdownMenuCheckboxItem
+                          key={eq}
+                          checked={selectedEquipment === eq}
+                          onCheckedChange={() => setSelectedEquipment(eq)}
+                        >
+                          {eq}
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
+
+              {allTags.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Tags</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {allTags.map(tag => (
+                      <button
+                        key={tag}
+                        onClick={() => toggleTag(tag)}
+                        className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
+                          selectedTags.includes(tag)
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {activeFiltersCount > 0 && (
                 <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
@@ -409,7 +468,7 @@ export default function ExercisesPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredExercises.map((exercise) => {
               const typeConfig = EXERCISE_TYPE_CONFIG[exercise.type] || EXERCISE_TYPE_CONFIG["OTHER"];
-              
+
               return (
                 <Card 
                   key={exercise.id} 
@@ -443,7 +502,7 @@ export default function ExercisesPage() {
                     <h3 className="font-semibold text-sm group-hover:text-primary transition-colors line-clamp-1">
                       {exercise.name}
                     </h3>
-                    
+
                     {exercise.muscleGroup && (
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {exercise.muscleGroup}

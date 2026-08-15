@@ -329,21 +329,22 @@ model CashMovement {
 // ============================================
 
 model Exercise {
-  id                String       @id @default(cuid())
-  name              String
-  type              ExerciseType
-  description       String?      // Técnico, para el coach
-  clientDescription String?      // Amigable, para el usuario final
-  muscleGroup       String?
-  equipment         String?
-  videoUrl          String?
-  imageUrl          String?
-  gifUrl            String?      // GIF de demostración
-  tags              String[]
-  isPublic          Boolean      @default(true)
-  createdAt         DateTime     @default(now())
+  id          String            @id @default(cuid())
+  name        String
+  type        ExerciseType
+  description String?
+  clientDescription String?  
+  muscleGroup String?
+  equipment   String?
+  videoUrl    String?
+  imageUrl    String?
+  gifUrl      String?   
+  tags        String[]
+  isPublic    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
 
-  routineExercises  RoutineExercise[]
+  routineExercises RoutineExercise[]
+  progressLogs     ProgressLog[]
 
   @@map("exercises")
 }
@@ -398,6 +399,7 @@ model ProgressLog {
   routineId       String
   routine         Routine  @relation(fields: [routineId], references: [id], onDelete: Cascade)
   exerciseId      String
+  exercise        Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
   memberId        String
   member          Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
   date            DateTime @default(now())

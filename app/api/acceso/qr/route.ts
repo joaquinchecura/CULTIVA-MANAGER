@@ -28,7 +28,7 @@ export async function POST() {
       data: {
         memberId: member.id,
         qrToken: token,
-        status: 'ALLOWED',
+        status: 'PENDING',
       },
     })
 

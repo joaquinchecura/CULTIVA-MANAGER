@@ -634,10 +634,12 @@ function AccesosApp({ attendances, members }: { attendances: any[], members: Mem
                   </td>
                   <td className="px-5 py-3 text-slate-600 text-xs font-mono">{getMemberDni(a.memberId)}</td>
                   <td className="px-5 py-3 text-slate-600 text-xs">
-                    {new Date(a.entryTime).toLocaleDateString('es-AR')}
-                  </td>
-                  <td className="px-5 py-3 text-slate-600 text-xs">
-                    {new Date(a.entryTime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(a.entryTime).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })
+new Date(a.entryTime).toLocaleTimeString('es-AR', {
+  hour: '2-digit',
+  minute: '2-digit',
+  timeZone: 'America/Argentina/Buenos_Aires',
+})}
                   </td>
                   <td className="px-5 py-3">
                     <code className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded font-mono">

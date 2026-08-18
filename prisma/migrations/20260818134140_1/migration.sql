@@ -1,0 +1,6 @@
+-- AlterEnum
+ALTER TYPE "AttendanceStatus" ADD VALUE 'PENDING';
+
+-- AlterTable
+ALTER TABLE "attendances" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ALTER COLUMN "status" SET DEFAULT 'PENDING';

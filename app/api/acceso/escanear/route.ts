@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       where: {
         memberId,
         qrToken: token,
-        status: 'ALLOWED',
+        status: 'PENDING',
       },
       include: { member: true },
     })

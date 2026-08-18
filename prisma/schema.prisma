@@ -49,6 +49,7 @@ enum BookingStatus {
 }
 
 enum AttendanceStatus {
+  PENDING
   ALLOWED
   WARNING
   DENIED
@@ -269,7 +270,8 @@ model Attendance {
   memberId    String
   entryTime   DateTime @default(now())
   qrToken     String
-  status      AttendanceStatus @default(ALLOWED)
+  createdAt   DateTime @default(now())
+  status      AttendanceStatus @default(PENDING)
 
   member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 

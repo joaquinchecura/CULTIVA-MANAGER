@@ -27,45 +27,33 @@ export async function POST(
     }
 
     // Crear nueva rutina asignada al nuevo cliente
-    const assigned = await prisma.$transaction(async (tx) => {
-      const newRoutine = await tx.routine.create({
-        data: {
-          memberId,
-          name: routine.name,
-          description: routine.description,
-          goal: routine.goal,
-          frequencyPerWeek: routine.frequencyPerWeek,
-          isActive: true,
-        },
-      });
-
-      for (const day of routine.days) {
-        const newDay = await tx.routineDay.create({
-          data: {
-            routineId: newRoutine.id,
+    const assigned = await prisma.routine.create({
+      data: {
+        memberId,
+        name: routine.name,
+        description: routine.description,
+        goal: routine.goal,
+        frequencyPerWeek: routine.frequencyPerWeek,
+        isActive: true,
+        days: {
+          create: routine.days.map((day) => ({
             dayName: day.dayName,
             order: day.order,
-          },
-        });
-
-        for (const ex of day.exercises) {
-          await tx.routineExercise.create({
-            data: {
-              dayId: newDay.id,
-              exerciseId: ex.exerciseId,
-              sets: ex.sets,
-              reps: ex.reps,
-              rest: ex.rest,
-              order: ex.order,
-              notes: ex.notes,
+            exercises: {
+              create: day.exercises.map((ex) => ({
+                exerciseId: ex.exerciseId,
+                sets: ex.sets,
+                reps: ex.reps,
+                rest: ex.rest,
+                order: ex.order,
+                notes: ex.notes,
+              })),
             },
-          });
-        }
-      }
-
-      return newRoutine;
+          })),
+        },
+      },
     });
-
+    
     return NextResponse.json(assigned, { status: 201 });
   } catch (error) {
     console.error("Error asignando rutina:", error);

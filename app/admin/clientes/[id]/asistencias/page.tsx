@@ -74,13 +74,14 @@ export default async function ClienteAsistenciasPage({ params }: { params: Promi
               {member.attendances.map((a) => (
                 <tr key={a.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 text-sm text-slate-900">
-                    {new Date(a.entryTime).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })
-new Date(a.entryTime).toLocaleTimeString('es-AR', {
-  hour: '2-digit',
-  minute: '2-digit',
-  timeZone: 'America/Argentina/Buenos_Aires',
-})}
-                  </td>
+  {new Date(a.entryTime).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })}
+</td>
+<td className="px-4 py-3 text-sm text-slate-600">
+  <span className="flex items-center gap-1">
+    <Clock size={14} />
+    {new Date(a.entryTime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' })}
+  </span>
+</td>
                   <td className="px-4 py-3 text-sm text-slate-600">
                     <span className="flex items-center gap-1">
                       <Clock size={14} />

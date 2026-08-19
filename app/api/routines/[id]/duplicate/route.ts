@@ -45,6 +45,9 @@ export async function POST(
             routineId: newRoutine.id,
             dayName: day.dayName,
             order: day.order,
+            sessionNumber: day.sessionNumber ?? 1,
+            weekNumber: day.weekNumber ?? 1,
+            dayOfWeek: day.dayOfWeek ?? null,
           },
         });
 

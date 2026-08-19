@@ -39,6 +39,9 @@ export async function POST(
           create: routine.days.map((day) => ({
             dayName: day.dayName,
             order: day.order,
+            sessionNumber: day.sessionNumber ?? 1,
+            weekNumber: day.weekNumber ?? 1,
+            dayOfWeek: day.dayOfWeek ?? null,
             exercises: {
               create: day.exercises.map((ex) => ({
                 exerciseId: ex.exerciseId,
@@ -53,7 +56,7 @@ export async function POST(
         },
       },
     });
-    
+
     return NextResponse.json(assigned, { status: 201 });
   } catch (error) {
     console.error("Error asignando rutina:", error);

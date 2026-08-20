@@ -72,6 +72,7 @@ function getSessionNumber(week: number, dayOfWeek: number, freq: number) {
 interface RoutineBuilderProps {
   members: { id: string; firstName: string; lastName: string }[]
   initialData?: any
+  defaultMemberId?: string   // ← nuevo
 }
 
 export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
@@ -80,7 +81,7 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
 
   // Step 1
 
-  const [memberId,    setMemberId]    = useState(initialData?.memberId    || "")
+  const [memberId, setMemberId] = useState(initialData?.memberId || defaultMemberId || "")
   const [isTemplate, setIsTemplate] = useState(initialData?.isTemplate || false)
   const [name,        setName]        = useState(initialData?.name        || "")
   const [description, setDescription] = useState(initialData?.description || "")

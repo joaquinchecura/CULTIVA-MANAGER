@@ -1,20 +1,28 @@
 import { prisma } from "@/lib/prisma";
 import { RoutineBuilder } from "@/components/routines/routine-builder";
 
-export default async function NuevaRutinaPage() {
+export default async function NuevaRutinaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ memberId?: string }>
+}) {
+  const params = await searchParams
   const members = await prisma.member.findMany({
-    where: { status: "ACTIVE" },
+    where: { status: 'ACTIVE' },
     select: { id: true, firstName: true, lastName: true },
-    orderBy: { lastName: "asc" },
-  });
+    orderBy: { lastName: 'asc' },
+  })
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900">🎯 Nueva rutina</h2>
+        <h2 className="text-2xl font-bold text-slate-900">Nueva rutina</h2>
         <p className="text-slate-500 mt-1">Armá una rutina personalizada para un cliente</p>
       </div>
-      <RoutineBuilder members={members} />
+      <RoutineBuilder
+        members={members}
+        defaultMemberId={params.memberId}  // ← pre-selecciona el cliente
+      />
     </div>
-  );
+  )
 }

@@ -504,3 +504,20 @@ export async function getActiveRoutineForMember(memberId: string) {
     include: { days: { include: { exercises: true } } },
   })
 }
+
+export async function getRoutineHistoryForMember(memberId: string) {
+  return prisma.routine.findMany({
+    where: { memberId, isTemplate: false },
+    include: {
+      days: {
+        include: {
+          sessionLogs: {
+            where: { memberId },
+            select: { completedAt: true },
+          },
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  })
+}

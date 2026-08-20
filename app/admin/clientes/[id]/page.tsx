@@ -1,188 +1,331 @@
-'use client'
+export const dynamic = 'force-dynamic'
 
-import { useEffect, useState } from 'react'
+import { prisma } from '@/lib/prisma'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { 
-  Dumbbell, Pencil, ArrowLeft, DollarSign, TrendingUp, 
-  Calendar, UserCheck 
+import {
+  Dumbbell, ArrowLeft, DollarSign, TrendingUp,
+  UserCheck, Calendar, Phone, Mail, MapPin,
+  AlertCircle, Copy, Plus, ChevronRight,
+  CheckCircle2, Clock, History,
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { getRoutineHistoryForMember, getTemplates } from '@/app/actions/routines'
+import AssignTemplateButton from '@/components/clientes/AssignTemplateButton'
 
-interface Member {
-  id: string
-  firstName: string
-  lastName: string
-  dni: string
-  email: string
-  phone: string
-  status: string
-  address: string | null
-  city: string | null
-  birthDate: string
-  emergencyContactName: string | null
-  emergencyContactPhone: string | null
-  medicalNotes: string | null
-  memberships: {
-    id: string
-    plan: { name: string }
-    startDate: string
-    endDate: string
-    status: string
-  }[]
+const TZ = 'America/Argentina/Buenos_Aires'
+
+function fmtFecha(d: Date | string) {
+  return new Date(d).toLocaleDateString('es-AR', {
+    day: 'numeric', month: 'long', year: 'numeric', timeZone: TZ,
+  })
 }
 
-export default function ClienteDetallePage({ params }: { params: Promise<{ id: string }> }) {
-  const [member, setMember] = useState<Member | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [id, setId] = useState<string>('')
+const statusConfig: Record<string, { label: string; color: string }> = {
+  ACTIVE:   { label: 'Activo',     color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  PENDING:  { label: 'Pendiente',  color: 'bg-amber-50 text-amber-700 border-amber-200' },
+  INACTIVE: { label: 'Inactivo',   color: 'bg-slate-100 text-slate-600 border-slate-200' },
+  FROZEN:   { label: 'Congelado',  color: 'bg-blue-50 text-blue-700 border-blue-200' },
+  OVERDUE:  { label: 'Atrasado',   color: 'bg-red-50 text-red-700 border-red-200' },
+}
 
-  useEffect(() => {
-    const getParams = async () => {
-      const resolvedParams = await params
-      setId(resolvedParams.id)
-    }
-    getParams()
-  }, [params])
+export default async function ClienteDetallePage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
 
-  useEffect(() => {
-    if (id) {
-      fetchMember()
-    }
-  }, [id])
+  const [member, routineHistory, templates] = await Promise.all([
+    prisma.member.findUnique({
+      where: { id },
+      include: {
+        memberships: {
+          include: { plan: true },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    }),
+    getRoutineHistoryForMember(id),
+    getTemplates(),
+  ])
 
-  const fetchMember = async () => {
-    try {
-      const response = await fetch(`/api/clientes/${id}`)
-      if (response.ok) {
-        const data = await response.json()
-        setMember(data)
-      }
-    } catch (error) {
-      console.error('Error:', error)
-    } finally {
-      setLoading(false)
-    }
+  if (!member) return notFound()
+
+  const activeRoutine  = routineHistory.find(r => r.isActive) ?? null
+  const archivedRoutines = routineHistory.filter(r => !r.isActive)
+  const activeMembership = member.memberships.find(m => m.status === 'ACTIVE')
+  const st = statusConfig[member.status] || statusConfig.INACTIVE
+
+  // Calcular progreso de la rutina activa
+  function routineProgress(routine: typeof activeRoutine) {
+    if (!routine) return { total: 0, completed: 0, pct: 0 }
+    const total = routine.days.length
+    const completed = routine.days.filter(d => d.sessionLogs.some(l => l.completedAt)).length
+    return { total, completed, pct: total > 0 ? Math.round((completed / total) * 100) : 0 }
   }
 
-  if (loading) {
-    return <div className="p-6">Cargando...</div>
-  }
-
-  if (!member) {
-    return <div className="p-6">Cliente no encontrado</div>
-  }
+  const progress = routineProgress(activeRoutine)
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">{member.firstName} {member.lastName}</h2>
-        <div className="flex gap-2 flex-wrap">
-          <Link 
-            href={`/admin/clientes/${member.id}/clases`}
-            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center gap-2"
-          >
-            <Dumbbell size={18} />
-            Clases
-          </Link>
-          
-          <Link 
-            href={`/admin/clientes/${member.id}/asistencias`}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center gap-2"
-          >
-            <UserCheck size={18} />
-            Asistencias
-          </Link>
-          
-          <Link 
-            href={`/admin/clientes/${member.id}/progreso`}
-            className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2"
-          >
-            <TrendingUp size={18} />
-            Progreso
-          </Link>
+    <div className="space-y-6 max-w-5xl mx-auto">
 
-          <Link 
-            href={`/admin/clientes/${member.id}/pagos`}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
-          >
-            <DollarSign size={18} />
-            Pagos
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Link href="/admin/clientes">
+            <Button variant="ghost" size="icon" className="h-9 w-9">
+              <ArrowLeft size={18} />
+            </Button>
           </Link>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">
+              {member.firstName} {member.lastName}
+            </h1>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-sm text-slate-500">DNI {member.dni}</span>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${st.color}`}>
+                {st.label}
+              </span>
+              {activeMembership && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                  {activeMembership.plan.name}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
 
-          <Link 
-            href={`/admin/clientes/${member.id}/membresia`}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          >
-            Asignar Membresía 
-          </Link>
-          
-          <Link 
-            href="/admin/clientes"
-            className="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-300 flex items-center gap-2"
-          >
-            <ArrowLeft size={18} />
-            Volver
-          </Link>
+        {/* Acciones rápidas */}
+        <div className="flex gap-2 flex-wrap justify-end">
+          {[
+            { href: `/admin/clientes/${id}/asistencias`, label: 'Asistencias', icon: UserCheck, color: 'bg-indigo-600 hover:bg-indigo-700' },
+            { href: `/admin/clientes/${id}/pagos`,       label: 'Pagos',       icon: DollarSign, color: 'bg-emerald-600 hover:bg-emerald-700' },
+            { href: `/admin/clientes/${id}/progreso`,    label: 'Progreso',    icon: TrendingUp, color: 'bg-orange-600 hover:bg-orange-700' },
+            { href: `/admin/clientes/${id}/membresia`,   label: 'Membresía',   icon: Calendar,   color: 'bg-blue-600 hover:bg-blue-700' },
+          ].map(({ href, label, icon: Icon, color }) => (
+            <Link key={href} href={href}>
+              <Button size="sm" className={`gap-1.5 text-white ${color}`}>
+                <Icon size={15} /> {label}
+              </Button>
+            </Link>
+          ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-          <h3 className="text-lg font-bold mb-4">Datos Personales</h3>
-          <div className="space-y-2 text-sm">
-            <p><span className="font-medium">DNI:</span> {member.dni}</p>
-            <p><span className="font-medium">Email:</span> {member.email}</p>
-            <p><span className="font-medium">Teléfono:</span> {member.phone}</p>
-            <p><span className="font-medium">Fecha de Nacimiento:</span> {new Date(member.birthDate).toLocaleDateString('es-AR')}</p>
-            <p><span className="font-medium">Dirección:</span> {member.address || '-'}</p>
-            <p><span className="font-medium">Ciudad:</span> {member.city || '-'}</p>
-            <p><span className="font-medium">Estado:</span> 
-              <span className={`ml-2 inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                member.status === 'ACTIVE' ? 'bg-green-100 text-green-700' :
-                member.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
-                'bg-red-100 text-red-700'
-              }`}>
-                {member.status}
-              </span>
-            </p>
-          </div>
-        </div>
+      {/* Grid principal */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-          <h3 className="text-lg font-bold mb-4">Contacto de Emergencia</h3>
-          <div className="space-y-2 text-sm">
-            <p><span className="font-medium">Nombre:</span> {member.emergencyContactName || '-'}</p>
-            <p><span className="font-medium">Teléfono:</span> {member.emergencyContactPhone || '-'}</p>
-          </div>
-          {member.medicalNotes && (
-            <div className="mt-4 p-3 bg-amber-50 border border-amber-100 rounded-lg">
-              <p className="text-sm text-amber-800"><span className="font-medium">Notas médicas:</span> {member.medicalNotes}</p>
-            </div>
-          )}
-        </div>
+        {/* Columna izquierda: datos */}
+        <div className="lg:col-span-1 space-y-5">
 
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 md:col-span-2">
-          <h3 className="text-lg font-bold mb-4">Membresías</h3>
-          {member.memberships.length > 0 ? (
-            <div className="space-y-2">
-              {member.memberships.map((mem) => (
-                <div key={mem.id} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                  <div>
-                    <p className="font-medium">{mem.plan.name}</p>
-                    <p className="text-sm text-slate-600">
-                      {new Date(mem.startDate).toLocaleDateString('es-AR')} - {new Date(mem.endDate).toLocaleDateString('es-AR')}
-                    </p>
-                  </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    mem.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {mem.status === 'ACTIVE' ? 'Activa' : mem.status}
-                  </span>
+          {/* Datos personales */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <h3 className="text-sm font-semibold text-slate-900 mb-4 uppercase tracking-wider">
+              Datos personales
+            </h3>
+            <div className="space-y-3 text-sm">
+              {[
+                { icon: Mail,    label: member.email },
+                { icon: Phone,   label: member.phone },
+                { icon: MapPin,  label: [member.address, member.city].filter(Boolean).join(', ') || '—' },
+                { icon: Calendar, label: fmtFecha(member.birthDate) },
+              ].map(({ icon: Icon, label }) => (
+                <div key={label} className="flex items-start gap-2.5 text-slate-600">
+                  <Icon size={14} className="text-slate-400 mt-0.5 shrink-0" />
+                  <span className="break-all">{label}</span>
                 </div>
               ))}
             </div>
-          ) : (
-            <p className="text-slate-500">No hay membresías activas</p>
+          </div>
+
+          {/* Contacto de emergencia */}
+          {(member.emergencyContactName || member.medicalNotes) && (
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <h3 className="text-sm font-semibold text-slate-900 mb-4 uppercase tracking-wider">
+                Emergencia
+              </h3>
+              <div className="space-y-2 text-sm text-slate-600">
+                {member.emergencyContactName && (
+                  <p><span className="font-medium text-slate-700">Contacto:</span> {member.emergencyContactName}</p>
+                )}
+                {member.emergencyContactPhone && (
+                  <p><span className="font-medium text-slate-700">Tel:</span> {member.emergencyContactPhone}</p>
+                )}
+              </div>
+              {member.medicalNotes && (
+                <div className="mt-3 p-3 bg-amber-50 border border-amber-100 rounded-lg text-xs text-amber-800 flex items-start gap-2">
+                  <AlertCircle size={13} className="shrink-0 mt-0.5" />
+                  {member.medicalNotes}
+                </div>
+              )}
+            </div>
           )}
+
+          {/* Membresías */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <h3 className="text-sm font-semibold text-slate-900 mb-4 uppercase tracking-wider">
+              Membresías
+            </h3>
+            {member.memberships.length > 0 ? (
+              <div className="space-y-2">
+                {member.memberships.slice(0, 3).map(mem => (
+                  <div key={mem.id} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">{mem.plan.name}</p>
+                      <p className="text-xs text-slate-500">
+                        hasta {new Date(mem.endDate).toLocaleDateString('es-AR', { timeZone: TZ })}
+                      </p>
+                    </div>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      mem.status === 'ACTIVE'
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : 'bg-slate-100 text-slate-500'
+                    }`}>
+                      {mem.status === 'ACTIVE' ? 'Activa' : 'Vencida'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-400">Sin membresías</p>
+            )}
+          </div>
+        </div>
+
+        {/* Columna derecha: rutinas */}
+        <div className="lg:col-span-2 space-y-5">
+
+          {/* Rutina activa */}
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                <Dumbbell size={15} className="text-blue-600" />
+                Rutina activa
+              </h3>
+              <div className="flex gap-2">
+                <Link href={`/admin/rutinas/nueva?memberId=${id}`}>
+                  <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs">
+                    <Plus size={13} /> Nueva rutina
+                  </Button>
+                </Link>
+                {/* Asignar desde template */}
+                {templates.length > 0 && (
+                  <AssignTemplateButton memberId={id} templates={templates} />
+                )}
+              </div>
+            </div>
+
+            {activeRoutine ? (
+              <div className="p-5">
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div>
+                    <h4 className="text-base font-bold text-slate-900">{activeRoutine.name}</h4>
+                    <div className="flex flex-wrap gap-2 mt-1.5">
+                      {activeRoutine.goal && (
+                        <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                          {activeRoutine.goal}
+                        </span>
+                      )}
+                      <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                        {activeRoutine.frequencyPerWeek} ses/sem · {activeRoutine.totalWeeks} semanas
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <Link href={`/admin/rutinas/${activeRoutine.id}`}>
+                      <Button variant="outline" size="sm" className="h-8 text-xs">Ver</Button>
+                    </Link>
+                    <Link href={`/admin/rutinas/${activeRoutine.id}/editar`}>
+                      <Button variant="outline" size="sm" className="h-8 text-xs">Editar</Button>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Barra de progreso */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs text-slate-500">
+                    <span>{progress.completed} de {progress.total} sesiones completadas</span>
+                    <span className="font-semibold text-slate-900">{progress.pct}%</span>
+                  </div>
+                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-emerald-500 rounded-full transition-all"
+                      style={{ width: `${progress.pct}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-8 text-center">
+                <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <Dumbbell size={22} className="text-slate-300" />
+                </div>
+                <p className="text-sm font-medium text-slate-700 mb-1">Sin rutina activa</p>
+                <p className="text-xs text-slate-400">
+                  Creá una rutina nueva o asigná un template existente
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Historial de rutinas */}
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                <History size={15} className="text-slate-400" />
+                Historial de rutinas
+              </h3>
+              {archivedRoutines.length > 3 && (
+                <Link href={`/admin/clientes/${id}/rutinas`} className="text-xs text-blue-600 hover:underline">
+                  Ver todas ({archivedRoutines.length})
+                </Link>
+              )}
+            </div>
+
+            {archivedRoutines.length === 0 ? (
+              <div className="px-5 py-6 text-center text-sm text-slate-400">
+                Aún no hay rutinas archivadas
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-50">
+                {archivedRoutines.slice(0, 4).map(routine => {
+                  const p = routineProgress(routine)
+                  return (
+                    <Link
+                      key={routine.id}
+                      href={`/admin/rutinas/${routine.id}`}
+                      className="flex items-center gap-4 px-5 py-3.5 hover:bg-slate-50 transition-colors group"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                        {p.pct === 100
+                          ? <CheckCircle2 size={16} className="text-emerald-500" />
+                          : <Clock size={15} className="text-slate-400" />
+                        }
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-900 truncate">{routine.name}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          {p.completed}/{p.total} sesiones
+                          {routine.totalWeeks && ` · ${routine.totalWeeks} semanas`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-slate-700">{p.pct}%</p>
+                          {p.pct === 100 && (
+                            <p className="text-[10px] text-emerald-500 font-medium">Completada</p>
+                          )}
+                        </div>
+                        <ChevronRight size={14} className="text-slate-300 group-hover:text-slate-500 transition-colors" />
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

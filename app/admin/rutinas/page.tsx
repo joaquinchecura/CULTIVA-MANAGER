@@ -36,7 +36,10 @@ export default async function RutinasPage({
 }) {
   const params = await searchParams;
   const routines = await getRoutines(params.search);
-
+  const routines = params.view === "templates"
+  ? await getTemplates()
+  : await getRoutines(params.search)
+  
   // Filtros
   const filteredRoutines = routines.filter((r) => {
     const matchesGoal = !params.goal || r.goal === params.goal;
@@ -155,7 +158,23 @@ export default async function RutinasPage({
       </form>
 
       {/* Listado */}
+      // arriba del listado de rutinas, agregar:
+<div className="flex gap-1 bg-white border border-slate-200 rounded-xl p-1 w-fit">
+  <Link href="/admin/rutinas">
+    <button className={cn("px-4 py-2 rounded-lg text-sm font-medium transition-all",
+      !params.view ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50")}>
+      Rutinas asignadas
+    </button>
+  </Link>
+  <Link href="/admin/rutinas?view=templates">
+    <button className={cn("px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5",
+      params.view === "templates" ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50")}>
+      <Copy size={14} /> Templates
+    </button>
+  </Link>
+</div>
       {filteredRoutines.length === 0 ? (
+        
         <div className="text-center py-16 bg-white border border-slate-200 rounded-xl">
           <Dumbbell className="mx-auto text-slate-300 mb-3" size={48} />
           <p className="text-slate-500 font-medium">No hay rutinas</p>

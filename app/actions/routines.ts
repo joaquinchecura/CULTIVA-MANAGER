@@ -26,15 +26,14 @@ export interface WeekTemplateSession {
 }
 
 export interface CreateRoutineInput {
-  memberId: string
+  memberId?: string | null    // ← ahora opcional
+  isTemplate?: boolean        // ← nuevo
   name: string
   description?: string | null
   goal?: string | null
-  frequencyPerWeek: number   // sesiones por semana (1-7)
-  totalWeeks: number         // 4/6/8/10/12
-  // template de la semana base — se replica totalWeeks veces
+  frequencyPerWeek: number
+  totalWeeks: number
   weekTemplate: WeekTemplateSession[]
-  // overrides de peso por sesión: [sessionNumber][exerciseIndex] = targetWeight
   weightOverrides: Record<number, Record<number, number | null>>
 }
 
@@ -56,29 +55,32 @@ function buildSessionName(sessionNumber: number) {
 // CREATE — genera todas las sesiones expandidas
 // ============================================
 
+async function archiveActiveRoutines(memberId: string, excludeId?: string) {
+  await prisma.routine.updateMany({
+    where: {
+      memberId,
+      isActive: true,
+      ...(excludeId ? { id: { not: excludeId } } : {}),
+    },
+    data: { isActive: false },
+  })
+}
+
 export async function createRoutine(data: CreateRoutineInput) {
   await getCurrentTrainer()
 
-  const days: {
-    sessionNumber: number
-    weekNumber: number
-    dayOfWeek: number
-    dayName: string
-    order: number
-    exercises: RoutineExerciseInput[]
-  }[] = []
+  if (!data.isTemplate && data.memberId) {
+    await archiveActiveRoutines(data.memberId)
+  }
 
+  const days: any[] = []
   let sessionNumber = 1
-
   for (let week = 1; week <= data.totalWeeks; week++) {
     for (const session of data.weekTemplate) {
       const overrides = data.weightOverrides[sessionNumber] || {}
       days.push({
-        sessionNumber,
-        weekNumber: week,
-        dayOfWeek: session.dayOfWeek,
-        dayName: buildSessionName(sessionNumber),
-        order: sessionNumber - 1,
+        sessionNumber, weekNumber: week, dayOfWeek: session.dayOfWeek,
+        dayName: buildSessionName(sessionNumber), order: sessionNumber - 1,
         exercises: session.exercises.map((ex, idx) => ({
           ...ex,
           targetWeight: overrides[idx] !== undefined ? overrides[idx] : ex.targetWeight,
@@ -90,7 +92,8 @@ export async function createRoutine(data: CreateRoutineInput) {
 
   const routine = await prisma.routine.create({
     data: {
-      memberId: data.memberId,
+      memberId: data.isTemplate ? null : data.memberId,
+      isTemplate: !!data.isTemplate,
       name: data.name,
       description: data.description,
       goal: data.goal as any,
@@ -99,20 +102,13 @@ export async function createRoutine(data: CreateRoutineInput) {
       isActive: true,
       days: {
         create: days.map((day) => ({
-          sessionNumber: day.sessionNumber,
-          weekNumber: day.weekNumber,
-          dayOfWeek: day.dayOfWeek,
-          dayName: day.dayName,
-          order: day.order,
+          sessionNumber: day.sessionNumber, weekNumber: day.weekNumber,
+          dayOfWeek: day.dayOfWeek, dayName: day.dayName, order: day.order,
           exercises: {
-            create: day.exercises.map((ex) => ({
-              exerciseId: ex.exerciseId,
-              sets: ex.sets,
-              reps: ex.reps,
-              targetWeight: ex.targetWeight ?? null,
-              rest: ex.rest ?? null,
-              order: ex.order,
-              notes: ex.notes ?? null,
+            create: day.exercises.map((ex: any) => ({
+              exerciseId: ex.exerciseId, sets: ex.sets, reps: ex.reps,
+              targetWeight: ex.targetWeight ?? null, rest: ex.rest ?? null,
+              order: ex.order, notes: ex.notes ?? null,
             })),
           },
         })),
@@ -121,6 +117,7 @@ export async function createRoutine(data: CreateRoutineInput) {
   })
 
   revalidatePath('/admin/rutinas')
+  if (data.memberId) revalidatePath(`/admin/clientes/${data.memberId}`)
   return routine
 }
 
@@ -197,25 +194,23 @@ export async function updateRoutine(id: string, data: CreateRoutineInput) {
 // ============================================
 
 export async function getRoutines(search?: string) {
-  const routines = await prisma.routine.findMany({
-    where: search ? {
-      OR: [
-        { name: { contains: search, mode: 'insensitive' } },
-        { member: { firstName: { contains: search, mode: 'insensitive' } } },
-        { member: { lastName: { contains: search, mode: 'insensitive' } } },
-      ],
-    } : undefined,
+  return prisma.routine.findMany({
+    where: {
+      isTemplate: false,
+      ...(search ? {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { member: { firstName: { contains: search, mode: 'insensitive' } } },
+          { member: { lastName: { contains: search, mode: 'insensitive' } } },
+        ],
+      } : {}),
+    },
     include: {
-      member: {
-        select: { id: true, firstName: true, lastName: true, photoUrl: true },
-      },
-      days: {
-        include: { exercises: true },
-      },
+      member: { select: { id: true, firstName: true, lastName: true, photoUrl: true } },
+      days: { include: { exercises: true } },
     },
     orderBy: { createdAt: 'desc' },
   })
-  return routines
 }
 
 export async function getRoutineById(id: string) {
@@ -450,5 +445,62 @@ export async function getProgressHistory(days = 30) {
       exercise: { select: { id: true, name: true, type: true, muscleGroup: true } },
     },
     orderBy: { date: 'desc' },
+  })
+}
+
+export async function getTemplates() {
+  return prisma.routine.findMany({
+    where: { isTemplate: true },
+    include: { days: { include: { exercises: true } } },
+    orderBy: { createdAt: 'desc' },
+  })
+}
+
+export async function assignTemplateToMember(templateId: string, memberId: string) {
+  await getCurrentTrainer()
+
+  const template = await prisma.routine.findUnique({
+    where: { id: templateId },
+    include: { days: { orderBy: { sessionNumber: 'asc' }, include: { exercises: true } } },
+  })
+  if (!template) throw new Error('Template no encontrado')
+
+  await archiveActiveRoutines(memberId)
+
+  const routine = await prisma.routine.create({
+    data: {
+      memberId,
+      isTemplate: false,
+      name: template.name,
+      description: template.description,
+      goal: template.goal,
+      frequencyPerWeek: template.frequencyPerWeek,
+      totalWeeks: template.totalWeeks,
+      isActive: true,
+      days: {
+        create: template.days.map((day) => ({
+          sessionNumber: day.sessionNumber, weekNumber: day.weekNumber,
+          dayOfWeek: day.dayOfWeek, dayName: day.dayName, order: day.order,
+          exercises: {
+            create: day.exercises.map((ex) => ({
+              exerciseId: ex.exerciseId, sets: ex.sets, reps: ex.reps,
+              targetWeight: ex.targetWeight, rest: ex.rest,
+              order: ex.order, notes: ex.notes,
+            })),
+          },
+        })),
+      },
+    },
+  })
+
+  revalidatePath('/admin/rutinas')
+  revalidatePath(`/admin/clientes/${memberId}`)
+  return routine
+}
+
+export async function getActiveRoutineForMember(memberId: string) {
+  return prisma.routine.findFirst({
+    where: { memberId, isActive: true, isTemplate: false },
+    include: { days: { include: { exercises: true } } },
   })
 }

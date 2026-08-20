@@ -79,7 +79,9 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
   const isEditing = !!initialData
 
   // Step 1
+  
   const [memberId,    setMemberId]    = useState(initialData?.memberId    || "")
+  const [isTemplate, setIsTemplate] = useState(initialData?.isTemplate || false)
   const [name,        setName]        = useState(initialData?.name        || "")
   const [description, setDescription] = useState(initialData?.description || "")
   const [goal,        setGoal]        = useState(initialData?.goal        || "")
@@ -344,7 +346,21 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
-
+          <div className="flex items-center gap-2 mb-3">
+  <button
+    type="button"
+    onClick={() => { setIsTemplate(!isTemplate); if (!isTemplate) setMemberId("") }}
+    className={cn(
+      "px-3 py-1.5 rounded-lg text-xs font-medium border transition-all flex items-center gap-1.5",
+      isTemplate
+        ? "bg-violet-50 border-violet-200 text-violet-700"
+        : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
+    )}
+  >
+    <Copy size={12} />
+    {isTemplate ? "Es un template (sin cliente asignado)" : "Guardar como template"}
+  </button>
+</div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>Cliente *</Label>

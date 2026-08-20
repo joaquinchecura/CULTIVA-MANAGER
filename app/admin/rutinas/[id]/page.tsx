@@ -33,7 +33,7 @@ export default async function RutinaDetailPage({
         select: { id: true, firstName: true, lastName: true, email: true },
       },
       days: {
-        orderBy: { order: "asc" },
+        orderBy: { sessionNumber: "asc" },  // ← era order: "asc"
         include: {
           exercises: {
             orderBy: { order: "asc" },
@@ -65,22 +65,27 @@ export default async function RutinaDetailPage({
       <div className="bg-white border border-slate-200 rounded-xl p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-2xl font-bold text-slate-900">{routine.name}</h1>
-              {routine.isActive ? (
-                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">Activa</Badge>
-              ) : (
-                <Badge className="bg-slate-100 text-slate-500">Inactiva</Badge>
-              )}
-            </div>
+          <div className="flex items-center gap-3 mb-2">
+  <h1 className="text-2xl font-bold text-slate-900">{routine.name}</h1>
+  {routine.isTemplate && (
+    <Badge className="bg-violet-50 text-violet-700 border-violet-200">Template</Badge>
+  )}
+  {routine.isActive ? (
+    <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">Activa</Badge>
+  ) : (
+    <Badge className="bg-slate-100 text-slate-500">Inactiva</Badge>
+  )}
+</div>
             {routine.description && (
               <p className="text-slate-500 mb-3">{routine.description}</p>
             )}
             <div className="flex items-center gap-4 text-sm text-slate-500 flex-wrap">
-              <span className="flex items-center gap-1.5">
-                <Users size={14} className="text-slate-400" />
-                {routine.member.firstName} {routine.member.lastName}
-              </span>
+            {routine.member && (
+  <span className="flex items-center gap-1.5">
+    <Users size={14} className="text-slate-400" />
+    {routine.member.firstName} {routine.member.lastName}
+  </span>
+)}
               {routine.goal && (
                 <span className="flex items-center gap-1.5">
                   <Target size={14} className="text-slate-400" />

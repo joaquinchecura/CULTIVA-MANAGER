@@ -19,7 +19,7 @@ import { Exercise, mapPrismaExercise } from "@/types/exercise"
 import {
   Dumbbell, Trash2, Plus, Save, ChevronUp, ChevronDown,
   X, ArrowRight, ArrowLeft, TrendingUp, Zap, Target,
-  Calendar, Info, Check,
+  Calendar, Info, Check, Copy,   // ← agregar Copy
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -79,7 +79,7 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
   const isEditing = !!initialData
 
   // Step 1
-  
+
   const [memberId,    setMemberId]    = useState(initialData?.memberId    || "")
   const [isTemplate, setIsTemplate] = useState(initialData?.isTemplate || false)
   const [name,        setName]        = useState(initialData?.name        || "")
@@ -259,7 +259,7 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
   }
 
   // ── Validation ──
-  const canStep1 = memberId && name.trim() && freq >= 1 && totalWeeks >= 4
+  const canStep1 = (isTemplate || memberId) && name.trim() && freq >= 1 && totalWeeks >= 4
   const canStep2 = template.every(s => s.exercises.length > 0)
 
   // ── Save ──
@@ -362,21 +362,24 @@ export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
   </button>
 </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label>Cliente *</Label>
-                <Select value={memberId} onValueChange={setMemberId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar cliente..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {members.map(m => (
-                      <SelectItem key={m.id} value={m.id}>
-                        {m.firstName} {m.lastName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+
+              {!isTemplate && (
+  <div className="space-y-1.5">
+    <Label>Cliente *</Label>
+    <Select value={memberId} onValueChange={setMemberId}>
+      <SelectTrigger>
+        <SelectValue placeholder="Seleccionar cliente..." />
+      </SelectTrigger>
+      <SelectContent>
+        {members.map(m => (
+          <SelectItem key={m.id} value={m.id}>
+            {m.firstName} {m.lastName}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+)}
               <div className="space-y-1.5">
                 <Label>Nombre *</Label>
                 <Input

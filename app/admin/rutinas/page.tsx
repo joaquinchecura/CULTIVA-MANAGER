@@ -1,24 +1,21 @@
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"
 
-import { getRoutines } from "@/app/actions/routines";
-import { RoutineActions } from "@/components/routines/routine-actions";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { getRoutines, getTemplates } from "@/app/actions/routines"
+import { RoutineActions } from "@/components/routines/routine-actions"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 import {
   Dumbbell, Plus, Search, Calendar, Users, Target,
-  Filter, Copy, FileText, TrendingUp
-} from "lucide-react";
-import Link from "next/link";
+  Filter, Copy, FileText, TrendingUp,
+} from "lucide-react"
+import Link from "next/link"
 
 const goalLabels: Record<string, string> = {
-  HYPERTROPHY: "Hipertrofia",
-  STRENGTH: "Fuerza",
-  ENDURANCE: "Resistencia",
-  WEIGHT_LOSS: "Pérdida de peso",
-  MAINTENANCE: "Mantenimiento",
-  REHABILITATION: "Rehabilitación",
-};
+  HYPERTROPHY: "Hipertrofia", STRENGTH: "Fuerza", ENDURANCE: "Resistencia",
+  WEIGHT_LOSS: "Pérdida de peso", MAINTENANCE: "Mantenimiento", REHABILITATION: "Rehabilitación",
+}
 
 const goalColors: Record<string, string> = {
   HYPERTROPHY: "bg-blue-50 text-blue-700 border-blue-200",
@@ -27,35 +24,42 @@ const goalColors: Record<string, string> = {
   WEIGHT_LOSS: "bg-orange-50 text-orange-700 border-orange-200",
   MAINTENANCE: "bg-purple-50 text-purple-700 border-purple-200",
   REHABILITATION: "bg-cyan-50 text-cyan-700 border-cyan-200",
-};
+}
 
 export default async function RutinasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string; goal?: string; status?: string }>;
+  searchParams: Promise<{
+    search?: string
+    goal?: string
+    status?: string
+    view?: string       // ← agregar view
+  }>
 }) {
-  const params = await searchParams;
-  const routines = await getRoutines(params.search);
+  const params = await searchParams
+
+  // Una sola declaración — condicional según view
   const routines = params.view === "templates"
-  ? await getTemplates()
-  : await getRoutines(params.search)
-  
-  // Filtros
-  const filteredRoutines = routines.filter((r) => {
-    const matchesGoal = !params.goal || r.goal === params.goal;
-    const matchesStatus = !params.status || (params.status === "active" ? r.isActive : !r.isActive);
-    return matchesGoal && matchesStatus;
-  });
+    ? await getTemplates()
+    : await getRoutines(params.search)
+
+  const filteredRoutines = routines.filter((r: any) => {
+    const matchesGoal   = !params.goal   || r.goal     === params.goal
+    const matchesStatus = !params.status || (params.status === "active" ? r.isActive : !r.isActive)
+    return matchesGoal && matchesStatus
+  })
 
   const stats = {
-    total: routines.length,
-    active: routines.filter((r) => r.isActive).length,
-    inactive: routines.filter((r) => !r.isActive).length,
-    byGoal: routines.reduce((acc, r) => {
-      if (r.goal) acc[r.goal] = (acc[r.goal] || 0) + 1;
-      return acc;
+    total:    routines.length,
+    active:   routines.filter((r: any) => r.isActive).length,
+    inactive: routines.filter((r: any) => !r.isActive).length,
+    byGoal:   routines.reduce((acc: any, r: any) => {
+      if (r.goal) acc[r.goal] = (acc[r.goal] || 0) + 1
+      return acc
     }, {} as Record<string, number>),
-  };
+  }
+
+  const isTemplateView = params.view === "templates"
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -67,16 +71,14 @@ export default async function RutinasPage({
             Rutinas
           </h2>
           <p className="text-slate-500 mt-1">
-            {stats.total} rutinas · {stats.active} activas · {stats.inactive} inactivas
+            {stats.total} {isTemplateView ? "templates" : "rutinas"} · {stats.active} activas
           </p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/admin/rutinas/nueva">
-            <Button className="gap-2">
-              <Plus size={16} /> Nueva rutina
-            </Button>
-          </Link>
-        </div>
+        <Link href="/admin/rutinas/nueva">
+          <Button className="gap-2">
+            <Plus size={16} /> {isTemplateView ? "Nuevo template" : "Nueva rutina"}
+          </Button>
+        </Link>
       </div>
 
       {/* Stats Cards */}
@@ -110,9 +112,32 @@ export default async function RutinasPage({
             <span className="text-xs text-slate-500">Clientes</span>
           </div>
           <p className="text-2xl font-bold text-orange-600">
-            {new Set(routines.map((r) => r.memberId)).size}
+            {isTemplateView
+              ? "—"
+              : new Set(routines.map((r: any) => r.memberId).filter(Boolean)).size
+            }
           </p>
         </div>
+      </div>
+
+      {/* View tabs */}
+      <div className="flex gap-1 bg-white border border-slate-200 rounded-xl p-1 w-fit">
+        <Link href="/admin/rutinas">
+          <button className={cn(
+            "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+            !isTemplateView ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50"
+          )}>
+            Rutinas asignadas
+          </button>
+        </Link>
+        <Link href="/admin/rutinas?view=templates">
+          <button className={cn(
+            "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5",
+            isTemplateView ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50"
+          )}>
+            <Copy size={14} /> Templates
+          </button>
+        </Link>
       </div>
 
       {/* Filtros */}
@@ -122,10 +147,12 @@ export default async function RutinasPage({
           <Input
             name="search"
             defaultValue={params.search}
-            placeholder="Buscar por nombre o cliente..."
+            placeholder={isTemplateView ? "Buscar template..." : "Buscar por nombre o cliente..."}
             className="pl-9 h-9 text-sm"
           />
         </div>
+        {/* Preservar view en el form */}
+        {isTemplateView && <input type="hidden" name="view" value="templates" />}
         <select
           name="goal"
           defaultValue={params.goal || ""}
@@ -136,20 +163,22 @@ export default async function RutinasPage({
             <option key={key} value={key}>{label}</option>
           ))}
         </select>
-        <select
-          name="status"
-          defaultValue={params.status || ""}
-          className="h-9 px-3 border border-slate-200 rounded-lg text-sm bg-white text-slate-600"
-        >
-          <option value="">Todos los estados</option>
-          <option value="active">Activas</option>
-          <option value="inactive">Inactivas</option>
-        </select>
+        {!isTemplateView && (
+          <select
+            name="status"
+            defaultValue={params.status || ""}
+            className="h-9 px-3 border border-slate-200 rounded-lg text-sm bg-white text-slate-600"
+          >
+            <option value="">Todos los estados</option>
+            <option value="active">Activas</option>
+            <option value="inactive">Inactivas</option>
+          </select>
+        )}
         <Button type="submit" variant="outline" size="sm" className="h-9">
           <Filter size={14} className="mr-1" /> Filtrar
         </Button>
         {(params.search || params.goal || params.status) && (
-          <Link href="/admin/rutinas">
+          <Link href={isTemplateView ? "/admin/rutinas?view=templates" : "/admin/rutinas"}>
             <Button type="button" variant="ghost" size="sm" className="h-9 text-slate-500">
               Limpiar
             </Button>
@@ -158,58 +187,48 @@ export default async function RutinasPage({
       </form>
 
       {/* Listado */}
-      // arriba del listado de rutinas, agregar:
-<div className="flex gap-1 bg-white border border-slate-200 rounded-xl p-1 w-fit">
-  <Link href="/admin/rutinas">
-    <button className={cn("px-4 py-2 rounded-lg text-sm font-medium transition-all",
-      !params.view ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50")}>
-      Rutinas asignadas
-    </button>
-  </Link>
-  <Link href="/admin/rutinas?view=templates">
-    <button className={cn("px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5",
-      params.view === "templates" ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50")}>
-      <Copy size={14} /> Templates
-    </button>
-  </Link>
-</div>
       {filteredRoutines.length === 0 ? (
-        
         <div className="text-center py-16 bg-white border border-slate-200 rounded-xl">
           <Dumbbell className="mx-auto text-slate-300 mb-3" size={48} />
-          <p className="text-slate-500 font-medium">No hay rutinas</p>
+          <p className="text-slate-500 font-medium">
+            {isTemplateView ? "No hay templates" : "No hay rutinas"}
+          </p>
           <p className="text-sm text-slate-400 mt-1">
-            {params.search || params.goal || params.status
+            {params.search || params.goal
               ? "Probá con otros filtros"
+              : isTemplateView
+              ? "Creá un template genérico para reutilizar con varios clientes"
               : "Creá la primera rutina para un cliente"}
           </p>
           <Link href="/admin/rutinas/nueva" className="inline-block mt-4">
             <Button size="sm" className="gap-2">
-              <Plus size={16} /> Nueva rutina
+              <Plus size={16} /> {isTemplateView ? "Nuevo template" : "Nueva rutina"}
             </Button>
           </Link>
         </div>
       ) : (
         <div className="grid gap-4">
-          {filteredRoutines.map((routine) => {
+          {filteredRoutines.map((routine: any) => {
             const totalExercises = routine.days.reduce(
-              (sum, d) => sum + d.exercises.length,
-              0
-            );
-
+              (sum: number, d: any) => sum + d.exercises.length, 0
+            )
             return (
               <div
                 key={routine.id}
-                className={`bg-white border rounded-xl p-5 transition-all hover:shadow-lg hover:-translate-y-0.5 ${
+                className={cn(
+                  "bg-white border rounded-xl p-5 transition-all hover:shadow-lg hover:-translate-y-0.5",
                   routine.isActive ? "border-slate-200" : "border-slate-200 opacity-60"
-                }`}
+                )}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-2">
-                      <h3 className="text-lg font-bold text-slate-900">
-                        {routine.name}
-                      </h3>
+                      {isTemplateView && (
+                        <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-200">
+                          <Copy size={10} /> Template
+                        </span>
+                      )}
+                      <h3 className="text-lg font-bold text-slate-900">{routine.name}</h3>
                       {routine.goal && (
                         <Badge
                           variant="outline"
@@ -219,33 +238,27 @@ export default async function RutinasPage({
                         </Badge>
                       )}
                       {!routine.isActive && (
-                        <Badge className="text-xs bg-slate-100 text-slate-500">
-                          Inactiva
-                        </Badge>
+                        <Badge className="text-xs bg-slate-100 text-slate-500">Inactiva</Badge>
                       )}
                     </div>
 
                     {routine.description && (
-                      <p className="text-sm text-slate-500 mb-3 line-clamp-2">
-                        {routine.description}
-                      </p>
+                      <p className="text-sm text-slate-500 mb-3 line-clamp-2">{routine.description}</p>
                     )}
 
                     <div className="flex items-center gap-4 text-sm text-slate-500 flex-wrap">
                       <span className="flex items-center gap-1.5">
                         <Calendar size={14} className="text-slate-400" />
-                        {routine.days.length} días · {totalExercises} ejercicios
+                        {routine.frequencyPerWeek && `${routine.frequencyPerWeek} ses/sem · `}
+                        {routine.totalWeeks && `${routine.totalWeeks} sem · `}
+                        {totalExercises} ejercicios
                       </span>
-                      {routine.frequencyPerWeek && (
+                      {!isTemplateView && routine.member && (
                         <span className="flex items-center gap-1.5">
-                          <Target size={14} className="text-slate-400" />
-                          {routine.frequencyPerWeek} días/semana
+                          <Users size={14} className="text-slate-400" />
+                          {routine.member.firstName} {routine.member.lastName}
                         </span>
                       )}
-                      <span className="flex items-center gap-1.5">
-                        <Users size={14} className="text-slate-400" />
-                        {routine.member.firstName} {routine.member.lastName}
-                      </span>
                     </div>
                   </div>
 
@@ -256,10 +269,10 @@ export default async function RutinasPage({
                   />
                 </div>
               </div>
-            );
+            )
           })}
         </div>
       )}
     </div>
-  );
+  )
 }

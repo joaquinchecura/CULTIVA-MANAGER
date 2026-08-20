@@ -92,7 +92,7 @@ export async function createRoutine(data: CreateRoutineInput) {
 
   const routine = await prisma.routine.create({
     data: {
-      memberId: data.isTemplate ? null : data.memberId,
+      memberId: data.isTemplate ? null : (data.memberId ?? null),
       isTemplate: !!data.isTemplate,
       name: data.name,
       description: data.description,
@@ -160,7 +160,7 @@ export async function updateRoutine(id: string, data: CreateRoutineInput) {
       goal: data.goal as any,
       frequencyPerWeek: data.frequencyPerWeek,
       totalWeeks: data.totalWeeks,
-      memberId: data.memberId,
+      memberId: data.memberId ?? null,
       days: {
         create: days.map((day) => ({
           sessionNumber: day.sessionNumber,

@@ -354,20 +354,21 @@ model Exercise {
 
 model Routine {
   id               String       @id @default(cuid())
-  memberId         String
-  member           Member       @relation(fields: [memberId], references: [id])
+  memberId         String?
+  member           Member?      @relation(fields: [memberId], references: [id])
+  isTemplate       Boolean      @default(false)
   name             String
   description      String?
   goal             RoutineGoal?
-  frequencyPerWeek Int?         // sesiones por semana (1-7)
-  totalWeeks       Int?         // ← nuevo: 4/6/8/10/12
+  frequencyPerWeek Int?
+  totalWeeks       Int?
   isActive         Boolean      @default(true)
   days             RoutineDay[]
   progressLogs     ProgressLog[]
-  sessionLogs      SessionLog[] // ← nuevo
+  sessionLogs      SessionLog[]
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
-  
+
   @@map("routines")
 }
 

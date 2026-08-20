@@ -192,7 +192,7 @@ export default async function AdminDashboard() {
     { href: '/admin/clientes/nuevo', label: 'Nuevo Cliente', icon: UserPlus, color: 'bg-blue-600 hover:bg-blue-700 text-white' },
     { href: '/admin/rutinas/nueva', label: 'Nueva Rutina', icon: Activity, color: 'bg-slate-800 hover:bg-slate-900 text-white' },
     { href: '/admin/agenda', label: 'Ver Agenda', icon: CalendarDays, color: 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200' },
-    { href: '/admin/pagos/nuevo', label: 'Registrar Pago', icon: CreditCard, color: 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200' },
+    { href: '/admin/pagos', label: 'Registrar Pago', icon: CreditCard, color: 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200' },
   ]
 
   return (

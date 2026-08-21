@@ -6,9 +6,8 @@ import { format, parse, startOfWeek, getDay, addDays, startOfMonth, endOfMonth, 
 import { es } from 'date-fns/locale'
 import Link from 'next/link'
 import {
-  Calendar as CalendarIcon, Plus, Filter, Grid3X3, List,
-  Clock, Users, MapPin, AlertCircle, X, CheckCircle,
-  ChevronLeft, ChevronRight, CalendarCheck
+  Calendar as CalendarIcon, Plus, Filter, Clock, Users, MapPin,
+  X, ChevronLeft, ChevronRight, CalendarCheck
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
@@ -17,7 +16,7 @@ const locales = { es }
 const localizer = dateFnsLocalizer({
   format,
   parse,
-  startOfWeek,
+  startOfWeek: (date: Date) => startOfWeek(date, { weekStartsOn: 1 }), // ← semana desde lunes
   getDay,
   locales,
 })
@@ -46,6 +45,33 @@ interface Schedule {
 
 type SideView = 'none' | 'day-detail' | 'upcoming'
 
+// ── Estados y colores ────────────────────────────────────────────────────
+// azul disponible · naranja casi llena · amarillo completa · rojo cancelada · verde finalizada
+
+function getScheduleEnd(schedule: Schedule) {
+  const dateStr = schedule.date.split('T')[0]
+  const [year, month, day] = dateStr.split('-').map(Number)
+  const [endHour, endMin] = schedule.endTime.split(':').map(Number)
+  return new Date(year, month - 1, day, endHour, endMin, 0)
+}
+
+function getScheduleStatus(schedule: Schedule) {
+  if (schedule.isCancelled) return 'cancelada'
+  if (getScheduleEnd(schedule).getTime() < Date.now()) return 'finalizada'
+  const occupancy = schedule.bookings.length / schedule.maxCapacity
+  if (occupancy >= 1) return 'completa'
+  if (occupancy >= 0.7) return 'casi-llena'
+  return 'disponible'
+}
+
+const STATUS_CONFIG: Record<string, { color: string; label: string; badge: string }> = {
+  disponible:  { color: '#3B82F6', label: 'Disponible', badge: 'bg-blue-50 text-blue-600' },
+  'casi-llena': { color: '#F97316', label: 'Casi llena', badge: 'bg-orange-50 text-orange-600' },
+  completa:    { color: '#EAB308', label: 'Completa',   badge: 'bg-amber-50 text-amber-700' },
+  cancelada:   { color: '#EF4444', label: 'Cancelada',  badge: 'bg-red-50 text-red-600' },
+  finalizada:  { color: '#22C55E', label: 'Finalizada', badge: 'bg-emerald-50 text-emerald-600' },
+}
+
 export default function AgendaPage() {
   const [schedules, setSchedules] = useState<Schedule[]>([])
   const [loading, setLoading] = useState(true)
@@ -60,12 +86,12 @@ export default function AgendaPage() {
     setLoading(true)
     try {
       let startDate: string, endDate: string
-      
+
       if (currentView === Views.MONTH) {
         startDate = format(startOfMonth(currentDateValue), 'yyyy-MM-dd')
         endDate = format(endOfMonth(currentDateValue), 'yyyy-MM-dd')
       } else if (currentView === Views.WEEK) {
-        const start = startOfWeek(currentDateValue, { locale: es })
+        const start = startOfWeek(currentDateValue, { weekStartsOn: 1 }) // ← lunes
         startDate = format(start, 'yyyy-MM-dd')
         endDate = format(addDays(start, 6), 'yyyy-MM-dd')
       } else {
@@ -89,7 +115,6 @@ export default function AgendaPage() {
     fetchSchedules(view, currentDate)
   }, [view, currentDate, fetchSchedules])
 
-  // Extraer actividades y salas únicas para filtros
   const activities = useMemo(() => {
     const map = new Map<string, string>()
     schedules.forEach(s => map.set(s.activity.id, s.activity.name))
@@ -114,10 +139,10 @@ export default function AgendaPage() {
     return filteredSchedules.map((schedule) => {
       const [startHour, startMin] = schedule.startTime.split(':').map(Number)
       const [endHour, endMin] = schedule.endTime.split(':').map(Number)
-      
+
       const dateStr = schedule.date.split('T')[0]
       const [year, month, day] = dateStr.split('-').map(Number)
-      
+
       const start = new Date(year, month - 1, day, startHour, startMin, 0)
       const end = new Date(year, month - 1, day, endHour, endMin, 0)
 
@@ -133,21 +158,14 @@ export default function AgendaPage() {
 
   const eventStyleGetter = (event: any) => {
     const schedule = event.resource as Schedule
-    const occupancy = schedule.bookings.length / schedule.maxCapacity
-    const isFull = occupancy >= 1
-    const isAlmostFull = occupancy >= 0.8
-    const isCancelled = schedule.isCancelled
-    
-    let backgroundColor = schedule.activity.color || '#3B82F6'
-    if (isCancelled) backgroundColor = '#EF4444'
-    else if (isFull) backgroundColor = '#F59E0B'
-    else if (isAlmostFull) backgroundColor = '#F97316'
+    const status = getScheduleStatus(schedule)
+    const backgroundColor = STATUS_CONFIG[status].color
 
     return {
       style: {
         backgroundColor,
         borderRadius: '8px',
-        opacity: isCancelled ? 0.6 : 1,
+        opacity: status === 'cancelada' ? 0.65 : status === 'finalizada' ? 0.75 : 1,
         color: 'white',
         border: 'none',
         fontSize: '12px',
@@ -158,7 +176,6 @@ export default function AgendaPage() {
     }
   }
 
-  // Próximas clases (sidebar)
   const upcomingClasses = useMemo(() => {
     const now = new Date()
     return schedules
@@ -167,7 +184,6 @@ export default function AgendaPage() {
       .slice(0, 10)
   }, [schedules])
 
-  // Clases del día seleccionado
   const dayClasses = useMemo(() => {
     if (!selectedDay) return []
     return schedules.filter(s => isSameDay(new Date(s.date), selectedDay))
@@ -186,24 +202,24 @@ export default function AgendaPage() {
         <Button variant="outline" size="sm" onClick={() => onNavigate('NEXT')}>
           <ChevronRight size={16} />
         </Button>
-        <span className="text-lg font-bold text-slate-900 ml-2">{label}</span>
+        <span className="text-lg font-bold text-slate-900 ml-2 capitalize">{label}</span>
       </div>
-      
+
       <div className="flex items-center gap-2">
         <div className="flex bg-slate-100 rounded-lg p-1">
-          <button 
+          <button
             onClick={() => onView('day')}
             className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${view === 'day' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600 hover:text-slate-900'}`}
           >
             Día
           </button>
-          <button 
+          <button
             onClick={() => onView('week')}
             className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${view === 'week' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600 hover:text-slate-900'}`}
           >
             Semana
           </button>
-          <button 
+          <button
             onClick={() => onView('month')}
             className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${view === 'month' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600 hover:text-slate-900'}`}
           >
@@ -249,7 +265,7 @@ export default function AgendaPage() {
   }
 
   return (
-    <div className="space-y-4 max-w-7xl mx-auto">
+    <div className="space-y-4 max-w-[1600px] mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -268,7 +284,7 @@ export default function AgendaPage() {
         </div>
       </div>
 
-      {/* Filtros */}
+      {/* Filtros + leyenda */}
       <div className="flex flex-wrap gap-3 items-center bg-white border border-slate-200 rounded-xl p-3">
         <Filter size={16} className="text-slate-400" />
         <select
@@ -293,19 +309,13 @@ export default function AgendaPage() {
             ))}
           </select>
         )}
-        <div className="flex items-center gap-4 ml-auto text-xs text-slate-500">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> Disponible
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-orange-500" /> Casi llena
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> Completa
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500" /> Cancelada
-          </span>
+        <div className="flex items-center gap-4 ml-auto text-xs text-slate-500 flex-wrap">
+          {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
+            <span key={key} className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cfg.color }} />
+              {cfg.label}
+            </span>
+          ))}
         </div>
       </div>
 
@@ -315,16 +325,17 @@ export default function AgendaPage() {
         <div className={`bg-white rounded-xl shadow-sm border border-slate-200 p-4 ${sideView !== 'none' ? 'flex-1' : 'w-full'}`}>
           <Calendar
             localizer={localizer}
+            culture="es"
             events={events}
             startAccessor="start"
             endAccessor="end"
-            style={{ height: 650 }}
+            style={{ height: 780 }}
             view={view}
             onView={(newView: View) => setView(newView)}
             date={currentDate}
             onNavigate={(newDate: Date) => setCurrentDate(newDate)}
             eventPropGetter={eventStyleGetter}
-            components={{ 
+            components={{
               toolbar: CustomToolbar,
               event: CustomEvent,
             }}
@@ -333,7 +344,13 @@ export default function AgendaPage() {
             max={new Date(0, 0, 0, 22, 0)}
             formats={{
               timeGutterFormat: 'HH:mm',
-              eventTimeRangeFormat: ({ start, end }: any) => 
+              dayFormat: (date: Date) => format(date, 'EEE d', { locale: es }),
+              weekdayFormat: (date: Date) => format(date, 'EEEE', { locale: es }),
+              monthHeaderFormat: (date: Date) => format(date, "MMMM yyyy", { locale: es }),
+              dayHeaderFormat: (date: Date) => format(date, "EEEE d 'de' MMMM", { locale: es }),
+              dayRangeHeaderFormat: ({ start, end }: any) =>
+                `${format(start, 'd MMM', { locale: es })} - ${format(end, 'd MMM', { locale: es })}`,
+              eventTimeRangeFormat: ({ start, end }: any) =>
                 `${format(start, 'HH:mm')} - ${format(end, 'HH:mm')}`,
             }}
             messages={{
@@ -344,6 +361,7 @@ export default function AgendaPage() {
               week: 'Semana',
               month: 'Mes',
               noEventsInRange: 'No hay clases programadas',
+              showMore: (total: number) => `+${total} más`,
             }}
             onSelectEvent={handleSelectEvent}
             onSelectSlot={handleSelectSlot}
@@ -356,12 +374,12 @@ export default function AgendaPage() {
         {sideView !== 'none' && (
           <div className="w-80 bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-slate-900">
+              <h3 className="font-semibold text-slate-900 capitalize">
                 {sideView === 'day-detail' && selectedDay
                   ? format(selectedDay, 'EEEE d MMM', { locale: es })
                   : 'Próximas Clases'}
               </h3>
-              <button 
+              <button
                 onClick={() => setSideView('none')}
                 className="p-1 rounded-lg hover:bg-slate-100 text-slate-400"
               >
@@ -374,28 +392,27 @@ export default function AgendaPage() {
                 dayClasses.length === 0 ? (
                   <p className="text-sm text-slate-400 text-center py-8">Sin clases este día</p>
                 ) : (
-                  dayClasses.map((s) => (
-                    <Link
-                      key={s.id}
-                      href={`/admin/agenda/${s.id}`}
-                      className="block p-3 rounded-lg border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-slate-900 text-sm">{s.activity.name}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          s.isCancelled ? 'bg-red-50 text-red-600' :
-                          s.bookings.length >= s.maxCapacity ? 'bg-amber-50 text-amber-600' :
-                          'bg-emerald-50 text-emerald-600'
-                        }`}>
-                          {s.isCancelled ? 'Cancelada' : `${s.bookings.length}/${s.maxCapacity}`}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500">
-                        <span className="flex items-center gap-1"><Clock size={12} /> {s.startTime.slice(0,5)} - {s.endTime.slice(0,5)}</span>
-                        {s.room && <span className="flex items-center gap-1"><MapPin size={12} /> {s.room}</span>}
-                      </div>
-                    </Link>
-                  ))
+                  dayClasses.map((s) => {
+                    const status = getScheduleStatus(s)
+                    return (
+                      <Link
+                        key={s.id}
+                        href={`/admin/agenda/${s.id}`}
+                        className="block p-3 rounded-lg border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-slate-900 text-sm">{s.activity.name}</span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_CONFIG[status].badge}`}>
+                            {status === 'cancelada' ? 'Cancelada' : `${s.bookings.length}/${s.maxCapacity}`}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500">
+                          <span className="flex items-center gap-1"><Clock size={12} /> {s.startTime.slice(0,5)} - {s.endTime.slice(0,5)}</span>
+                          {s.room && <span className="flex items-center gap-1"><MapPin size={12} /> {s.room}</span>}
+                        </div>
+                      </Link>
+                    )
+                  })
                 )
               ) : (
                 upcomingClasses.length === 0 ? (

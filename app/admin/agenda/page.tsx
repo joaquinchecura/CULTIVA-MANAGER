@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
+import ScheduleDetailModal from '@/components/agenda/ScheduleDetailModal'
 
 const locales = { es }
 const localizer = dateFnsLocalizer({
@@ -81,6 +82,7 @@ export default function AgendaPage() {
   const [selectedDay, setSelectedDay] = useState<Date | null>(null)
   const [filterActivity, setFilterActivity] = useState<string>('all')
   const [filterRoom, setFilterRoom] = useState<string>('all')
+  const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null)
 
   const fetchSchedules = useCallback(async (currentView: View, currentDateValue: Date) => {
     setLoading(true)
@@ -253,7 +255,7 @@ export default function AgendaPage() {
   }
 
   const handleSelectEvent = (event: any) => {
-    window.location.href = `/admin/agenda/${event.id}`
+    setSelectedScheduleId(event.id)
   }
 
   if (loading && schedules.length === 0) {
@@ -370,8 +372,8 @@ export default function AgendaPage() {
           />
         </div>
 
-        {/* Sidebar */}
-        {sideView !== 'none' && (
+               {/* Sidebar */}
+               {sideView !== 'none' && (
           <div className="w-80 bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-slate-900 capitalize">
@@ -395,10 +397,10 @@ export default function AgendaPage() {
                   dayClasses.map((s) => {
                     const status = getScheduleStatus(s)
                     return (
-                      <Link
+                      <button
                         key={s.id}
-                        href={`/admin/agenda/${s.id}`}
-                        className="block p-3 rounded-lg border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all"
+                        onClick={() => setSelectedScheduleId(s.id)}
+                        className="w-full text-left block p-3 rounded-lg border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all"
                       >
                         <div className="flex items-center justify-between">
                           <span className="font-medium text-slate-900 text-sm">{s.activity.name}</span>
@@ -410,7 +412,7 @@ export default function AgendaPage() {
                           <span className="flex items-center gap-1"><Clock size={12} /> {s.startTime.slice(0,5)} - {s.endTime.slice(0,5)}</span>
                           {s.room && <span className="flex items-center gap-1"><MapPin size={12} /> {s.room}</span>}
                         </div>
-                      </Link>
+                      </button>
                     )
                   })
                 )
@@ -419,10 +421,10 @@ export default function AgendaPage() {
                   <p className="text-sm text-slate-400 text-center py-8">Sin clases próximas</p>
                 ) : (
                   upcomingClasses.map((s) => (
-                    <Link
+                    <button
                       key={s.id}
-                      href={`/admin/agenda/${s.id}`}
-                      className="block p-3 rounded-lg border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all"
+                      onClick={() => setSelectedScheduleId(s.id)}
+                      className="w-full text-left block p-3 rounded-lg border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all"
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-slate-900 text-sm">{s.activity.name}</span>
@@ -435,7 +437,7 @@ export default function AgendaPage() {
                         <span className="flex items-center gap-1"><Users size={12} /> {s.bookings.length}/{s.maxCapacity}</span>
                         {s.room && <span className="flex items-center gap-1"><MapPin size={12} /> {s.room}</span>}
                       </div>
-                    </Link>
+                    </button>
                   ))
                 )
               )}
@@ -443,6 +445,14 @@ export default function AgendaPage() {
           </div>
         )}
       </div>
+
+      {selectedScheduleId && (
+        <ScheduleDetailModal
+          scheduleId={selectedScheduleId}
+          onClose={() => setSelectedScheduleId(null)}
+          onChanged={() => fetchSchedules(view, currentDate)}
+        />
+      )}
     </div>
   )
 }

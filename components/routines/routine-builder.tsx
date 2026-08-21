@@ -75,7 +75,7 @@ interface RoutineBuilderProps {
   defaultMemberId?: string   // ← nuevo
 }
 
-export function RoutineBuilder({ members, initialData }: RoutineBuilderProps) {
+export function RoutineBuilder({ members, initialData, defaultMemberId }: RoutineBuilderProps) {
   const router = useRouter()
   const isEditing = !!initialData
 

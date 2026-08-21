@@ -20,6 +20,7 @@ import {
   BarChart3,
   FileText,
   ChevronDown,
+  Settings,   // ← agregar
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -62,6 +63,12 @@ const navGroups = [
     items: [
       { href: '/admin/estadisticas', label: 'Estadísticas', icon: BarChart3 },
       { href: '/admin/reportes', label: 'Reportes', icon: FileText },
+    ],
+  },
+  {
+    title: 'Sistema',
+    items: [
+      { href: '/admin/configuracion', label: 'Configuración', icon: Settings },
     ],
   },
 ]

@@ -212,6 +212,59 @@ function ClientesListado({
 }: any) {
   if (loading) return <div className="p-8 text-center text-slate-500">Cargando clientes...</div>
 
+// components/admin/clientes/ClientesListado.tsx (o donde esté el componente)
+// Agregar esta función arriba del return, junto a las demás funciones del componente:
+
+function exportarCSV(members: Member[]) {
+  const headers = [
+    'Nombre', 'Apellido', 'DNI', 'Email', 'Teléfono',
+    'Ciudad', 'Estado', 'Membresía', 'Vence', 'Fecha de alta',
+  ]
+
+  const rows = members.map(m => {
+    const activeMembership = m.memberships.find(mem => mem.status === 'ACTIVE')
+    return [
+      m.firstName,
+      m.lastName,
+      m.dni,
+      m.email,
+      m.phone,
+      m.city || '',
+      m.status,
+      activeMembership?.plan.name || '',
+      activeMembership
+        ? new Date(activeMembership.endDate).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })
+        : '',
+      new Date(m.createdAt).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }),
+    ]
+  })
+
+  // Escapar valores con comas, comillas o saltos de línea
+  function escapeCSV(value: string) {
+    if (/[",\n]/.test(value)) {
+      return `"${value.replace(/"/g, '""')}"`
+    }
+    return value
+  }
+
+  const csvContent = [headers, ...rows]
+    .map(row => row.map(v => escapeCSV(String(v))).join(','))
+    .join('\n')
+
+  // BOM para que Excel reconozca UTF-8 (tildes, ñ) correctamente
+  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  const fecha = new Date().toISOString().split('T')[0]
+
+  link.href = url
+  link.download = `clientes-cultiva-${fecha}.csv`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
   return (
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
       {/* Toolbar */}
@@ -249,9 +302,14 @@ function ClientesListado({
             ))}
           </select>
         )}
-        <Button variant="outline" size="sm" className="gap-2 h-9">
-          <Download size={14} /> Exportar CSV
-        </Button>
+        <Button
+  variant="outline"
+  size="sm"
+  className="gap-2"
+  onClick={() => exportarCSV(members)}
+>
+  <Download size={14} /> Exportar CSV
+</Button>
       </div>
 
       {/* Table */}

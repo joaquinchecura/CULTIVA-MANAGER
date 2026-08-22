@@ -25,6 +25,7 @@ interface Booking {
 
 interface ScheduleDetail {
   id: string
+  activityId: string 
   date: string
   startTime: string
   endTime: string
@@ -258,10 +259,10 @@ export default function ScheduleDetailModal({
 
             {/* Footer */}
             <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
-              <Link
-                href={`/admin/estadisticas/clases?activityId=${schedule.id}`}
-                className="text-xs text-blue-600 hover:underline flex items-center gap-1"
-              >
+            <Link
+  href={`/admin/estadisticas/clases?activityId=${schedule.activityId}`}
+  className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+>
                 <TrendingUp size={13} /> Ver estadísticas completas
               </Link>
               <Button variant="outline" size="sm" onClick={onClose}>Cerrar</Button>

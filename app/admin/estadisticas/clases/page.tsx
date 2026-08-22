@@ -2,21 +2,33 @@ export const dynamic = 'force-dynamic'
 
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
-import { ArrowLeft, TrendingUp, Users, CheckCircle2, XCircle, Dumbbell } from 'lucide-react'
+import {
+  ArrowLeft, TrendingUp, Users, CheckCircle2, XCircle,
+  Dumbbell, ChevronRight,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-export default async function EstadisticasClasesPage() {
+export default async function EstadisticasClasesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ activityId?: string }>
+}) {
+  const params = await searchParams
   const now = new Date()
 
   const schedules = await prisma.schedule.findMany({
-    where: { isCancelled: false, date: { lt: now } },
+    where: {
+      isCancelled: false,
+      date: { lt: now },
+      maxCapacity: { gt: 1 },   // ← solo clases grupales, no PT
+    },
     include: { activity: true, bookings: true },
     orderBy: { date: 'desc' },
     take: 200,
   })
 
-  // Agregación por actividad
   const byActivity = new Map<string, {
+    id: string
     name: string
     totalClasses: number
     totalBookings: number
@@ -27,11 +39,8 @@ export default async function EstadisticasClasesPage() {
   schedules.forEach(s => {
     if (!byActivity.has(s.activityId)) {
       byActivity.set(s.activityId, {
-        name: s.activity.name,
-        totalClasses: 0,
-        totalBookings: 0,
-        completed: 0,
-        noShow: 0,
+        id: s.activityId, name: s.activity.name,
+        totalClasses: 0, totalBookings: 0, completed: 0, noShow: 0,
       })
     }
     const entry = byActivity.get(s.activityId)!
@@ -56,6 +65,41 @@ export default async function EstadisticasClasesPage() {
     ? Math.round((totalCompleted / (totalCompleted + totalNoShow)) * 100)
     : 0
 
+  // Drill-down: clientes de una actividad específica
+  let clientBreakdown: { name: string; completed: number; noShow: number; rate: number }[] = []
+  let selectedActivityName = ''
+
+  if (params.activityId) {
+    const activity = await prisma.activity.findUnique({ where: { id: params.activityId } })
+    selectedActivityName = activity?.name || ''
+
+    const activityBookings = await prisma.booking.findMany({
+      where: {
+        schedule: {
+          activityId: params.activityId,
+          isCancelled: false,
+          date: { lt: now },
+          maxCapacity: { gt: 1 },
+        },
+        status: { in: ['COMPLETED', 'NO_SHOW'] },
+      },
+      include: { member: { select: { firstName: true, lastName: true } } },
+    })
+
+    const byMember = new Map<string, { name: string; completed: number; noShow: number }>()
+    activityBookings.forEach(b => {
+      const name = `${b.member.firstName} ${b.member.lastName}`
+      if (!byMember.has(name)) byMember.set(name, { name, completed: 0, noShow: 0 })
+      const e = byMember.get(name)!
+      if (b.status === 'COMPLETED') e.completed++
+      if (b.status === 'NO_SHOW') e.noShow++
+    })
+
+    clientBreakdown = Array.from(byMember.values())
+      .map(m => ({ ...m, rate: m.completed + m.noShow > 0 ? Math.round((m.completed / (m.completed + m.noShow)) * 100) : 0 }))
+      .sort((a, b) => b.completed - a.completed)
+  }
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <div className="flex items-center gap-3">
@@ -65,7 +109,7 @@ export default async function EstadisticasClasesPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Estadísticas de clases</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Estadísticas de clases grupales</h1>
           <p className="text-sm text-slate-500">Últimas {totalClasses} clases finalizadas</p>
         </div>
       </div>
@@ -102,7 +146,7 @@ export default async function EstadisticasClasesPage() {
         </div>
       </div>
 
-      {/* Por actividad */}
+      {/* Por actividad — cada fila lleva al drill-down */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100">
           <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">
@@ -116,7 +160,13 @@ export default async function EstadisticasClasesPage() {
         ) : (
           <div className="divide-y divide-slate-50">
             {activityStats.map(a => (
-              <div key={a.name} className="px-5 py-4 flex items-center gap-4">
+              <Link
+                key={a.id}
+                href={`/admin/estadisticas/clases?activityId=${a.id}`}
+                className={`px-5 py-4 flex items-center gap-4 hover:bg-slate-50 transition-colors ${
+                  params.activityId === a.id ? 'bg-blue-50/60' : ''
+                }`}
+              >
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-slate-900">{a.name}</p>
                   <p className="text-xs text-slate-400 mt-0.5">
@@ -138,11 +188,45 @@ export default async function EstadisticasClasesPage() {
                     />
                   </div>
                 </div>
-              </div>
+                <ChevronRight size={16} className="text-slate-300 shrink-0" />
+              </Link>
             ))}
           </div>
         )}
       </div>
+
+      {/* Drill-down: clientes de la actividad seleccionada */}
+      {params.activityId && (
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <Users size={15} className="text-blue-600" />
+              Clientes — {selectedActivityName}
+            </h3>
+            <Link href="/admin/estadisticas/clases" className="text-xs text-blue-600 hover:underline">
+              Ver todas las actividades
+            </Link>
+          </div>
+          {clientBreakdown.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 text-sm">
+              Sin asistencia marcada todavía para esta actividad
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-50">
+              {clientBreakdown.map(c => (
+                <div key={c.name} className="px-5 py-3 flex items-center justify-between">
+                  <p className="text-sm font-medium text-slate-900">{c.name}</p>
+                  <div className="flex items-center gap-3 text-xs">
+                    <span className="text-emerald-600 font-semibold">{c.completed} ✓</span>
+                    <span className="text-red-500">{c.noShow} ausente</span>
+                    <span className="text-slate-400 w-10 text-right">{c.rate}%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

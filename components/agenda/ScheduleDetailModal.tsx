@@ -141,13 +141,13 @@ export default function ScheduleDetailModal({
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-sm text-slate-500 flex-wrap">
-                    <span className="flex items-center gap-1">
-                      <CalendarIcon size={13} />
-                      {new Date(schedule.date).toLocaleDateString('es-AR', {
-                        weekday: 'long', day: 'numeric', month: 'long',
-                        timeZone: 'America/Argentina/Buenos_Aires',
-                      })}
-                    </span>
+                  <span className="flex items-center gap-1">
+  <CalendarIcon size={13} />
+  {new Date(schedule.date).toLocaleDateString('es-AR', {
+    weekday: 'long', day: 'numeric', month: 'long',
+    timeZone: 'UTC',
+  })}
+</span>
                     <span className="flex items-center gap-1">
                       <Clock size={13} /> {schedule.startTime.slice(0,5)} - {schedule.endTime.slice(0,5)}
                     </span>

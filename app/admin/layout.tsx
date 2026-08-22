@@ -20,7 +20,8 @@ import {
   BarChart3,
   FileText,
   ChevronDown,
-  Settings,   // ← agregar
+  Settings,  
+  UserCircle2, 
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -55,6 +56,7 @@ const navGroups = [
     title: 'Operaciones',
     items: [
       { href: '/admin/agenda', label: 'Agenda', icon: CalendarDays },
+      { href: '/admin/agenda-pt', label: 'Agenda Personal', icon: UserCircle2 },
       { href: '/admin/acceso', label: 'Acceso', icon: Scan },
     ],
   },

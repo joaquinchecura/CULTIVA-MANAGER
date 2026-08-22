@@ -1,43 +1,90 @@
 export const dynamic = 'force-dynamic'
 
 import { prisma } from '@/lib/prisma'
-import { startOfWeek, endOfWeek, addDays, format } from 'date-fns'
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, addMonths, format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import Link from 'next/link'
-import { Users, Clock, MapPin, Plus, TrendingUp, UserCircle2 } from 'lucide-react'
+import { Plus, TrendingUp, UserCircle2, LayoutGrid, List } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getSessionLabel } from '@/lib/pt-session'
 import PTSessionRow from '@/components/agenda-pt/PTSessionRow'
-
-const STATUS_COLOR: Record<string, string> = {
-  CONFIRMED: 'border-l-blue-500 bg-blue-50/40',
-  COMPLETED: 'border-l-emerald-500 bg-emerald-50/40',
-  CANCELLED: 'border-l-red-500 bg-red-50/40 opacity-60',
-  NO_SHOW: 'border-l-amber-500 bg-amber-50/40',
-}
-
-const STATUS_LABEL: Record<string, { label: string; badge: string }> = {
-  CONFIRMED: { label: 'Reservada', badge: 'bg-blue-100 text-blue-700' },
-  COMPLETED: { label: 'Realizada', badge: 'bg-emerald-100 text-emerald-700' },
-  CANCELLED: { label: 'Cancelada', badge: 'bg-red-100 text-red-700' },
-  NO_SHOW:   { label: 'Ausente',   badge: 'bg-amber-100 text-amber-700' },
-}
+import PTMonthCalendar from '@/components/agenda-pt/PTMonthCalendar'
+import { cn } from '@/lib/utils'
 
 export default async function AgendaPTPage({
   searchParams,
 }: {
-  searchParams: Promise<{ week?: string }>
+  searchParams: Promise<{ week?: string; month?: string; view?: string }>
 }) {
   const params = await searchParams
+  const isMonthView = params.view === 'month'
+
+  if (isMonthView) {
+    const baseDate = params.month ? new Date(params.month) : new Date()
+    const start = startOfMonth(baseDate)
+    const end = endOfMonth(baseDate)
+
+    const schedules = await prisma.schedule.findMany({
+      where: { maxCapacity: 1, date: { gte: start, lte: end } },
+      include: {
+        activity: true,
+        bookings: {
+          include: { member: { select: { firstName: true, lastName: true } } },
+        },
+      },
+      orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
+    })
+
+    const prevMonth = format(addMonths(start, -1), 'yyyy-MM-dd')
+    const nextMonth = format(addMonths(start, 1), 'yyyy-MM-dd')
+
+    return (
+      <div className="space-y-5 max-w-5xl mx-auto">
+        <Header />
+        <ViewToggle current="month" />
+
+        <div className="flex items-center gap-2">
+          <Link href={`/admin/agenda-pt?view=month&month=${prevMonth}`}>
+            <Button variant="outline" size="sm">← Mes anterior</Button>
+          </Link>
+          <Link href="/admin/agenda-pt?view=month">
+            <Button variant="outline" size="sm">Hoy</Button>
+          </Link>
+          <Link href={`/admin/agenda-pt?view=month&month=${nextMonth}`}>
+            <Button variant="outline" size="sm">Mes siguiente →</Button>
+          </Link>
+          <span className="ml-auto text-sm text-slate-500 capitalize">
+            {format(start, "MMMM yyyy", { locale: es })}
+          </span>
+        </div>
+
+        <Legend />
+
+        <PTMonthCalendar
+          schedules={schedules.map(s => ({
+            id: s.id,
+            date: s.date.toISOString(),
+            startTime: s.startTime,
+            endTime: s.endTime,
+            activity: s.activity,
+            bookings: s.bookings.map(b => ({ status: b.status, member: b.member })),
+          }))}
+        />
+
+        <p className="text-xs text-slate-400 text-center">
+          Click en una sesión para ir a su semana y gestionarla
+        </p>
+      </div>
+    )
+  }
+
+  // ── Vista semanal (default) ──
   const baseDate = params.week ? new Date(params.week) : new Date()
   const start = startOfWeek(baseDate, { weekStartsOn: 1 })
   const end = endOfWeek(baseDate, { weekStartsOn: 1 })
 
   const schedules = await prisma.schedule.findMany({
-    where: {
-      maxCapacity: 1,
-      date: { gte: start, lte: end },
-    },
+    where: { maxCapacity: 1, date: { gte: start, lte: end } },
     include: {
       activity: true,
       bookings: {
@@ -47,7 +94,6 @@ export default async function AgendaPTPage({
     orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
   })
 
-  // Enriquecer con el label de sesión
   const enriched = await Promise.all(
     schedules.map(async (s) => {
       const booking = s.bookings[0]
@@ -73,31 +119,13 @@ export default async function AgendaPTPage({
 
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <UserCircle2 size={24} className="text-blue-600" />
-            Agenda Personal Trainer
-          </h1>
-          <p className="text-sm text-slate-500 mt-1 capitalize">
-            {format(start, "d 'de' MMMM", { locale: es })} — {format(end, "d 'de' MMMM yyyy", { locale: es })}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Link href="/admin/estadisticas/personal">
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <TrendingUp size={14} /> Estadísticas
-            </Button>
-          </Link>
-          <Link href="/admin/agenda-pt/nueva">
-            <Button size="sm" className="gap-1.5">
-              <Plus size={14} /> Nueva sesión
-            </Button>
-          </Link>
-        </div>
-      </div>
+      <Header />
+      <ViewToggle current="week" />
 
-      {/* Navegación de semana */}
+      <p className="text-sm text-slate-500 capitalize -mt-2">
+        {format(start, "d 'de' MMMM", { locale: es })} — {format(end, "d 'de' MMMM yyyy", { locale: es })}
+      </p>
+
       <div className="flex items-center gap-2">
         <Link href={`/admin/agenda-pt?week=${prevWeek}`}>
           <Button variant="outline" size="sm">← Semana anterior</Button>
@@ -110,15 +138,8 @@ export default async function AgendaPTPage({
         </Link>
       </div>
 
-      {/* Leyenda */}
-      <div className="flex items-center gap-4 text-xs text-slate-500 bg-white border border-slate-200 rounded-xl px-4 py-2.5">
-        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> Reservada</span>
-        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> Realizada</span>
-        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-500" /> Cancelada</span>
-        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> Ausente</span>
-      </div>
+      <Legend />
 
-      {/* Días */}
       <div className="space-y-4">
         {Array.from(byDay.entries()).map(([dateKey, items]) => (
           <div key={dateKey} className="bg-white border border-slate-200 rounded-xl overflow-hidden">
@@ -149,6 +170,71 @@ export default async function AgendaPTPage({
           </div>
         ))}
       </div>
+    </div>
+  )
+}
+
+// ── Subcomponentes compartidos ──────────────────────────────────────────
+
+function Header() {
+  return (
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <UserCircle2 size={24} className="text-blue-600" />
+          Agenda Personal Trainer
+        </h1>
+      </div>
+      <div className="flex gap-2">
+        <Link href="/admin/estadisticas/personal">
+          <Button variant="outline" size="sm" className="gap-1.5">
+            <TrendingUp size={14} /> Estadísticas
+          </Button>
+        </Link>
+        <Link href="/admin/agenda-pt/nueva">
+          <Button size="sm" className="gap-1.5">
+            <Plus size={14} /> Nueva sesión
+          </Button>
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+function ViewToggle({ current }: { current: 'week' | 'month' }) {
+  return (
+    <div className="flex bg-slate-100 rounded-lg p-1 w-fit">
+      <Link href="/admin/agenda-pt">
+        <button
+          className={cn(
+            'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all',
+            current === 'week' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600 hover:text-slate-900'
+          )}
+        >
+          <List size={14} /> Semana
+        </button>
+      </Link>
+      <Link href="/admin/agenda-pt?view=month">
+        <button
+          className={cn(
+            'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all',
+            current === 'month' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600 hover:text-slate-900'
+          )}
+        >
+          <LayoutGrid size={14} /> Mes
+        </button>
+      </Link>
+    </div>
+  )
+}
+
+function Legend() {
+  return (
+    <div className="flex items-center gap-4 text-xs text-slate-500 bg-white border border-slate-200 rounded-xl px-4 py-2.5">
+      <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> Reservada</span>
+      <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> Realizada</span>
+      <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-500" /> Cancelada</span>
+      <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> Ausente</span>
     </div>
   )
 }

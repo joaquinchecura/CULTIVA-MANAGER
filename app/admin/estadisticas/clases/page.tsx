@@ -20,7 +20,7 @@ export default async function EstadisticasClasesPage({
     where: {
       isCancelled: false,
       date: { lt: now },
-      mactivity: { type: 'GROUP' }
+      activity: { type: 'GROUP' }
     },
     include: { activity: true, bookings: true },
     orderBy: { date: 'desc' },

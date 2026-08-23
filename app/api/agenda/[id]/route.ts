@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { z } from 'zod'
 
 export async function GET(
   request: Request,
@@ -60,6 +61,44 @@ export async function GET(
     })
   } catch (error) {
     console.error('Error fetching schedule detail:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+// Agregar al final del archivo, después del GET existente
+
+const updateSchema = z.object({
+  date: z.string().optional(),
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
+  room: z.string().optional(),
+  maxCapacity: z.number().int().positive().optional(),
+  isCancelled: z.boolean().optional(),
+})
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const body = await request.json()
+    const data = updateSchema.parse(body)
+
+    const schedule = await prisma.schedule.update({
+      where: { id },
+      data: {
+        ...data,
+        date: data.date ? new Date(data.date) : undefined,
+      },
+    })
+
+    return NextResponse.json(schedule)
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.errors }, { status: 400 })
+    }
+    console.error('Error updating schedule:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

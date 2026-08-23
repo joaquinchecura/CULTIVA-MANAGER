@@ -114,6 +114,24 @@ export default function ScheduleDetailModal({
     }
   }
 
+  async function cancelSchedule() {
+    if (!confirm('¿Cancelar esta clase completa? Los clientes anotados quedarán notificados de la cancelación.')) return
+    setUpdatingId('schedule')
+    try {
+      const res = await fetch(`/api/agenda/${scheduleId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isCancelled: true }),
+      })
+      if (res.ok) {
+        await fetchDetail()
+        onChanged?.()
+      }
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
   const status = schedule ? getStatus(schedule) : null
   const isFinalized = status === 'finalizada'
   const activeBookings = schedule?.bookings.filter(b => b.status !== 'CANCELLED') ?? []
@@ -256,16 +274,28 @@ export default function ScheduleDetailModal({
                 </div>
               )}
             </div>
-
             {/* Footer */}
             <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
-            <Link
-  href={`/admin/estadisticas/clases?activityId=${schedule.activityId}`}
-  className="text-xs text-blue-600 hover:underline flex items-center gap-1"
->
+              <Link
+                href={`/admin/estadisticas/clases?activityId=${schedule.activityId}`}
+                className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+              >
                 <TrendingUp size={13} /> Ver estadísticas completas
               </Link>
-              <Button variant="outline" size="sm" onClick={onClose}>Cerrar</Button>
+              <div className="flex gap-2">
+                {status !== 'cancelada' && status !== 'finalizada' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={cancelSchedule}
+                    disabled={updatingId === 'schedule'}
+                    className="text-red-600 border-red-200 hover:bg-red-50"
+                  >
+                    Cancelar clase
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" onClick={onClose}>Cerrar</Button>
+              </div>
             </div>
           </>
         )}

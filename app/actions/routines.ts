@@ -128,22 +128,27 @@ export async function createRoutine(data: CreateRoutineInput) {
 export async function updateRoutine(id: string, data: CreateRoutineInput) {
   await getCurrentTrainer()
 
-  // Borrar sesiones existentes y recrear
-  await prisma.routineDay.deleteMany({ where: { routineId: id } })
+  // Reconstruir la estructura completa deseada (igual que createRoutine)
+  const newDays: {
+    sessionNumber: number
+    weekNumber: number
+    dayOfWeek: number
+    dayName: string
+    order: number
+    exercises: RoutineExerciseInput[]
+  }[] = []
 
-  const days: Parameters<typeof createRoutine>[0]['weekTemplate'] extends any ? any[] : never[] = []
   let sessionNumber = 1
-
   for (let week = 1; week <= data.totalWeeks; week++) {
     for (const session of data.weekTemplate) {
       const overrides = data.weightOverrides[sessionNumber] || {}
-      days.push({
+      newDays.push({
         sessionNumber,
         weekNumber: week,
         dayOfWeek: session.dayOfWeek,
         dayName: buildSessionName(sessionNumber),
         order: sessionNumber - 1,
-        exercises: session.exercises.map((ex: RoutineExerciseInput, idx: number) => ({
+        exercises: session.exercises.map((ex, idx) => ({
           ...ex,
           targetWeight: overrides[idx] !== undefined ? overrides[idx] : ex.targetWeight,
         })),
@@ -152,6 +157,86 @@ export async function updateRoutine(id: string, data: CreateRoutineInput) {
     }
   }
 
+  // Días que ya existen en la base para esta rutina
+  const existingDays = await prisma.routineDay.findMany({
+    where: { routineId: id },
+    select: { id: true, sessionNumber: true },
+  })
+  const existingBySession = new Map(existingDays.map(d => [d.sessionNumber, d.id]))
+  const newSessionNumbers = new Set(newDays.map(d => d.sessionNumber))
+
+  // 1. Actualizar en el lugar los días que ya existen (conserva SessionLog/progreso)
+  //    y crear los que sean nuevos (ej. si se agregaron semanas)
+  for (const day of newDays) {
+    const existingId = existingBySession.get(day.sessionNumber)
+
+    if (existingId) {
+      await prisma.routineDay.update({
+        where: { id: existingId },
+        data: {
+          weekNumber: day.weekNumber,
+          dayOfWeek: day.dayOfWeek,
+          dayName: day.dayName,
+          order: day.order,
+        },
+      })
+      // Los ejercicios sí se pueden reemplazar libremente: ProgressLog
+      // no depende de RoutineExercise, así que no se pierde nada
+      await prisma.routineExercise.deleteMany({ where: { dayId: existingId } })
+      await prisma.routineExercise.createMany({
+        data: day.exercises.map((ex, idx) => ({
+          dayId: existingId,
+          exerciseId: ex.exerciseId,
+          sets: ex.sets,
+          reps: ex.reps,
+          targetWeight: ex.targetWeight ?? null,
+          rest: ex.rest ?? null,
+          order: idx,
+          notes: ex.notes ?? null,
+        })),
+      })
+    } else {
+      await prisma.routineDay.create({
+        data: {
+          routineId: id,
+          sessionNumber: day.sessionNumber,
+          weekNumber: day.weekNumber,
+          dayOfWeek: day.dayOfWeek,
+          dayName: day.dayName,
+          order: day.order,
+          exercises: {
+            create: day.exercises.map((ex, idx) => ({
+              exerciseId: ex.exerciseId,
+              sets: ex.sets,
+              reps: ex.reps,
+              targetWeight: ex.targetWeight ?? null,
+              rest: ex.rest ?? null,
+              order: idx,
+              notes: ex.notes ?? null,
+            })),
+          },
+        },
+      })
+    }
+  }
+
+  // 2. Días que sobran (ej. se redujo la cantidad de semanas): se intentan borrar.
+  //    Si el cliente ya tiene sesiones/progreso ahí, no se puede sin perder historial
+  //    — se dejan como están (quedan fuera del rango de semanas actual, invisibles
+  //    para el cliente porque su vista solo itera hasta totalWeeks).
+  const staleDayIds = existingDays
+    .filter(d => !newSessionNumbers.has(d.sessionNumber))
+    .map(d => d.id)
+
+  for (const dayId of staleDayIds) {
+    try {
+      await prisma.routineDay.delete({ where: { id: dayId } })
+    } catch {
+      // tiene SessionLog asociado — se preserva intacto
+    }
+  }
+
+  // 3. Datos generales de la rutina
   const routine = await prisma.routine.update({
     where: { id },
     data: {
@@ -161,31 +246,12 @@ export async function updateRoutine(id: string, data: CreateRoutineInput) {
       frequencyPerWeek: data.frequencyPerWeek,
       totalWeeks: data.totalWeeks,
       memberId: data.memberId ?? null,
-      days: {
-        create: days.map((day) => ({
-          sessionNumber: day.sessionNumber,
-          weekNumber: day.weekNumber,
-          dayOfWeek: day.dayOfWeek,
-          dayName: day.dayName,
-          order: day.order,
-          exercises: {
-            create: day.exercises.map((ex: RoutineExerciseInput) => ({
-              exerciseId: ex.exerciseId,
-              sets: ex.sets,
-              reps: ex.reps,
-              targetWeight: ex.targetWeight ?? null,
-              rest: ex.rest ?? null,
-              order: ex.order,
-              notes: ex.notes ?? null,
-            })),
-          },
-        })),
-      },
     },
   })
 
   revalidatePath('/admin/rutinas')
   revalidatePath(`/admin/rutinas/${id}/editar`)
+  if (data.memberId) revalidatePath(`/admin/clientes/${data.memberId}`)
   return routine
 }
 

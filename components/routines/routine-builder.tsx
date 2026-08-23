@@ -264,44 +264,45 @@ export function RoutineBuilder({ members, initialData, defaultMemberId }: Routin
   const canStep2 = template.every(s => s.exercises.length > 0)
 
   // ── Save ──
-  async function handleSave() {
-    setSaving(true)
-    try {
-      const payload = {
-        memberId,
-        name,
-        description: description || null,
-        goal: goal || null,
-        frequencyPerWeek: freq,
-        totalWeeks,
-        weekTemplate: template.map(s => ({
-          dayOfWeek: s.dayOfWeek,
-          exercises: s.exercises.map((ex, idx) => ({
-            exerciseId: ex.exerciseId,
-            sets: ex.sets,
-            reps: ex.reps,
-            targetWeight: ex.targetWeight,
-            rest: ex.rest || null,
-            order: idx,
-            notes: ex.notes || null,
-          })),
+async function handleSave() {
+  setSaving(true)
+  try {
+    const payload = {
+      memberId: isTemplate ? null : memberId,
+      isTemplate,
+      name,
+      description: description || null,
+      goal: goal || null,
+      frequencyPerWeek: freq,
+      totalWeeks,
+      weekTemplate: template.map(s => ({
+        dayOfWeek: s.dayOfWeek,
+        exercises: s.exercises.map((ex, idx) => ({
+          exerciseId: ex.exerciseId,
+          sets: ex.sets,
+          reps: ex.reps,
+          targetWeight: ex.targetWeight,
+          rest: ex.rest || null,
+          order: idx,
+          notes: ex.notes || null,
         })),
-        weightOverrides,
-      }
-      if (isEditing) {
-        await updateRoutine(initialData.id, payload)
-      } else {
-        await createRoutine(payload)
-      }
-      router.push("/admin/rutinas")
-      router.refresh()
-    } catch (err) {
-      console.error(err)
-      alert("Error al guardar la rutina")
-    } finally {
-      setSaving(false)
+      })),
+      weightOverrides,
     }
+    if (isEditing) {
+      await updateRoutine(initialData.id, payload)
+    } else {
+      await createRoutine(payload)
+    }
+    router.push("/admin/rutinas")
+    router.refresh()
+  } catch (err) {
+    console.error(err)
+    alert("Error al guardar la rutina")
+  } finally {
+    setSaving(false)
   }
+}
 
   // ── Render ──
   return (

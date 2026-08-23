@@ -132,6 +132,25 @@ export default function ScheduleDetailModal({
     }
   }
 
+  async function deleteSchedule() {
+    const hasBookings = activeBookings.length > 0
+    const msg = hasBookings
+      ? `Esta clase tiene ${activeBookings.length} cliente(s) anotado(s). Eliminarla borra también sus reservas. ¿Continuar?`
+      : '¿Eliminar esta clase? Esta acción no se puede deshacer.'
+  
+    if (!confirm(msg)) return
+    setUpdatingId('schedule')
+    try {
+      const res = await fetch(`/api/agenda/${scheduleId}`, { method: 'DELETE' })
+      if (res.ok) {
+        onChanged?.()
+        onClose()
+      }
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
   const status = schedule ? getStatus(schedule) : null
   const isFinalized = status === 'finalizada'
   const activeBookings = schedule?.bookings.filter(b => b.status !== 'CANCELLED') ?? []
@@ -283,19 +302,29 @@ export default function ScheduleDetailModal({
                 <TrendingUp size={13} /> Ver estadísticas completas
               </Link>
               <div className="flex gap-2">
-                {status !== 'cancelada' && status !== 'finalizada' && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={cancelSchedule}
-                    disabled={updatingId === 'schedule'}
-                    className="text-red-600 border-red-200 hover:bg-red-50"
-                  >
-                    Cancelar clase
-                  </Button>
-                )}
-                <Button variant="outline" size="sm" onClick={onClose}>Cerrar</Button>
-              </div>
+  {status !== 'cancelada' && status !== 'finalizada' && (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={cancelSchedule}
+      disabled={updatingId === 'schedule'}
+      className="text-red-600 border-red-200 hover:bg-red-50"
+    >
+      Cancelar clase
+    </Button>
+  )}
+  <Button
+    variant="outline"
+    size="sm"
+    onClick={deleteSchedule}
+    disabled={updatingId === 'schedule'}
+    className="text-slate-500 border-slate-200 hover:bg-slate-50"
+    title="Eliminar por completo (para errores de carga)"
+  >
+    Eliminar
+  </Button>
+  <Button variant="outline" size="sm" onClick={onClose}>Cerrar</Button>
+</div>
             </div>
           </>
         )}

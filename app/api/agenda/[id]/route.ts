@@ -102,3 +102,19 @@ export async function PATCH(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+// Agregar al final del archivo, después del PATCH que ya tenés
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    await prisma.schedule.delete({ where: { id } })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Error deleting schedule:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

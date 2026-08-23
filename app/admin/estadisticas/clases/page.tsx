@@ -20,7 +20,7 @@ export default async function EstadisticasClasesPage({
     where: {
       isCancelled: false,
       date: { lt: now },
-      maxCapacity: { gt: 1 },   // ← solo clases grupales, no PT
+      mactivity: { type: 'GROUP' }
     },
     include: { activity: true, bookings: true },
     orderBy: { date: 'desc' },

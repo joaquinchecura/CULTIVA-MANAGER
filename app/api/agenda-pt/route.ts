@@ -59,7 +59,7 @@ export async function GET(request: Request) {
 
     const schedules = await prisma.schedule.findMany({
       where: {
-        maxCapacity: 1,
+        activity: { type: 'PERSONAL' },
         date: { gte: new Date(startDate), lte: new Date(endDate) },
       },
       include: {

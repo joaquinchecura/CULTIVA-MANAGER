@@ -42,7 +42,7 @@ export default function NuevaClasePage() {
 
   const fetchActivities = async () => {
     try {
-      const response = await fetch('/api/actividades')
+      const response = await fetch('/api/actividades?type=GROUP')
       if (response.ok) {
         const data = await response.json()
         setActivities(data.filter((a: Activity) => a.isActive !== false))

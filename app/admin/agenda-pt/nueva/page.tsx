@@ -26,7 +26,7 @@ export default function NuevaSesionPTPage() {
   useEffect(() => {
     Promise.all([
       fetch('/api/admin/clientes').then(r => r.json()),
-      fetch('/api/actividades').then(r => r.json()),
+      fetch('/api/actividades?type=PERSONAL').then(r => r.json()),
     ]).then(([m, a]) => {
       setMembers(m)
       setActivities(a)

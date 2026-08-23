@@ -5,12 +5,12 @@ import { z } from 'zod'
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
   description: z.string().optional(),
+  type: z.enum(['GROUP', 'PERSONAL']).optional(),
   defaultDuration: z.number().int().positive().optional(),
   maxCapacity: z.number().int().positive().optional(),
   isActive: z.boolean().optional(),
 })
 
-// FIX: params es Promise<{ id: string }> en Next.js 15
 export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -19,10 +19,13 @@ export async function PUT(
     const { id } = await params
     const body = await req.json()
     const data = updateSchema.parse(body)
-    
+
     const activity = await prisma.activity.update({
       where: { id },
-      data,
+      data: {
+        ...data,
+        maxCapacity: data.type === 'PERSONAL' ? 1 : data.maxCapacity,
+      },
     })
     return NextResponse.json(activity)
   } catch (error) {
@@ -40,7 +43,7 @@ export async function PATCH(
   try {
     const { id } = await params
     const body = await req.json()
-    
+
     const activity = await prisma.activity.update({
       where: { id },
       data: body,

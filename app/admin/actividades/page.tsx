@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import {
-  Dumbbell, Plus, Search, Filter, MoreHorizontal,
-  Edit2, Trash2, Clock, Users, Power, X, CheckCircle,
-  LayoutGrid, List, ArrowUpDown
+  Dumbbell, Plus, Search, Edit2, Trash2, Clock, Users, Power, X, CheckCircle,
+  LayoutGrid, List,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,6 +13,7 @@ interface Activity {
   id: string
   name: string
   description: string | null
+  type: 'GROUP' | 'PERSONAL'
   defaultDuration: number
   maxCapacity: number
   isActive: boolean
@@ -31,12 +31,14 @@ export default function ActividadesPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [search, setSearch] = useState('')
   const [filterActive, setFilterActive] = useState<'all' | 'active' | 'inactive'>('all')
+  const [filterType, setFilterType] = useState<'all' | 'GROUP' | 'PERSONAL'>('all')
   const [sortBy, setSortBy] = useState<'name' | 'duration' | 'capacity'>('name')
   const [saving, setSaving] = useState(false)
 
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    type: 'GROUP' as 'GROUP' | 'PERSONAL',
     defaultDuration: '60',
     maxCapacity: '20',
     isActive: true,
@@ -62,11 +64,8 @@ export default function ActividadesPage() {
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      description: '',
-      defaultDuration: '60',
-      maxCapacity: '20',
-      isActive: true,
+      name: '', description: '', type: 'GROUP',
+      defaultDuration: '60', maxCapacity: '20', isActive: true,
     })
     setEditingId(null)
   }
@@ -75,6 +74,7 @@ export default function ActividadesPage() {
     setFormData({
       name: activity.name,
       description: activity.description || '',
+      type: activity.type,
       defaultDuration: String(activity.defaultDuration),
       maxCapacity: String(activity.maxCapacity),
       isActive: activity.isActive,
@@ -144,16 +144,16 @@ export default function ActividadesPage() {
     }
   }
 
-  // Filtros y ordenamiento
   const filteredActivities = activities
     .filter(a => {
-      const matchesSearch = 
+      const matchesSearch =
         a.name.toLowerCase().includes(search.toLowerCase()) ||
         (a.description && a.description.toLowerCase().includes(search.toLowerCase()))
-      const matchesFilter = 
+      const matchesFilter =
         filterActive === 'all' ? true :
         filterActive === 'active' ? a.isActive : !a.isActive
-      return matchesSearch && matchesFilter
+      const matchesType = filterType === 'all' ? true : a.type === filterType
+      return matchesSearch && matchesFilter && matchesType
     })
     .sort((a, b) => {
       if (sortBy === 'name') return a.name.localeCompare(b.name)
@@ -219,6 +219,15 @@ export default function ActividadesPage() {
           />
         </div>
         <select
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value as any)}
+          className="h-9 px-3 border border-slate-200 rounded-lg text-sm bg-white text-slate-600"
+        >
+          <option value="all">Todos los tipos</option>
+          <option value="GROUP">Clases grupales</option>
+          <option value="PERSONAL">Personal trainer</option>
+        </select>
+        <select
           value={filterActive}
           onChange={(e) => setFilterActive(e.target.value as any)}
           className="h-9 px-3 border border-slate-200 rounded-lg text-sm bg-white text-slate-600"
@@ -265,6 +274,35 @@ export default function ActividadesPage() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
+              {/* Tipo — primera decisión del form */}
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-slate-700">Tipo de actividad *</Label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, type: 'GROUP' })}
+                    className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium border transition-all ${
+                      formData.type === 'GROUP'
+                        ? 'bg-blue-50 border-blue-300 text-blue-700'
+                        : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                    }`}
+                  >
+                    Clase grupal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, type: 'PERSONAL', maxCapacity: '1' })}
+                    className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium border transition-all ${
+                      formData.type === 'PERSONAL'
+                        ? 'bg-violet-50 border-violet-300 text-violet-700'
+                        : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                    }`}
+                  >
+                    Personal trainer
+                  </button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium text-slate-700">Nombre *</Label>
@@ -294,15 +332,17 @@ export default function ActividadesPage() {
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-slate-700">Cupo por defecto *</Label>
-                  <Input
-                    type="number"
-                    required
-                    value={formData.maxCapacity}
-                    onChange={(e) => setFormData({ ...formData, maxCapacity: e.target.value })}
-                  />
-                </div>
+                {formData.type === 'GROUP' && (
+                  <div className="space-y-1.5">
+                    <Label className="text-sm font-medium text-slate-700">Cupo por defecto *</Label>
+                    <Input
+                      type="number"
+                      required
+                      value={formData.maxCapacity}
+                      onChange={(e) => setFormData({ ...formData, maxCapacity: e.target.value })}
+                    />
+                  </div>
+                )}
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium text-slate-700">Estado</Label>
                   <div className="flex items-center gap-2 h-10">
@@ -366,17 +406,26 @@ export default function ActividadesPage() {
                   </button>
                 </div>
               </div>
-              <h3 className="text-lg font-bold text-slate-900">{activity.name}</h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-lg font-bold text-slate-900">{activity.name}</h3>
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                  activity.type === 'PERSONAL' ? 'bg-violet-50 text-violet-700' : 'bg-blue-50 text-blue-700'
+                }`}>
+                  {activity.type === 'PERSONAL' ? 'Personal' : 'Grupal'}
+                </span>
+              </div>
               <p className="text-sm text-slate-500 mt-1 line-clamp-2">{activity.description || 'Sin descripción'}</p>
               <div className="flex items-center gap-4 mt-4 text-sm text-slate-600">
                 <span className="flex items-center gap-1.5">
                   <Clock size={14} className="text-slate-400" />
                   {activity.defaultDuration} min
                 </span>
-                <span className="flex items-center gap-1.5">
-                  <Users size={14} className="text-slate-400" />
-                  {activity.maxCapacity} cupo
-                </span>
+                {activity.type === 'GROUP' && (
+                  <span className="flex items-center gap-1.5">
+                    <Users size={14} className="text-slate-400" />
+                    {activity.maxCapacity} cupo
+                  </span>
+                )}
               </div>
               <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
                 <button
@@ -405,6 +454,7 @@ export default function ActividadesPage() {
             <thead>
               <tr className="bg-slate-50 border-b border-slate-100">
                 <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Actividad</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Tipo</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Descripción</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Duración</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Cupo</th>
@@ -425,11 +475,18 @@ export default function ActividadesPage() {
                       <span className="font-medium text-slate-900">{activity.name}</span>
                     </div>
                   </td>
+                  <td className="px-5 py-4">
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                      activity.type === 'PERSONAL' ? 'bg-violet-50 text-violet-700' : 'bg-blue-50 text-blue-700'
+                    }`}>
+                      {activity.type === 'PERSONAL' ? 'Personal' : 'Grupal'}
+                    </span>
+                  </td>
                   <td className="px-5 py-4 text-slate-500 text-xs max-w-[200px] truncate">
                     {activity.description || '—'}
                   </td>
                   <td className="px-5 py-4 text-slate-600">{activity.defaultDuration} min</td>
-                  <td className="px-5 py-4 text-slate-600">{activity.maxCapacity}</td>
+                  <td className="px-5 py-4 text-slate-600">{activity.type === 'GROUP' ? activity.maxCapacity : '—'}</td>
                   <td className="px-5 py-4">
                     <button
                       onClick={() => handleToggleActive(activity.id, activity.isActive)}

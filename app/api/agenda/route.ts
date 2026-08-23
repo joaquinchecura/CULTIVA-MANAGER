@@ -41,14 +41,14 @@ export async function GET(request: Request) {
     }
 
     const schedules = await prisma.schedule.findMany({
-      where,
-      include: {
-        activity: true,
-        bookings: true,
+      where: {
+        ...where,
+        activity: { type: 'GROUP' },
       },
+      include: { activity: true, bookings: true },
       orderBy: { startTime: 'asc' },
     })
-
+    
     return NextResponse.json(schedules)
   } catch (error) {
     console.error('Error fetching schedules:', error)

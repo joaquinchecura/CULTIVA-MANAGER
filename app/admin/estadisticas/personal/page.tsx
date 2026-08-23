@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 
 export default async function EstadisticasPersonalPage() {
   const bookings = await prisma.booking.findMany({
-    where: { schedule: { maxCapacity: 1 } },
+    where: { schedule: { activity: { type: 'PERSONAL' } } },
     include: { member: true, schedule: true },
   })
 

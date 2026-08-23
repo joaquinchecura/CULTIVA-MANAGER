@@ -98,6 +98,11 @@ enum ExerciseType {
   OTHER
 }
 
+enum ActivityType {
+  GROUP
+  PERSONAL
+}
+
 // ============================================
 // 1. CONFIGURACIÓN DEL GIMNASIO
 // ============================================
@@ -218,6 +223,7 @@ model Activity {
   id              String     @id @default(cuid())
   name            String
   description     String?
+  type            ActivityType @default(GROUP)
   defaultDuration Int
   maxCapacity     Int
   color           String?

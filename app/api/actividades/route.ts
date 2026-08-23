@@ -5,13 +5,18 @@ import { z } from 'zod'
 const createActivitySchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
+  type: z.enum(['GROUP', 'PERSONAL']),
   defaultDuration: z.number().int().positive(),
   maxCapacity: z.number().int().positive(),
 })
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const type = searchParams.get('type')
+
     const activities = await prisma.activity.findMany({
+      where: type ? { type: type as 'GROUP' | 'PERSONAL' } : undefined,
       orderBy: { name: 'asc' },
     })
 
@@ -30,6 +35,7 @@ export async function POST(request: Request) {
     const activity = await prisma.activity.create({
       data: {
         ...validatedData,
+        maxCapacity: validatedData.type === 'PERSONAL' ? 1 : validatedData.maxCapacity,
         isActive: true,
       },
     })

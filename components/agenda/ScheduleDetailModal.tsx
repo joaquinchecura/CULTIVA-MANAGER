@@ -5,9 +5,11 @@ import Link from 'next/link'
 import {
   X, Clock, MapPin, Users, CheckCircle2, XCircle,
   UserX, TrendingUp, Loader2, Calendar as CalendarIcon,
+  Pencil, Save,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { Input } from '@/components/ui/input'
 
 interface BookingMember {
   id: string
@@ -70,6 +72,8 @@ export default function ScheduleDetailModal({
   const [schedule, setSchedule] = useState<ScheduleDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [editing, setEditing] = useState(false)
+  const [editForm, setEditForm] = useState({ startTime: '', endTime: '', room: '' })
 
   async function fetchDetail() {
     setLoading(true)
@@ -132,6 +136,39 @@ export default function ScheduleDetailModal({
     }
   }
 
+  // Agregar función, junto a cancelSchedule:
+function startEditing() {
+  if (!schedule) return
+  setEditForm({
+    startTime: schedule.startTime.slice(0, 5),
+    endTime: schedule.endTime.slice(0, 5),
+    room: schedule.room || '',
+  })
+  setEditing(true)
+}
+
+async function saveEdit() {
+  setUpdatingId('edit')
+  try {
+    const res = await fetch(`/api/agenda/${scheduleId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        startTime: editForm.startTime,
+        endTime: editForm.endTime,
+        room: editForm.room || null,
+      }),
+    })
+    if (res.ok) {
+      setEditing(false)
+      await fetchDetail()
+      onChanged?.()
+    }
+  } finally {
+    setUpdatingId(null)
+  }
+}
+
   async function deleteSchedule() {
     const hasBookings = activeBookings.length > 0
     const msg = hasBookings
@@ -168,38 +205,72 @@ export default function ScheduleDetailModal({
         ) : (
           <>
             {/* Header */}
-            <div className="px-6 py-5 border-b border-slate-100">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                    <h3 className="text-lg font-bold text-slate-900">{schedule.activity.name}</h3>
-                    <span className={cn('text-xs px-2 py-0.5 rounded-full border font-medium', STATUS_LABEL[status!].badge)}>
-                      {STATUS_LABEL[status!].label}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-slate-500 flex-wrap">
-                  <span className="flex items-center gap-1">
-  <CalendarIcon size={13} />
-  {new Date(schedule.date).toLocaleDateString('es-AR', {
-    weekday: 'long', day: 'numeric', month: 'long',
-    timeZone: 'UTC',
-  })}
-</span>
-                    <span className="flex items-center gap-1">
-                      <Clock size={13} /> {schedule.startTime.slice(0,5)} - {schedule.endTime.slice(0,5)}
-                    </span>
-                    {schedule.room && (
-                      <span className="flex items-center gap-1">
-                        <MapPin size={13} /> {schedule.room}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 shrink-0">
-                  <X size={18} />
-                </button>
-              </div>
+            <div className="flex items-center gap-3 text-sm text-slate-500 flex-wrap">
+  <span className="flex items-center gap-1">
+    <CalendarIcon size={13} />
+    {new Date(schedule.date).toLocaleDateString('es-AR', {
+      weekday: 'long', day: 'numeric', month: 'long',
+      timeZone: 'UTC',
+    })}
+  </span>
 
+  {editing ? (
+    <div className="flex items-center gap-2 flex-wrap w-full mt-1">
+      <Input
+        type="time"
+        value={editForm.startTime}
+        onChange={e => setEditForm(f => ({ ...f, startTime: e.target.value }))}
+        className="h-8 w-28 text-sm"
+      />
+      <span className="text-slate-400">a</span>
+      <Input
+        type="time"
+        value={editForm.endTime}
+        onChange={e => setEditForm(f => ({ ...f, endTime: e.target.value }))}
+        className="h-8 w-28 text-sm"
+      />
+      <Input
+        value={editForm.room}
+        onChange={e => setEditForm(f => ({ ...f, room: e.target.value }))}
+        placeholder="Sala"
+        className="h-8 w-32 text-sm"
+      />
+      <Button
+        size="sm"
+        onClick={saveEdit}
+        disabled={updatingId === 'edit'}
+        className="h-8 gap-1.5"
+      >
+        <Save size={13} /> Guardar
+      </Button>
+      <button
+        onClick={() => setEditing(false)}
+        className="text-xs text-slate-400 hover:text-slate-600 px-2"
+      >
+        Cancelar
+      </button>
+    </div>
+  ) : (
+    <>
+      <span className="flex items-center gap-1">
+        <Clock size={13} /> {schedule.startTime.slice(0,5)} - {schedule.endTime.slice(0,5)}
+      </span>
+      {schedule.room && (
+        <span className="flex items-center gap-1">
+          <MapPin size={13} /> {schedule.room}
+        </span>
+      )}
+      {status !== 'finalizada' && status !== 'cancelada' && (
+        <button
+          onClick={startEditing}
+          className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+        >
+          <Pencil size={11} /> Editar horario
+        </button>
+      )}
+    </>
+  )}
+</div>
               {/* Mini stats */}
               <div className="flex items-center gap-4 mt-4">
                 <div className="flex items-center gap-1.5 text-sm">
@@ -215,7 +286,6 @@ export default function ScheduleDetailModal({
                   </div>
                 )}
               </div>
-            </div>
 
             {/* Roster */}
             <div className="flex-1 overflow-y-auto px-6 py-4">

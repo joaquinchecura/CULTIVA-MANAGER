@@ -155,6 +155,7 @@ export default async function AgendaPTPage({
                 {items.map(({ schedule, booking, sessionInfo }) => (
                   <PTSessionRow
                     key={schedule.id}
+                    scheduleId={schedule.id}
                     bookingId={booking?.id ?? null}
                     memberName={booking ? `${booking.member.firstName} ${booking.member.lastName}` : 'Sin cliente'}
                     activityName={schedule.activity.name}

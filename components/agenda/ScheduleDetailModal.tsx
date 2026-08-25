@@ -27,7 +27,7 @@ interface Booking {
 
 interface ScheduleDetail {
   id: string
-  activityId: string 
+  activityId: string
   date: string
   startTime: string
   endTime: string
@@ -136,45 +136,44 @@ export default function ScheduleDetailModal({
     }
   }
 
-  // Agregar función, junto a cancelSchedule:
-function startEditing() {
-  if (!schedule) return
-  setEditForm({
-    startTime: schedule.startTime.slice(0, 5),
-    endTime: schedule.endTime.slice(0, 5),
-    room: schedule.room || '',
-  })
-  setEditing(true)
-}
-
-async function saveEdit() {
-  setUpdatingId('edit')
-  try {
-    const res = await fetch(`/api/agenda/${scheduleId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        startTime: editForm.startTime,
-        endTime: editForm.endTime,
-        room: editForm.room || null,
-      }),
+  function startEditing() {
+    if (!schedule) return
+    setEditForm({
+      startTime: schedule.startTime.slice(0, 5),
+      endTime: schedule.endTime.slice(0, 5),
+      room: schedule.room || '',
     })
-    if (res.ok) {
-      setEditing(false)
-      await fetchDetail()
-      onChanged?.()
-    }
-  } finally {
-    setUpdatingId(null)
+    setEditing(true)
   }
-}
+
+  async function saveEdit() {
+    setUpdatingId('edit')
+    try {
+      const res = await fetch(`/api/agenda/${scheduleId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          startTime: editForm.startTime,
+          endTime: editForm.endTime,
+          room: editForm.room || null,
+        }),
+      })
+      if (res.ok) {
+        setEditing(false)
+        await fetchDetail()
+        onChanged?.()
+      }
+    } finally {
+      setUpdatingId(null)
+    }
+  }
 
   async function deleteSchedule() {
     const hasBookings = activeBookings.length > 0
     const msg = hasBookings
       ? `Esta clase tiene ${activeBookings.length} cliente(s) anotado(s). Eliminarla borra también sus reservas. ¿Continuar?`
       : '¿Eliminar esta clase? Esta acción no se puede deshacer.'
-  
+
     if (!confirm(msg)) return
     setUpdatingId('schedule')
     try {
@@ -205,72 +204,86 @@ async function saveEdit() {
         ) : (
           <>
             {/* Header */}
-            <div className="flex items-center gap-3 text-sm text-slate-500 flex-wrap">
-  <span className="flex items-center gap-1">
-    <CalendarIcon size={13} />
-    {new Date(schedule.date).toLocaleDateString('es-AR', {
-      weekday: 'long', day: 'numeric', month: 'long',
-      timeZone: 'UTC',
-    })}
-  </span>
+            <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-base font-semibold text-slate-900">
+                  {schedule.activity.name}
+                </h2>
+                <button
+                  onClick={onClose}
+                  className="p-1 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
 
-  {editing ? (
-    <div className="flex items-center gap-2 flex-wrap w-full mt-1">
-      <Input
-        type="time"
-        value={editForm.startTime}
-        onChange={e => setEditForm(f => ({ ...f, startTime: e.target.value }))}
-        className="h-8 w-28 text-sm"
-      />
-      <span className="text-slate-400">a</span>
-      <Input
-        type="time"
-        value={editForm.endTime}
-        onChange={e => setEditForm(f => ({ ...f, endTime: e.target.value }))}
-        className="h-8 w-28 text-sm"
-      />
-      <Input
-        value={editForm.room}
-        onChange={e => setEditForm(f => ({ ...f, room: e.target.value }))}
-        placeholder="Sala"
-        className="h-8 w-32 text-sm"
-      />
-      <Button
-        size="sm"
-        onClick={saveEdit}
-        disabled={updatingId === 'edit'}
-        className="h-8 gap-1.5"
-      >
-        <Save size={13} /> Guardar
-      </Button>
-      <button
-        onClick={() => setEditing(false)}
-        className="text-xs text-slate-400 hover:text-slate-600 px-2"
-      >
-        Cancelar
-      </button>
-    </div>
-  ) : (
-    <>
-      <span className="flex items-center gap-1">
-        <Clock size={13} /> {schedule.startTime.slice(0,5)} - {schedule.endTime.slice(0,5)}
-      </span>
-      {schedule.room && (
-        <span className="flex items-center gap-1">
-          <MapPin size={13} /> {schedule.room}
-        </span>
-      )}
-      {status !== 'finalizada' && status !== 'cancelada' && (
-        <button
-          onClick={startEditing}
-          className="text-xs text-blue-600 hover:underline flex items-center gap-1"
-        >
-          <Pencil size={11} /> Editar horario
-        </button>
-      )}
-    </>
-  )}
-</div>
+              <div className="flex items-center gap-3 text-sm text-slate-500 flex-wrap">
+                <span className="flex items-center gap-1">
+                  <CalendarIcon size={13} />
+                  {new Date(schedule.date).toLocaleDateString('es-AR', {
+                    weekday: 'long', day: 'numeric', month: 'long',
+                    timeZone: 'UTC',
+                  })}
+                </span>
+
+                {editing ? (
+                  <div className="flex items-center gap-2 flex-wrap w-full mt-1">
+                    <Input
+                      type="time"
+                      value={editForm.startTime}
+                      onChange={e => setEditForm(f => ({ ...f, startTime: e.target.value }))}
+                      className="h-8 w-28 text-sm"
+                    />
+                    <span className="text-slate-400">a</span>
+                    <Input
+                      type="time"
+                      value={editForm.endTime}
+                      onChange={e => setEditForm(f => ({ ...f, endTime: e.target.value }))}
+                      className="h-8 w-28 text-sm"
+                    />
+                    <Input
+                      value={editForm.room}
+                      onChange={e => setEditForm(f => ({ ...f, room: e.target.value }))}
+                      placeholder="Sala"
+                      className="h-8 w-32 text-sm"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={saveEdit}
+                      disabled={updatingId === 'edit'}
+                      className="h-8 gap-1.5"
+                    >
+                      <Save size={13} /> Guardar
+                    </Button>
+                    <button
+                      onClick={() => setEditing(false)}
+                      className="text-xs text-slate-400 hover:text-slate-600 px-2"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <span className="flex items-center gap-1">
+                      <Clock size={13} /> {schedule.startTime.slice(0,5)} - {schedule.endTime.slice(0,5)}
+                    </span>
+                    {schedule.room && (
+                      <span className="flex items-center gap-1">
+                        <MapPin size={13} /> {schedule.room}
+                      </span>
+                    )}
+                    {status !== 'finalizada' && status !== 'cancelada' && (
+                      <button
+                        onClick={startEditing}
+                        className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                      >
+                        <Pencil size={11} /> Editar horario
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+
               {/* Mini stats */}
               <div className="flex items-center gap-4 mt-4">
                 <div className="flex items-center gap-1.5 text-sm">
@@ -286,6 +299,7 @@ async function saveEdit() {
                   </div>
                 )}
               </div>
+            </div>
 
             {/* Roster */}
             <div className="flex-1 overflow-y-auto px-6 py-4">
@@ -363,6 +377,7 @@ async function saveEdit() {
                 </div>
               )}
             </div>
+
             {/* Footer */}
             <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
               <Link
@@ -372,29 +387,29 @@ async function saveEdit() {
                 <TrendingUp size={13} /> Ver estadísticas completas
               </Link>
               <div className="flex gap-2">
-  {status !== 'cancelada' && status !== 'finalizada' && (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={cancelSchedule}
-      disabled={updatingId === 'schedule'}
-      className="text-red-600 border-red-200 hover:bg-red-50"
-    >
-      Cancelar clase
-    </Button>
-  )}
-  <Button
-    variant="outline"
-    size="sm"
-    onClick={deleteSchedule}
-    disabled={updatingId === 'schedule'}
-    className="text-slate-500 border-slate-200 hover:bg-slate-50"
-    title="Eliminar por completo (para errores de carga)"
-  >
-    Eliminar
-  </Button>
-  <Button variant="outline" size="sm" onClick={onClose}>Cerrar</Button>
-</div>
+                {status !== 'cancelada' && status !== 'finalizada' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={cancelSchedule}
+                    disabled={updatingId === 'schedule'}
+                    className="text-red-600 border-red-200 hover:bg-red-50"
+                  >
+                    Cancelar clase
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={deleteSchedule}
+                  disabled={updatingId === 'schedule'}
+                  className="text-slate-500 border-slate-200 hover:bg-slate-50"
+                  title="Eliminar por completo (para errores de carga)"
+                >
+                  Eliminar
+                </Button>
+                <Button variant="outline" size="sm" onClick={onClose}>Cerrar</Button>
+              </div>
             </div>
           </>
         )}

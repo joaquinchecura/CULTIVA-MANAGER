@@ -71,7 +71,7 @@ const updateSchema = z.object({
   date: z.string().optional(),
   startTime: z.string().optional(),
   endTime: z.string().optional(),
-  room: z.string().optional(),
+  room: z.string().nullable().optional(),   // ← antes: z.string().optional()
   maxCapacity: z.number().int().positive().optional(),
   isCancelled: z.boolean().optional(),
 })

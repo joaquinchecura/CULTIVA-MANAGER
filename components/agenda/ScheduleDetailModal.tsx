@@ -162,6 +162,10 @@ export default function ScheduleDetailModal({
         setEditing(false)
         await fetchDetail()
         onChanged?.()
+      } else {
+        const err = await res.json().catch(() => null)
+        console.error('Error al guardar el horario:', err)
+        alert('No se pudo guardar el horario. Revisá los datos e intentá de nuevo.')
       }
     } finally {
       setUpdatingId(null)

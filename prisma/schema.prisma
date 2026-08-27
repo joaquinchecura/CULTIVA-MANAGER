@@ -279,7 +279,10 @@ model Attendance {
   qrToken     String
   createdAt   DateTime @default(now())
   status      AttendanceStatus @default(PENDING)
-
+  userAgent    String?  // raw, por si el parser falla
+  deviceBrand  String?
+  deviceModel  String?
+  deviceOS     String?
   member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@map("attendances")

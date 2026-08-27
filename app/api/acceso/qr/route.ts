@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { randomBytes } from 'crypto'
+import { parseDeviceInfo } from '@/lib/parseDevice'
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
     const { userId } = await auth()
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -19,16 +20,22 @@ export async function POST() {
       return NextResponse.json({ error: 'Member not found' }, { status: 404 })
     }
 
-    // Generar token único
+    // El User-Agent acá es el del celular del cliente (quien está generando su QR)
+    const userAgent = request.headers.get('user-agent')
+    const { deviceBrand, deviceModel, deviceOS } = parseDeviceInfo(userAgent)
+
     const token = randomBytes(32).toString('hex')
     const expiresAt = new Date(Date.now() + 2 * 60 * 1000) // 2 minutos
 
-    // Guardar en attendance como QR pendiente
     await prisma.attendance.create({
       data: {
         memberId: member.id,
         qrToken: token,
         status: 'PENDING',
+        userAgent,
+        deviceBrand,
+        deviceModel,
+        deviceOS,
       },
     })
 

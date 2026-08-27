@@ -4,15 +4,13 @@ import { prisma } from '@/lib/prisma'
 export async function POST(request: Request) {
   try {
     const { qrData } = await request.json()
-    
-    // qrData = "memberId:token"
+
     const [memberId, token] = qrData.split(':')
-    
+
     if (!memberId || !token) {
       return NextResponse.json({ error: 'QR inválido' }, { status: 400 })
     }
 
-    // Buscar el attendance con ese token y status ALLOWED
     const attendance = await prisma.attendance.findFirst({
       where: {
         memberId,
@@ -26,12 +24,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'QR expirado o ya utilizado' }, { status: 400 })
     }
 
-    // Verificar que el token no haya expirado (2 minutos)
+    // entryTime acá todavía es la hora de GENERACIÓN del QR (seteada en generar-qr)
     const tokenAge = Date.now() - attendance.entryTime.getTime()
-    const maxAge = 2 * 60 * 1000 // 2 minutos
-    
+    const maxAge = 2 * 60 * 1000
+
     if (tokenAge > maxAge) {
-      // Invalidar token expirado
       await prisma.attendance.update({
         where: { id: attendance.id },
         data: { status: 'DENIED' },
@@ -39,7 +36,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'QR expirado' }, { status: 400 })
     }
 
-    // Verificar que el member tenga membresía activa
     const activeMembership = await prisma.membership.findFirst({
       where: {
         memberId,
@@ -49,26 +45,31 @@ export async function POST(request: Request) {
     })
 
     if (!activeMembership && attendance.member.status !== 'ACTIVE') {
-      return NextResponse.json({ 
+      await prisma.attendance.update({
+        where: { id: attendance.id },
+        data: { status: 'DENIED' },
+      })
+      return NextResponse.json({
         error: 'Membresía inactiva',
-        member: attendance.member 
+        member: attendance.member,
       }, { status: 403 })
     }
 
-    // Marcar asistencia como completada
+    // Ahora sí: entryTime pasa a ser la hora REAL del escaneo/ingreso
     await prisma.attendance.update({
       where: { id: attendance.id },
-      data: { status: 'ALLOWED' }, // Ya estaba ALLOWED, podríamos agregar un campo "scannedAt"
+      data: { status: 'ALLOWED', entryTime: new Date() },
     })
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       message: '✅ Acceso permitido',
       member: {
         name: `${attendance.member.firstName} ${attendance.member.lastName}`,
+        email: attendance.member.email,
         dni: attendance.member.dni,
         status: attendance.member.status,
-      }
+      },
     })
   } catch (error) {
     console.error('Error:', error)

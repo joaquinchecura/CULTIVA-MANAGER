@@ -524,14 +524,14 @@ function AccesosApp({ attendances, members }: { attendances: any[], members: Mem
 
   const filteredAttendances = attendances.filter((a: any) => {
     const entryDate = new Date(a.entryTime)
-    const matchesFilter = 
+    const matchesFilter =
       filter === 'all' ? true :
       filter === 'today' ? entryDate >= startOfDay :
       filter === 'week' ? entryDate >= startOfWeek :
       entryDate >= startOfMonth
 
     const member = members.find(m => m.id === a.memberId)
-    const matchesSearch = !searchMember || 
+    const matchesSearch = !searchMember ||
       (member && (
         member.firstName.toLowerCase().includes(searchMember.toLowerCase()) ||
         member.lastName.toLowerCase().includes(searchMember.toLowerCase()) ||
@@ -541,15 +541,13 @@ function AccesosApp({ attendances, members }: { attendances: any[], members: Mem
     return matchesFilter && matchesSearch
   })
 
+  const getMember = (memberId: string) => members.find(m => m.id === memberId)
   const getMemberName = (memberId: string) => {
-    const member = members.find(m => m.id === memberId)
+    const member = getMember(memberId)
     return member ? `${member.firstName} ${member.lastName}` : 'Desconocido'
   }
-
-  const getMemberDni = (memberId: string) => {
-    const member = members.find(m => m.id === memberId)
-    return member?.dni || '—'
-  }
+  const getMemberDni = (memberId: string) => getMember(memberId)?.dni || '—'
+  const getMemberEmail = (memberId: string) => getMember(memberId)?.email || '—'
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
@@ -569,12 +567,66 @@ function AccesosApp({ attendances, members }: { attendances: any[], members: Mem
     )
   }
 
+  const formatDevice = (a: any) => {
+    const parts = [a.deviceBrand, a.deviceModel].filter(Boolean).join(' ')
+    if (!parts && !a.deviceOS) return null
+    return { label: parts || 'Desconocido', os: a.deviceOS || null }
+  }
+
   // Estadísticas
   const totalHoy = attendances.filter((a: any) => new Date(a.entryTime) >= startOfDay).length
   const totalSemana = attendances.filter((a: any) => new Date(a.entryTime) >= startOfWeek).length
   const totalMes = attendances.filter((a: any) => new Date(a.entryTime) >= startOfMonth).length
   const permitidos = filteredAttendances.filter((a: any) => a.status === 'ALLOWED').length
   const denegados = filteredAttendances.filter((a: any) => a.status === 'DENIED').length
+
+  function exportarAccesosCSV(rows: any[]) {
+    const headers = [
+      'Cliente', 'Email', 'DNI', 'Fecha', 'Hora',
+      'Marca', 'Modelo', 'OS', 'Token QR', 'Estado', 'Membresía cliente',
+    ]
+
+    const csvRows = rows.map((a: any) => {
+      const member = getMember(a.memberId)
+      const entryDate = new Date(a.entryTime)
+      return [
+        getMemberName(a.memberId),
+        getMemberEmail(a.memberId),
+        getMemberDni(a.memberId),
+        entryDate.toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }),
+        entryDate.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' }),
+        a.deviceBrand || '',
+        a.deviceModel || '',
+        a.deviceOS || '',
+        a.qrToken,
+        a.status === 'ALLOWED' ? 'Permitido' : a.status === 'DENIED' ? 'Denegado' : 'Advertencia',
+        member?.status || '',
+      ]
+    })
+
+    function escapeCSV(value: string) {
+      if (/[",\n]/.test(value)) {
+        return `"${value.replace(/"/g, '""')}"`
+      }
+      return value
+    }
+
+    const csvContent = [headers, ...csvRows]
+      .map(row => row.map(v => escapeCSV(String(v))).join(','))
+      .join('\n')
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    const fecha = new Date().toISOString().split('T')[0]
+
+    link.href = url
+    link.download = `accesos-cultiva-${fecha}.csv`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
 
   return (
     <div className="space-y-6">
@@ -618,8 +670,8 @@ function AccesosApp({ attendances, members }: { attendances: any[], members: Mem
             <div>
               <p className="text-sm text-slate-500">Tasa de éxito</p>
               <p className="text-2xl font-bold text-slate-900 mt-1">
-                {filteredAttendances.length > 0 
-                  ? Math.round((permitidos / filteredAttendances.length) * 100) 
+                {filteredAttendances.length > 0
+                  ? Math.round((permitidos / filteredAttendances.length) * 100)
                   : 0}%
               </p>
             </div>
@@ -635,8 +687,8 @@ function AccesosApp({ attendances, members }: { attendances: any[], members: Mem
         <div className="p-4 border-b border-slate-100 flex flex-wrap gap-3 items-center">
           <div className="relative flex-1 min-w-[240px]">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <Input 
-              placeholder="Buscar por cliente o DNI..." 
+            <Input
+              placeholder="Buscar por cliente o DNI..."
               value={searchMember}
               onChange={(e) => setSearchMember(e.target.value)}
               className="pl-9 h-9 text-sm"
@@ -653,8 +705,8 @@ function AccesosApp({ attendances, members }: { attendances: any[], members: Mem
                 key={f.id}
                 onClick={() => setFilter(f.id)}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                  filter === f.id 
-                    ? 'bg-white text-slate-900 shadow-sm' 
+                  filter === f.id
+                    ? 'bg-white text-slate-900 shadow-sm'
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
@@ -662,7 +714,12 @@ function AccesosApp({ attendances, members }: { attendances: any[], members: Mem
               </button>
             ))}
           </div>
-          <Button variant="outline" size="sm" className="gap-2 h-9">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 h-9"
+            onClick={() => exportarAccesosCSV(filteredAttendances)}
+          >
             <Download size={14} /> Exportar
           </Button>
         </div>
@@ -672,38 +729,61 @@ function AccesosApp({ attendances, members }: { attendances: any[], members: Mem
             <thead>
               <tr className="bg-slate-50 border-b border-slate-100">
                 <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Cliente</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">DNI</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Fecha</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Hora</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Fecha y hora</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Dispositivo</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Token QR</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase">Estado</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredAttendances.map((a: any) => (
-                <tr key={a.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-5 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-semibold text-xs">
-                        {getMemberName(a.memberId).split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+              {filteredAttendances.map((a: any) => {
+                const device = formatDevice(a)
+                const member = getMember(a.memberId)
+                return (
+                  <tr key={a.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-semibold text-xs shrink-0">
+                          {getMemberName(a.memberId).split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-900">{getMemberName(a.memberId)}</p>
+                          <p className="text-xs text-slate-500">{getMemberEmail(a.memberId)}</p>
+                          <p className="text-xs text-slate-400 font-mono">DNI: {getMemberDni(a.memberId)}</p>
+                        </div>
                       </div>
-                      <span className="font-medium text-slate-900">{getMemberName(a.memberId)}</span>
-                    </div>
-                  </td>
-                  <td className="px-5 py-3 text-slate-600 text-xs font-mono">{getMemberDni(a.memberId)}</td>
-                  <td className="px-5 py-3 text-slate-600 text-xs">
-  {new Date(a.entryTime).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })}
-  {' '}
-  {new Date(a.entryTime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' })}
-</td>
-                  <td className="px-5 py-3">
-                    <code className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded font-mono">
-                      {a.qrToken.slice(0, 12)}...
-                    </code>
-                  </td>
-                  <td className="px-5 py-3">{getStatusBadge(a.status)}</td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-5 py-3 text-slate-600 text-xs whitespace-nowrap">
+                      {new Date(a.entryTime).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })}
+                      {' '}
+                      {new Date(a.entryTime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' })}
+                    </td>
+                    <td className="px-5 py-3 text-xs">
+                      {device ? (
+                        <div>
+                          <p className="text-slate-700">{device.label}</p>
+                          {device.os && <p className="text-slate-400">{device.os}</p>}
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 italic">Sin datos</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3">
+                      <code className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded font-mono">
+                        {a.qrToken.slice(0, 12)}...
+                      </code>
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="flex flex-col gap-1 items-start">
+                        {getStatusBadge(a.status)}
+                        {member && member.status !== 'ACTIVE' && (
+                          <span className="text-xs text-amber-600">Cliente: {member.status}</span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -725,6 +805,7 @@ function AccesosApp({ attendances, members }: { attendances: any[], members: Mem
     </div>
   )
 }
+
 // ============================================
 // TAB: ESTADÍSTICAS
 // ============================================

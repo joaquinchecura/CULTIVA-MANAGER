@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import {
   DollarSign, CreditCard, Calendar, TrendingUp, Users,
-  Search, Plus, X, CheckCircle, Loader2, Filter
+  Search, Plus, X, CheckCircle, Loader2, Filter, Pencil, Trash2
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -48,7 +48,7 @@ export default function PagosPage() {
   const [filterMethod, setFilterMethod] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
 
-  // Form state
+  // Form state (registrar)
   const [formData, setFormData] = useState({
     memberId: '',
     amount: '',
@@ -57,6 +57,19 @@ export default function PagosPage() {
     reference: '',
     notes: '',
   })
+
+  // Edit state
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null)
+  const [editForm, setEditForm] = useState({
+    amount: '',
+    method: 'CASH',
+    status: 'COMPLETED',
+    concept: '',
+    reference: '',
+    notes: '',
+  })
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchPayments()
@@ -118,6 +131,7 @@ export default function PagosPage() {
           reference: '',
           notes: '',
         })
+        setMemberSearch('')
         fetchPayments()
       } else {
         const err = await res.json()
@@ -128,6 +142,71 @@ export default function PagosPage() {
       alert('Error al registrar el pago')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const openEdit = (payment: Payment) => {
+    setEditingPayment(payment)
+    setEditForm({
+      amount: String(payment.amount),
+      method: payment.method,
+      status: payment.status,
+      concept: payment.concept,
+      reference: payment.reference || '',
+      notes: payment.notes || '',
+    })
+  }
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingPayment) return
+    if (!editForm.amount || !editForm.concept) return
+
+    setSavingEdit(true)
+    try {
+      const res = await fetch(`/api/pagos/${editingPayment.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: parseFloat(editForm.amount),
+          method: editForm.method,
+          status: editForm.status,
+          concept: editForm.concept,
+          reference: editForm.reference || null,
+          notes: editForm.notes || null,
+        }),
+      })
+
+      if (res.ok) {
+        setEditingPayment(null)
+        fetchPayments()
+      } else {
+        const err = await res.json()
+        alert('Error: ' + (err.error?.[0]?.message || 'No se pudo actualizar el pago'))
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Error al actualizar el pago')
+    } finally {
+      setSavingEdit(false)
+    }
+  }
+
+  const handleDelete = async (paymentId: string) => {
+    if (!confirm('¿Eliminar este pago? Esta acción no se puede deshacer.')) return
+    setDeletingId(paymentId)
+    try {
+      const res = await fetch(`/api/pagos/${paymentId}`, { method: 'DELETE' })
+      if (res.ok) {
+        fetchPayments()
+      } else {
+        alert('No se pudo eliminar el pago')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Error al eliminar el pago')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -315,6 +394,7 @@ export default function PagosPage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Método</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Monto</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Estado</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -353,6 +433,27 @@ export default function PagosPage() {
                          p.status === 'PENDING' ? '⏳ Pendiente' :
                          p.status === 'FAILED' ? '✕ Fallido' : '↩ Reembolsado'}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => openEdit(p)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                          title="Editar pago"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(p.id)}
+                          disabled={deletingId === p.id}
+                          className="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
+                          title="Eliminar pago"
+                        >
+                          {deletingId === p.id
+                            ? <Loader2 size={14} className="animate-spin" />
+                            : <Trash2 size={14} />}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -475,6 +576,110 @@ export default function PagosPage() {
                   {saving ? 'Registrando...' : 'Registrar pago'}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => setShowModal(false)}>
+                  Cancelar
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Editar Pago */}
+      {editingPayment && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">Editar Pago</h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {editingPayment.member.firstName} {editingPayment.member.lastName} · DNI {editingPayment.member.dni}
+                </p>
+              </div>
+              <button
+                onClick={() => setEditingPayment(null)}
+                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium text-slate-700">Monto *</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={editForm.amount}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, amount: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium text-slate-700">Método *</Label>
+                  <select
+                    value={editForm.method}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, method: e.target.value }))}
+                    className="w-full h-10 px-3 border border-slate-200 rounded-lg text-sm bg-white"
+                  >
+                    <option value="CASH">💵 Efectivo</option>
+                    <option value="TRANSFER">🏦 Transferencia</option>
+                    <option value="MERCADOPAGO">📱 MercadoPago</option>
+                    <option value="CARD">💳 Tarjeta</option>
+                    <option value="OTHER">📝 Otro</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-slate-700">Estado *</Label>
+                <select
+                  value={editForm.status}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, status: e.target.value }))}
+                  className="w-full h-10 px-3 border border-slate-200 rounded-lg text-sm bg-white"
+                >
+                  <option value="COMPLETED">✓ Completado</option>
+                  <option value="PENDING">⏳ Pendiente</option>
+                  <option value="FAILED">✕ Fallido</option>
+                  <option value="REFUNDED">↩ Reembolsado</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-slate-700">Concepto *</Label>
+                <Input
+                  placeholder="Ej: Membresía mensual, Personal training..."
+                  value={editForm.concept}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, concept: e.target.value }))}
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-slate-700">Referencia (opcional)</Label>
+                <Input
+                  placeholder="N° de transferencia, comprobante..."
+                  value={editForm.reference}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, reference: e.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-slate-700">Notas (opcional)</Label>
+                <Input
+                  placeholder="Observaciones adicionales..."
+                  value={editForm.notes}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))}
+                />
+              </div>
+
+              <div className="pt-2 flex gap-3">
+                <Button type="submit" disabled={savingEdit} className="flex-1 gap-2">
+                  {savingEdit ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+                  {savingEdit ? 'Guardando...' : 'Guardar cambios'}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setEditingPayment(null)}>
                   Cancelar
                 </Button>
               </div>

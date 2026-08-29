@@ -249,17 +249,17 @@ export default function AccesoPage() {
               </div>
             ) : (
               <div className="relative bg-slate-950">
-                <div id="qr-reader" className="w-full aspect-square lg:aspect-[16/10] lg:max-h-[820px] mx-auto" />
+                <div id="qr-reader" className="w-full aspect-[3/4] lg:aspect-[16/10] lg:max-h-[820px] mx-auto" />
 
                 {/* Tarjeta de resultado normal — solo visible cuando no estamos en medio de capturar una foto */}
                 {result && capturePhase === 'idle' && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-10">
-                    <div className={`p-8 rounded-3xl text-center ${result.success ? 'bg-emerald-500' : 'bg-red-500'} text-white max-w-md mx-4 shadow-2xl`}>
+                    <div className={`p-5 sm:p-8 rounded-3xl text-center ${result.success ? 'bg-emerald-500' : 'bg-red-500'} text-white max-w-md mx-4 shadow-2xl`}>
                       {result.member?.photoUrl ? (
                         <img
                           src={result.member.photoUrl}
                           alt={result.member.name}
-                          className="w-80 h-80 rounded-full object-cover mx-auto mb-3 border-4 border-white/40"
+                          className="w-48 h-48 sm:w-64 sm:h-64 lg:w-80 lg:h-80 rounded-full object-cover mx-auto mb-3 border-4 border-white/40"
                         />
                       ) : result.success ? (
                         <UserCheck size={52} className="mx-auto mb-3" />

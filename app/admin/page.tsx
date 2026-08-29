@@ -13,6 +13,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Activity,
+  Smartphone,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -114,6 +115,7 @@ export default async function AdminDashboard() {
     : '0'
 
   // Cards principales (métricas clave)
+  // Orden: Total Clientes, Asistencias Hoy, Pendientes, Recaudación Mes (movida al final)
   const metricCards = [
     {
       href: '/admin/clientes',
@@ -139,6 +141,17 @@ export default async function AdminDashboard() {
       trendValue: `${Math.abs(Number(variacionAsistencias))}%`,
     },
     {
+      href: '/admin/clientes/vincular',
+      label: 'Pendientes',
+      value: clientesPendientes,
+      sublabel: 'por aprobar',
+      icon: AlertCircle,
+      color: 'text-amber-600',
+      bg: 'bg-amber-50',
+      border: 'border-amber-100',
+      trend: clientesPendientes > 0 ? 'up' : 'neutral' as const,
+    },
+    {
       href: '/admin/pagos',
       label: 'Recaudación Mes',
       value: `$${montoMes.toLocaleString('es-AR')}`,
@@ -150,20 +163,9 @@ export default async function AdminDashboard() {
       trend: Number(variacionPagos) > 0 ? 'up' : Number(variacionPagos) < 0 ? 'down' : 'neutral' as const,
       trendValue: `${Math.abs(Number(variacionPagos))}%`,
     },
-    {
-      href: '/admin/clientes/vincular',
-      label: 'Pendientes',
-      value: clientesPendientes,
-      sublabel: 'por aprobar',
-      icon: AlertCircle,
-      color: 'text-amber-600',
-      bg: 'bg-amber-50',
-      border: 'border-amber-100',
-      trend: clientesPendientes > 0 ? 'up' : 'neutral' as const,
-    },
   ]
 
-  // Cards secundarias (alertas y acciones)
+  // Cards secundarias (alertas)
   const alertCards = [
     {
       href: '/admin/planes',
@@ -187,12 +189,12 @@ export default async function AdminDashboard() {
     },
   ]
 
-  // Acciones rápidas
+  // Acciones rápidas — ahora con fondo de color propio en las 4
   const quickActions = [
-    { href: '/admin/clientes/nuevo', label: 'Nuevo Cliente', icon: UserPlus, color: 'bg-blue-600 hover:bg-blue-700 text-white' },
-    { href: '/admin/rutinas/nueva', label: 'Nueva Rutina', icon: Activity, color: 'bg-slate-800 hover:bg-slate-900 text-white' },
-    { href: '/admin/agenda', label: 'Ver Agenda', icon: CalendarDays, color: 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200' },
-    { href: '/admin/pagos', label: 'Registrar Pago', icon: CreditCard, color: 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200' },
+    { href: '/admin/clientes/nuevo', label: 'Nuevo Cliente', icon: UserPlus, className: 'bg-blue-600 hover:bg-blue-700 text-white' },
+    { href: '/admin/rutinas/nueva', label: 'Nueva Rutina', icon: Activity, className: 'bg-slate-800 hover:bg-slate-900 text-white' },
+    { href: '/admin/agenda', label: 'Ver Agenda', icon: CalendarDays, className: 'bg-sky-500 hover:bg-sky-600 text-white' },
+    { href: '/admin/pagos', label: 'Registrar Pago', icon: CreditCard, className: 'bg-emerald-500 hover:bg-emerald-600 text-white' },
   ]
 
   return (
@@ -239,50 +241,51 @@ export default async function AdminDashboard() {
         ))}
       </div>
 
-      {/* Alertas + Acciones rápidas */}
+      {/* Alertas + Acciones rápidas: 1 columna de alertas (2 cards apiladas) + 2 columnas de acciones (2x2) = 3 columnas de 2 cards */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Alertas */}
-        <div className="lg:col-span-2 space-y-3">
-          <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Alertas</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {alertCards.map((card) => (
-              <Link
-                key={card.label}
-                href={card.href}
-                className={`flex items-center gap-4 p-4 rounded-xl border ${card.border} ${card.bg} ${card.alert ? 'animate-pulse' : ''} hover:shadow-md transition-all`}
-              >
-                <div className={`p-2.5 rounded-xl bg-white/80`}>
-                  <card.icon size={22} className={card.color} />
+        <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider lg:col-span-1">Alertas</h3>
+        <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider lg:col-span-2">Acciones Rápidas</h3>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 -mt-3">
+        {/* Alertas: apiladas verticalmente */}
+        <div className="space-y-3">
+          {alertCards.map((card) => (
+            <Link
+              key={card.label}
+              href={card.href}
+              className={`flex items-center gap-4 p-4 rounded-xl border ${card.border} ${card.bg} ${card.alert ? 'animate-pulse' : ''} hover:shadow-md transition-all`}
+            >
+              <div className="p-2.5 rounded-xl bg-white/80">
+                <card.icon size={22} className={card.color} />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-700">{card.label}</p>
+                <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
+              </div>
+              {card.alert && (
+                <div className="ml-auto">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-700">{card.label}</p>
-                  <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
-                </div>
-                {card.alert && (
-                  <div className="ml-auto">
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-                  </div>
-                )}
-              </Link>
-            ))}
-          </div>
+              )}
+            </Link>
+          ))}
         </div>
 
-        {/* Acciones rápidas */}
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Acciones Rápidas</h3>
-          <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
-            {quickActions.map((action) => (
-              <Link
-                key={action.href}
-                href={action.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${action.color}`}
-              >
+        {/* Acciones rápidas: 2x2 ocupando las 2 columnas restantes */}
+        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {quickActions.map((action) => (
+            <Link
+              key={action.href}
+              href={action.href}
+              className={`flex items-center gap-3 p-4 rounded-xl font-medium shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all ${action.className}`}
+            >
+              <div className="p-2 rounded-lg bg-white/20">
                 <action.icon size={18} />
-                {action.label}
-              </Link>
-            ))}
-          </div>
+              </div>
+              <span className="text-sm">{action.label}</span>
+            </Link>
+          ))}
         </div>
       </div>
 
@@ -320,33 +323,65 @@ async function UltimasAsistencias() {
     )
   }
 
+  function formatDevice(a: any) {
+    const parts = [a.deviceBrand, a.deviceModel].filter(Boolean).join(' ')
+    if (!parts && !a.deviceOS) return null
+    return { label: parts || 'Desconocido', os: a.deviceOS || null }
+  }
+
   return (
     <div className="divide-y divide-slate-100">
-      {attendances.map((a) => (
-        <div key={a.id} className="px-5 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 font-semibold text-sm">
-              {a.member.firstName[0]}
+      {attendances.map((a) => {
+        const device = formatDevice(a)
+        return (
+          <div key={a.id} className="px-5 py-3 flex items-center gap-4 hover:bg-slate-50 transition-colors">
+            {/* Avatar */}
+            {a.member.photoUrl ? (
+              <img
+                src={a.member.photoUrl}
+                alt={`${a.member.firstName} ${a.member.lastName}`}
+                className="w-10 h-10 rounded-full object-cover shrink-0"
+              />
+            ) : (
+              <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 font-semibold text-sm shrink-0">
+                {a.member.firstName[0]}
+              </div>
+            )}
+
+            {/* Nombre + DNI */}
+            <div className="w-48 shrink-0">
+              <p className="text-sm font-medium text-slate-900 truncate">{a.member.firstName} {a.member.lastName}</p>
+              <p className="text-xs text-slate-500">DNI: {a.member.dni}</p>
             </div>
-            <div>
-              <p className="text-sm font-medium text-slate-900">{a.member.firstName} {a.member.lastName}</p>
-              <p className="text-xs text-slate-500">{a.member.dni}</p>
+
+            {/* Dispositivo — ocupa el espacio central que antes quedaba vacío */}
+            <div className="flex-1 flex items-center gap-1.5 text-xs text-slate-500 min-w-0">
+              {device ? (
+                <>
+                  <Smartphone size={13} className="text-slate-400 shrink-0" />
+                  <span className="truncate">{device.label}{device.os && ` · ${device.os}`}</span>
+                </>
+              ) : (
+                <span className="text-slate-300 italic">Sin datos de dispositivo</span>
+              )}
+            </div>
+
+            {/* Fecha + estado */}
+            <div className="text-right shrink-0">
+              <p className="text-xs text-slate-500">
+                {new Date(a.entryTime).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })}
+                {' · '}
+                {new Date(a.entryTime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' })}
+              </p>
+              <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full mt-1 ${
+                a.status === 'ALLOWED' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+              }`}>
+                {a.status === 'ALLOWED' ? '✓ Permitido' : '✗ Denegado'}
+              </span>
             </div>
           </div>
-          <div className="text-right">
-          <p className="text-xs text-slate-500">
-  {new Date(a.entryTime).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })}
-  {' · '}
-  {new Date(a.entryTime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' })}
-</p>
-            <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full mt-1 ${
-              a.status === 'ALLOWED' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
-            }`}>
-              {a.status === 'ALLOWED' ? '✓ Permitido' : '✗ Denegado'}
-            </span>
-          </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

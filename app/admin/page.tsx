@@ -189,12 +189,12 @@ export default async function AdminDashboard() {
     },
   ]
 
-  // Acciones rápidas — ahora con fondo de color propio en las 4
+  // Acciones rápidas — ahora con fondo de color propio en las 4 (estilo pastel, consistente con las métricas de arriba)
   const quickActions = [
-    { href: '/admin/clientes/nuevo', label: 'Nuevo Cliente', icon: UserPlus, className: 'bg-blue-600 hover:bg-blue-700 text-white' },
-    { href: '/admin/rutinas/nueva', label: 'Nueva Rutina', icon: Activity, className: 'bg-slate-800 hover:bg-slate-900 text-white' },
-    { href: '/admin/agenda', label: 'Ver Agenda', icon: CalendarDays, className: 'bg-sky-500 hover:bg-sky-600 text-white' },
-    { href: '/admin/pagos', label: 'Registrar Pago', icon: CreditCard, className: 'bg-emerald-500 hover:bg-emerald-600 text-white' },
+    { href: '/admin/clientes/nuevo', label: 'Nuevo Cliente', icon: UserPlus, className: 'bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-100' },
+    { href: '/admin/rutinas/nueva', label: 'Nueva Rutina', icon: Activity, className: 'bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-100' },
+    { href: '/admin/agenda', label: 'Ver Agenda', icon: CalendarDays, className: 'bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-100' },
+    { href: '/admin/pagos', label: 'Registrar Pago', icon: CreditCard, className: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-100' },
   ]
 
   return (
@@ -280,7 +280,7 @@ export default async function AdminDashboard() {
               href={action.href}
               className={`flex items-center gap-3 p-4 rounded-xl font-medium shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all ${action.className}`}
             >
-              <div className="p-2 rounded-lg bg-white/20">
+              <div className="p-2 rounded-lg bg-white/60">
                 <action.icon size={18} />
               </div>
               <span className="text-sm">{action.label}</span>

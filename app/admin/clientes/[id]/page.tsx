@@ -7,7 +7,7 @@ import {
   Dumbbell, ArrowLeft, DollarSign, TrendingUp,
   UserCheck, Calendar, Phone, Mail, MapPin,
   AlertCircle, Copy, Plus, ChevronRight,
-  CheckCircle2, Clock, History,
+  CheckCircle2, Clock, History, User,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -20,6 +20,10 @@ function fmtFecha(d: Date | string) {
   return new Date(d).toLocaleDateString('es-AR', {
     day: 'numeric', month: 'long', year: 'numeric', timeZone: TZ,
   })
+}
+
+function initials(firstName: string, lastName: string) {
+  return `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase()
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -79,6 +83,20 @@ export default async function ClienteDetallePage({
               <ArrowLeft size={18} />
             </Button>
           </Link>
+
+          {/* Avatar chico para reconocimiento rápido en el header */}
+          {member.photoUrl ? (
+            <img
+              src={member.photoUrl}
+              alt={`${member.firstName} ${member.lastName}`}
+              className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm shrink-0"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-semibold text-sm shrink-0">
+              {initials(member.firstName, member.lastName)}
+            </div>
+          )}
+
           <div>
             <h1 className="text-2xl font-bold text-slate-900">
               {member.firstName} {member.lastName}
@@ -117,8 +135,26 @@ export default async function ClienteDetallePage({
       {/* Grid principal */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
-        {/* Columna izquierda: datos */}
+        {/* Columna izquierda: foto + datos */}
         <div className="lg:col-span-1 space-y-5">
+
+          {/* Foto de perfil — tarjeta destacada */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            {member.photoUrl ? (
+              <img
+                src={member.photoUrl}
+                alt={`${member.firstName} ${member.lastName}`}
+                className="w-full aspect-square max-w-[320px] mx-auto rounded-2xl object-cover border border-slate-100"
+              />
+            ) : (
+              <div className="w-full aspect-square max-w-[320px] mx-auto rounded-2xl bg-slate-50 border border-dashed border-slate-200 flex flex-col items-center justify-center gap-2">
+                <User size={40} className="text-slate-300" />
+                <p className="text-xs text-slate-400 text-center px-6">
+                  Sin foto de perfil todavía
+                </p>
+              </div>
+            )}
+          </div>
 
           {/* Datos personales */}
           <div className="bg-white border border-slate-200 rounded-xl p-5">

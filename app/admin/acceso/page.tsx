@@ -60,7 +60,7 @@ export default function AccesoPage() {
     try {
       await scannerRef.current.start(
         selectedCamera,
-        { fps: 10, qrbox: { width: 280, height: 280 } },
+        { fps: 10, qrbox: isMobile ? { width: 260, height: 260 } : { width: 380, height: 380 } },
         async (decodedText) => { await handleScan(decodedText) },
         () => {}
       )
@@ -111,7 +111,16 @@ export default function AccesoPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
-      <div className="max-w-5xl mx-auto px-6 py-10">
+      {/* html5-qrcode inyecta su propio <video>/<canvas> dentro de #qr-reader;
+          forzamos que llenen el contenedor con zoom "cover" en vez del letterboxing por defecto */}
+      <style>{`
+        #qr-reader video, #qr-reader canvas {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+        }
+      `}</style>
+      <div className="max-w-[1600px] mx-auto px-6 py-10">
         <div className="flex items-center gap-4 mb-8">
           <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-600/20">
             <Scan className="text-white" size={22} />
@@ -122,7 +131,7 @@ export default function AccesoPage() {
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-[1fr_320px] gap-6 items-start">
+        <div className="grid lg:grid-cols-[1fr_360px] gap-6 items-start">
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
             {!scanning ? (
               <div className="p-10 lg:p-16 text-center">
@@ -173,7 +182,7 @@ export default function AccesoPage() {
               </div>
             ) : (
               <div className="relative bg-slate-950">
-                <div id="qr-reader" className="w-full aspect-square lg:aspect-[4/3] lg:max-h-[640px] mx-auto" />
+                <div id="qr-reader" className="w-full aspect-square lg:aspect-[16/10] lg:max-h-[820px] mx-auto" />
 
                 {result && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-10">

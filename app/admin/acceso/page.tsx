@@ -254,12 +254,12 @@ export default function AccesoPage() {
                 {/* Tarjeta de resultado normal — solo visible cuando no estamos en medio de capturar una foto */}
                 {result && capturePhase === 'idle' && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-10">
-                    <div className={`p-8 rounded-3xl text-center ${result.success ? 'bg-emerald-500' : 'bg-red-500'} text-white max-w-sm mx-4 shadow-2xl`}>
+                    <div className={`p-8 rounded-3xl text-center ${result.success ? 'bg-emerald-500' : 'bg-red-500'} text-white max-w-md mx-4 shadow-2xl`}>
                       {result.member?.photoUrl ? (
                         <img
                           src={result.member.photoUrl}
                           alt={result.member.name}
-                          className="w-40 h-40 rounded-full object-cover mx-auto mb-3 border-4 border-white/40"
+                          className="w-80 h-80 rounded-full object-cover mx-auto mb-3 border-4 border-white/40"
                         />
                       ) : result.success ? (
                         <UserCheck size={52} className="mx-auto mb-3" />
@@ -339,12 +339,14 @@ export default function AccesoPage() {
                   </div>
                 )}
 
-                <button
-                  onClick={stopScan}
-                  className="absolute bottom-5 left-1/2 -translate-x-1/2 px-5 py-2.5 bg-white/95 text-slate-700 rounded-xl font-medium hover:bg-white transition-colors z-20 shadow-lg"
-                >
-                  Detener
-                </button>
+                {capturePhase === 'idle' && (
+                  <button
+                    onClick={stopScan}
+                    className="absolute bottom-5 left-1/2 -translate-x-1/2 px-5 py-2.5 bg-white/95 text-slate-700 rounded-xl font-medium hover:bg-white transition-colors z-20 shadow-lg"
+                  >
+                    Detener
+                  </button>
+                )}
               </div>
             )}
           </div>

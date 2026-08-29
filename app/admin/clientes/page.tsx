@@ -28,6 +28,7 @@ interface Member {
   city: string | null
   status: string
   createdAt: string
+  photoUrl: string | null   // ← agregar esta línea
   memberships: {
     id: string
     plan: { name: string }
@@ -331,11 +332,19 @@ function exportarCSV(members: Member[]) {
               const activeMembership = m.memberships.find(mem => mem.status === 'ACTIVE')
               return (
                 <tr key={m.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-5 py-4">
+                                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-semibold text-sm">
-                        {m.firstName[0]}{m.lastName[0]}
-                      </div>
+                      {m.photoUrl ? (
+                        <img
+                          src={m.photoUrl}
+                          alt={`${m.firstName} ${m.lastName}`}
+                          className="w-16 h-16 rounded-full object-cover shrink-0"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-semibold text-base shrink-0">
+                          {m.firstName[0]}{m.lastName[0]}
+                        </div>
+                      )}
                       <div>
                         <p className="font-medium text-slate-900">{m.firstName} {m.lastName}</p>
                         <p className="text-xs text-slate-500">DNI: {m.dni}</p>
@@ -741,11 +750,19 @@ function AccesosApp({ attendances, members }: { attendances: any[], members: Mem
                 const member = getMember(a.memberId)
                 return (
                   <tr key={a.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-5 py-3">
+                                        <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-semibold text-xs shrink-0">
-                          {getMemberName(a.memberId).split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-                        </div>
+                        {member?.photoUrl ? (
+                          <img
+                            src={member.photoUrl}
+                            alt={getMemberName(a.memberId)}
+                            className="w-16 h-16 rounded-full object-cover shrink-0"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-semibold text-sm shrink-0">
+                            {getMemberName(a.memberId).split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                          </div>
+                        )}
                         <div>
                           <p className="font-medium text-slate-900">{getMemberName(a.memberId)}</p>
                           <p className="text-xs text-slate-500">{getMemberEmail(a.memberId)}</p>

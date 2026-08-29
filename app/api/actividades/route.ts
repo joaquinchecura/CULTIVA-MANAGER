@@ -17,6 +17,9 @@ export async function GET(request: Request) {
 
     const activities = await prisma.activity.findMany({
       where: type ? { type: type as 'GROUP' | 'PERSONAL' } : undefined,
+      include: {
+        _count: { select: { schedules: true } },
+      },
       orderBy: { name: 'asc' },
     })
 

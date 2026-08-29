@@ -16,12 +16,13 @@ export default function AccesoPage() {
   const [cameras, setCameras] = useState<any[]>([])
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null)
+  const [capturePhase, setCapturePhase] = useState<'idle' | 'live' | 'preview'>('idle')
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const photoFlowActiveRef = useRef(false)
 
   useEffect(() => {
-    photoFlowActiveRef.current = Boolean(capturedPhoto) || uploadingPhoto
-  }, [capturedPhoto, uploadingPhoto])
+    photoFlowActiveRef.current = capturePhase !== 'idle' || uploadingPhoto
+  }, [capturePhase, uploadingPhoto])
 
   const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
 
@@ -120,6 +121,14 @@ export default function AccesoPage() {
     if (!ctx) return
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
     setCapturedPhoto(canvas.toDataURL('image/jpeg', 0.9))
+    setCapturePhase('preview')
+  }
+
+  function cancelPhotoFlow() {
+    setCapturedPhoto(null)
+    setCapturePhase('idle')
+    setResult(null)
+    scannerRef.current?.resume()
   }
 
   async function confirmUploadPhoto() {
@@ -139,6 +148,7 @@ export default function AccesoPage() {
           ? { ...prev, member: { ...prev.member, photoUrl: data.photoUrl } }
           : prev)
         setCapturedPhoto(null)
+        setCapturePhase('idle')
       } else {
         alert('No se pudo guardar la foto de perfil')
       }
@@ -158,6 +168,8 @@ export default function AccesoPage() {
     setScanning(false)
     setResult(null)
     setCameraError(null)
+    setCapturedPhoto(null)
+    setCapturePhase('idle')
   }
 
   useEffect(() => {
@@ -239,14 +251,15 @@ export default function AccesoPage() {
               <div className="relative bg-slate-950">
                 <div id="qr-reader" className="w-full aspect-square lg:aspect-[16/10] lg:max-h-[820px] mx-auto" />
 
-                {result && (
+                {/* Tarjeta de resultado normal — solo visible cuando no estamos en medio de capturar una foto */}
+                {result && capturePhase === 'idle' && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-10">
                     <div className={`p-8 rounded-3xl text-center ${result.success ? 'bg-emerald-500' : 'bg-red-500'} text-white max-w-sm mx-4 shadow-2xl`}>
                       {result.member?.photoUrl ? (
                         <img
                           src={result.member.photoUrl}
                           alt={result.member.name}
-                          className="w-24 h-24 rounded-full object-cover mx-auto mb-3 border-4 border-white/40"
+                          className="w-40 h-40 rounded-full object-cover mx-auto mb-3 border-4 border-white/40"
                         />
                       ) : result.success ? (
                         <UserCheck size={52} className="mx-auto mb-3" />
@@ -259,7 +272,7 @@ export default function AccesoPage() {
                       )}
                       {result.member?.id && (
                         <button
-                          onClick={captureFrame}
+                          onClick={() => setCapturePhase('live')}
                           className="mt-4 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl text-sm font-medium transition-colors inline-flex items-center gap-2"
                         >
                           {result.member.photoUrl ? 'Actualizar foto de perfil' : 'Capturar foto de perfil'}
@@ -269,8 +282,26 @@ export default function AccesoPage() {
                   </div>
                 )}
 
+                {/* Modo "live": destapamos el video en vivo (sin overlay oscuro) para encuadrar antes de sacar la foto */}
+                {capturePhase === 'live' && (
+                  <div className="absolute inset-x-0 bottom-0 z-20 p-5 bg-gradient-to-t from-black/80 to-transparent flex items-center justify-center gap-3">
+                    <button
+                      onClick={cancelPhotoFlow}
+                      className="px-5 py-2.5 rounded-xl bg-white/90 text-slate-700 text-sm font-medium hover:bg-white transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={captureFrame}
+                      className="px-6 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors shadow-lg"
+                    >
+                      📷 Tomar foto
+                    </button>
+                  </div>
+                )}
+
                 {/* Preview grande de la foto capturada, antes de confirmar el guardado */}
-                {capturedPhoto && (
+                {capturePhase === 'preview' && capturedPhoto && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/85 backdrop-blur-sm z-30 p-6">
                     <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl">
                       <p className="text-sm font-medium text-slate-500 mb-4 text-center">
@@ -279,11 +310,11 @@ export default function AccesoPage() {
                       <img
                         src={capturedPhoto}
                         alt="Foto capturada"
-                        className="w-64 h-64 object-cover rounded-2xl mx-auto border border-slate-200"
+                        className="w-72 h-72 object-cover rounded-2xl mx-auto border border-slate-200"
                       />
                       <div className="flex gap-2 mt-5">
                         <button
-                          onClick={() => setCapturedPhoto(null)}
+                          onClick={() => { setCapturedPhoto(null); setCapturePhase('live') }}
                           disabled={uploadingPhoto}
                           className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 disabled:opacity-50"
                         >

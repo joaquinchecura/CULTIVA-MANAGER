@@ -6,10 +6,15 @@ import { Scan, UserCheck, UserX, Loader2, Camera, CameraOff, Info } from 'lucide
 
 export default function AccesoPage() {
   const [scanning, setScanning] = useState(false)
-  const [result, setResult] = useState<{success?: boolean; message?: string; member?: any} | null>(null)
+  const [result, setResult] = useState<{
+    success?: boolean
+    message?: string
+    member?: { id: string; name: string; dni: string; email?: string; status?: string; photoUrl?: string | null }
+  } | null>(null)
   const [loading, setLoading] = useState(false)
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [cameras, setCameras] = useState<any[]>([])
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const scannerRef = useRef<Html5Qrcode | null>(null)
 
   const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
@@ -85,13 +90,56 @@ export default function AccesoPage() {
       const data = await res.json()
       setResult({ success: res.ok, message: data.message || data.error, member: data.member })
       setTimeout(async () => {
-        setResult(null)
-        await scannerRef.current?.resume()
-      }, 3000)
+        setResult(prev => {
+          // no cerrar el overlay si se está subiendo una foto en este momento
+          return uploadingPhoto ? prev : null
+        })
+        if (!uploadingPhoto) await scannerRef.current?.resume()
+      }, 6000)
     } catch (error) {
       setResult({ success: false, message: 'Error de conexión' })
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function captureAndUploadPhoto() {
+    if (!result?.member?.id) return
+    const video = document.querySelector('#qr-reader video') as HTMLVideoElement | null
+    if (!video || video.videoWidth === 0) {
+      alert('No se pudo acceder a la imagen de la cámara')
+      return
+    }
+
+    setUploadingPhoto(true)
+    try {
+      const canvas = document.createElement('canvas')
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      const ctx = canvas.getContext('2d')
+      if (!ctx) throw new Error('No se pudo crear el canvas')
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+      const imageBase64 = canvas.toDataURL('image/jpeg', 0.85)
+
+      const res = await fetch('/api/upload/member-photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberId: result.member.id, imageBase64 }),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setResult(prev => prev?.member
+          ? { ...prev, member: { ...prev.member, photoUrl: data.photoUrl } }
+          : prev)
+      } else {
+        alert('No se pudo guardar la foto de perfil')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Error al capturar/subir la foto')
+    } finally {
+      setUploadingPhoto(false)
     }
   }
 
@@ -187,10 +235,30 @@ export default function AccesoPage() {
                 {result && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-10">
                     <div className={`p-8 rounded-3xl text-center ${result.success ? 'bg-emerald-500' : 'bg-red-500'} text-white max-w-sm mx-4 shadow-2xl`}>
-                      {result.success ? <UserCheck size={52} className="mx-auto mb-3" /> : <UserX size={52} className="mx-auto mb-3" />}
+                      {result.member?.photoUrl ? (
+                        <img
+                          src={result.member.photoUrl}
+                          alt={result.member.name}
+                          className="w-24 h-24 rounded-full object-cover mx-auto mb-3 border-4 border-white/40"
+                        />
+                      ) : result.success ? (
+                        <UserCheck size={52} className="mx-auto mb-3" />
+                      ) : (
+                        <UserX size={52} className="mx-auto mb-3" />
+                      )}
                       <p className="text-xl font-bold">{result.message}</p>
                       {result.member && (
                         <p className="text-sm mt-1.5 opacity-90">{result.member.name} — DNI: {result.member.dni}</p>
+                      )}
+                      {result.member?.id && (
+                        <button
+                          onClick={captureAndUploadPhoto}
+                          disabled={uploadingPhoto}
+                          className="mt-4 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+                        >
+                          {uploadingPhoto && <Loader2 size={14} className="animate-spin" />}
+                          {result.member.photoUrl ? 'Actualizar foto de perfil' : 'Capturar foto de perfil'}
+                        </button>
                       )}
                     </div>
                   </div>

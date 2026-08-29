@@ -51,7 +51,14 @@ export async function POST(request: Request) {
       })
       return NextResponse.json({
         error: 'Membresía inactiva',
-        member: attendance.member,
+        member: {
+          id: attendance.member.id,
+          name: `${attendance.member.firstName} ${attendance.member.lastName}`,
+          email: attendance.member.email,
+          dni: attendance.member.dni,
+          status: attendance.member.status,
+          photoUrl: attendance.member.photoUrl,
+        },
       }, { status: 403 })
     }
 
@@ -65,10 +72,12 @@ export async function POST(request: Request) {
       success: true,
       message: '✅ Acceso permitido',
       member: {
+        id: attendance.member.id,
         name: `${attendance.member.firstName} ${attendance.member.lastName}`,
         email: attendance.member.email,
         dni: attendance.member.dni,
         status: attendance.member.status,
+        photoUrl: attendance.member.photoUrl,
       },
     })
   } catch (error) {

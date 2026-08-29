@@ -15,7 +15,13 @@ export default function AccesoPage() {
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [cameras, setCameras] = useState<any[]>([])
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null)
   const scannerRef = useRef<Html5Qrcode | null>(null)
+  const photoFlowActiveRef = useRef(false)
+
+  useEffect(() => {
+    photoFlowActiveRef.current = Boolean(capturedPhoto) || uploadingPhoto
+  }, [capturedPhoto, uploadingPhoto])
 
   const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
 
@@ -90,11 +96,9 @@ export default function AccesoPage() {
       const data = await res.json()
       setResult({ success: res.ok, message: data.message || data.error, member: data.member })
       setTimeout(async () => {
-        setResult(prev => {
-          // no cerrar el overlay si se está subiendo una foto en este momento
-          return uploadingPhoto ? prev : null
-        })
-        if (!uploadingPhoto) await scannerRef.current?.resume()
+        if (photoFlowActiveRef.current) return // no cerrar mientras se revisa/sube una foto
+        setResult(null)
+        await scannerRef.current?.resume()
       }, 6000)
     } catch (error) {
       setResult({ success: false, message: 'Error de conexión' })
@@ -103,28 +107,30 @@ export default function AccesoPage() {
     }
   }
 
-  async function captureAndUploadPhoto() {
-    if (!result?.member?.id) return
+  function captureFrame() {
     const video = document.querySelector('#qr-reader video') as HTMLVideoElement | null
     if (!video || video.videoWidth === 0) {
       alert('No se pudo acceder a la imagen de la cámara')
       return
     }
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    setCapturedPhoto(canvas.toDataURL('image/jpeg', 0.9))
+  }
+
+  async function confirmUploadPhoto() {
+    if (!result?.member?.id || !capturedPhoto) return
 
     setUploadingPhoto(true)
     try {
-      const canvas = document.createElement('canvas')
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-      const ctx = canvas.getContext('2d')
-      if (!ctx) throw new Error('No se pudo crear el canvas')
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-      const imageBase64 = canvas.toDataURL('image/jpeg', 0.85)
-
       const res = await fetch('/api/upload/member-photo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memberId: result.member.id, imageBase64 }),
+        body: JSON.stringify({ memberId: result.member.id, imageBase64: capturedPhoto }),
       })
 
       if (res.ok) {
@@ -132,12 +138,13 @@ export default function AccesoPage() {
         setResult(prev => prev?.member
           ? { ...prev, member: { ...prev.member, photoUrl: data.photoUrl } }
           : prev)
+        setCapturedPhoto(null)
       } else {
         alert('No se pudo guardar la foto de perfil')
       }
     } catch (err) {
       console.error(err)
-      alert('Error al capturar/subir la foto')
+      alert('Error al subir la foto')
     } finally {
       setUploadingPhoto(false)
     }
@@ -252,14 +259,45 @@ export default function AccesoPage() {
                       )}
                       {result.member?.id && (
                         <button
-                          onClick={captureAndUploadPhoto}
-                          disabled={uploadingPhoto}
-                          className="mt-4 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+                          onClick={captureFrame}
+                          className="mt-4 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl text-sm font-medium transition-colors inline-flex items-center gap-2"
                         >
-                          {uploadingPhoto && <Loader2 size={14} className="animate-spin" />}
                           {result.member.photoUrl ? 'Actualizar foto de perfil' : 'Capturar foto de perfil'}
                         </button>
                       )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Preview grande de la foto capturada, antes de confirmar el guardado */}
+                {capturedPhoto && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/85 backdrop-blur-sm z-30 p-6">
+                    <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl">
+                      <p className="text-sm font-medium text-slate-500 mb-4 text-center">
+                        ¿Guardar esta foto de perfil?
+                      </p>
+                      <img
+                        src={capturedPhoto}
+                        alt="Foto capturada"
+                        className="w-64 h-64 object-cover rounded-2xl mx-auto border border-slate-200"
+                      />
+                      <div className="flex gap-2 mt-5">
+                        <button
+                          onClick={() => setCapturedPhoto(null)}
+                          disabled={uploadingPhoto}
+                          className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 disabled:opacity-50"
+                        >
+                          Volver a tomar
+                        </button>
+                        <button
+                          onClick={confirmUploadPhoto}
+                          disabled={uploadingPhoto}
+                          className="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                        >
+                          {uploadingPhoto && <Loader2 size={14} className="animate-spin" />}
+                          {uploadingPhoto ? 'Guardando...' : 'Guardar foto'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

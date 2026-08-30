@@ -101,8 +101,12 @@ export default function AdminLayout({
         {/* Logo */}
         <div className="p-5 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
-              <span className="text-xl font-bold text-white">C</span>
+            <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0">
+              <img
+                src="/icons/android-chrome-192x192.png"
+                alt="Cultiva Manager"
+                className="w-full h-full object-cover"
+              />
             </div>
             <div>
               <h1 className="text-base font-bold text-slate-900 leading-tight">Cultiva</h1>
@@ -110,7 +114,6 @@ export default function AdminLayout({
             </div>
           </div>
         </div>
-
         {/* Navegación con viñetas */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {navGroups.map((group) => {

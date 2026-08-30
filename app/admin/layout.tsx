@@ -109,7 +109,7 @@ export default function AdminLayout({
               />
             </div>
             <div>
-              <h1 className="text-base font-bold text-slate-900 leading-tight">Cultiva</h1>
+              <h1 className="text-base font-bold text-slate-900 leading-tight">Cultiva Fitness</h1>
               <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">Manager</p>
             </div>
           </div>

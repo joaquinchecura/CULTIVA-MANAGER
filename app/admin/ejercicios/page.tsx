@@ -42,7 +42,7 @@ const EXERCISE_TYPE_CONFIG: Record<string, { label: string; icon: React.ReactNod
   TECHNIQUE: { label: "Técnica", icon: <Wrench className="h-3.5 w-3.5" />, color: "text-slate-700", bg: "bg-slate-100" },
   WARMUP: { label: "Calentamiento", icon: <Timer className="h-3.5 w-3.5" />, color: "text-rose-700", bg: "bg-rose-100" },
   COOLDOWN: { label: "Vuelta a la calma", icon: <Snowflake className="h-3.5 w-3.5" />, color: "text-cyan-700", bg: "bg-cyan-100" },
-  REHABILITATION: {label: "Rehabilitación",icon: <HeartPulse className="h-3.5 w-3.5" />,color: "text-indigo-700",bg: "bg-indigo-100"},
+  REHABILITATION: { label: "Rehabilitación",icon: <HeartPulse className="h-3.5 w-3.5" />,color: "text-indigo-700",bg: "bg-indigo-100" },
   OTHER: { label: "Otro", icon: <Target className="h-3.5 w-3.5" />, color: "text-gray-700", bg: "bg-gray-100" },
 };
 

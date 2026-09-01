@@ -55,8 +55,8 @@ const navGroups = [
   {
     title: 'Operaciones',
     items: [
-      { href: '/admin/agenda', label: 'Agenda Grupales', icon: CalendarDays },
-      { href: '/admin/agenda-pt', label: 'Agenda Personal', icon: UserCircle2 },
+      { href: '/admin/agenda', label: 'Agenda Clases', icon: CalendarDays },
+      { href: '/admin/agenda-pt', label: 'Agenda P.T.', icon: UserCircle2 },
       { href: '/admin/acceso', label: 'Acceso', icon: Scan },
     ],
   },

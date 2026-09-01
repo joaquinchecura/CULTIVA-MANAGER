@@ -1888,7 +1888,6 @@ const exercises = [
   },
 
   {
-    id: "reh001",
     name: "Retracción de mentón",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Cuello",
@@ -1900,7 +1899,6 @@ const exercises = [
   },
   
   {
-    id: "reh002",
     name: "Retracción de mentón contra pared",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Cuello",
@@ -1912,7 +1910,6 @@ const exercises = [
   },
   
   {
-    id: "reh003",
     name: "Empuje isométrico frontal de cuello",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Cuello",
@@ -1924,7 +1921,6 @@ const exercises = [
   },
   
   {
-    id: "reh004",
     name: "Empuje isométrico posterior de cuello",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Cuello",
@@ -1936,7 +1932,6 @@ const exercises = [
   },
   
   {
-    id: "reh005",
     name: "Presión isométrica lateral de cuello",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Cuello",
@@ -1948,7 +1943,6 @@ const exercises = [
   },
   
   {
-    id: "reh006",
     name: "Rotaciones de cuello",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Cuello",
@@ -1960,7 +1954,6 @@ const exercises = [
   },
   
   {
-    id: "reh007",
     name: "Estiramiento de trapecio superior",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Cuello y trapecio",
@@ -1972,7 +1965,6 @@ const exercises = [
   },
   
   {
-    id: "reh008",
     name: "Estiramiento del elevador de la escápula",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Cuello y escápulas",
@@ -1984,7 +1976,6 @@ const exercises = [
   },
   
   {
-    id: "reh009",
     name: "Rotación controlada de cuello",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Cuello",
@@ -1996,7 +1987,6 @@ const exercises = [
   },
   
   {
-    id: "reh010",
     name: "Retracción cervical isométrica",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Cuello",
@@ -2008,7 +1998,6 @@ const exercises = [
   },
   
   {
-    id: "reh011",
     name: "Retracción escapular",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Espalda alta",
@@ -2020,7 +2009,6 @@ const exercises = [
   },
   
   {
-    id: "reh012",
     name: "Rechazo escapular",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Escápulas y serrato anterior",
@@ -2032,7 +2020,6 @@ const exercises = [
   },
   
   {
-    id: "reh013",
     name: "Deslizamiento escapular en pared",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Espalda alta y escápulas",
@@ -2044,7 +2031,6 @@ const exercises = [
   },
   
   {
-    id: "reh014",
     name: "Apertura escapular con banda",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Espalda alta",
@@ -2056,7 +2042,6 @@ const exercises = [
   },
   
   {
-    id: "reh015",
     name: "Elevaciones Y-T-W",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Espalda alta y hombros",
@@ -2068,7 +2053,6 @@ const exercises = [
   },
   
   {
-    id: "reh016",
     name: "Retracción escapular boca abajo",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Espalda alta",
@@ -2080,7 +2064,6 @@ const exercises = [
   },
   
   {
-    id: "reh017",
     name: "Deslizamiento escapular con activación del serrato",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Serrato anterior y escápulas",
@@ -2092,7 +2075,6 @@ const exercises = [
   },
   
   {
-    id: "reh018",
     name: "Depresión escapular",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Escápulas y espalda alta",
@@ -2104,7 +2086,6 @@ const exercises = [
   },
   
   {
-    id: "reh019",
     name: "Rotaciones escapulares",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Escápulas y espalda alta",
@@ -2116,7 +2097,6 @@ const exercises = [
   },
   
   {
-    id: "reh020",
     name: "Empuje escapular acostado",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Serrato anterior y escápulas",
@@ -2128,7 +2108,6 @@ const exercises = [
   },
   
   {
-    id: "reh021",
     name: "Rotación controlada de hombro",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Hombros",
@@ -2140,7 +2119,6 @@ const exercises = [
   },
   
   {
-    id: "reh022",
     name: "Rotación externa de hombro con banda",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Hombros y manguito rotador",
@@ -2152,7 +2130,6 @@ const exercises = [
   },
   
   {
-    id: "reh023",
     name: "Deslizamientos de hombros contra pared",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Hombros y escápulas",
@@ -2164,7 +2141,6 @@ const exercises = [
   },
   
   {
-    id: "reh024",
     name: "Protracción escapular",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Escápulas y serrato anterior",
@@ -2176,7 +2152,6 @@ const exercises = [
   },
   
   {
-    id: "reh025",
     name: "Estiramiento de rotación interna de hombro acostado",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Hombros",
@@ -2188,7 +2163,6 @@ const exercises = [
   },
   
   {
-    id: "reh026",
     name: "Apertura de hombros con banda",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Hombros y espalda alta",
@@ -2200,7 +2174,6 @@ const exercises = [
   },
   
   {
-    id: "reh027",
     name: "Flexión de hombro",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Hombros",
@@ -2212,7 +2185,6 @@ const exercises = [
   },
   
   {
-    id: "reh028",
     name: "Rotación externa de brazo contra pared",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Hombros y manguito rotador",
@@ -2224,7 +2196,6 @@ const exercises = [
   },
   
   {
-    id: "reh029",
     name: "Círculos controlados de hombro",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Hombros",
@@ -2236,7 +2207,6 @@ const exercises = [
   },
   
   {
-    id: "reh030",
     name: "Extensión de hombros con banda",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Hombros y espalda alta",
@@ -2248,7 +2218,6 @@ const exercises = [
   },
   
   {
-    id: "reh031",
     name: "Extensión de rodilla con banda",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Cuádriceps",
@@ -2260,7 +2229,6 @@ const exercises = [
   },
   
   {
-    id: "reh032",
     name: "Descenso desde cajón",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Rodillas y piernas",
@@ -2272,7 +2240,6 @@ const exercises = [
   },
   
   {
-    id: "reh033",
     name: "Sentadilla asistida con banda",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Rodillas y piernas",
@@ -2284,7 +2251,6 @@ const exercises = [
   },
   
   {
-    id: "reh034",
     name: "Cuádriceps isométrico",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Cuádriceps",
@@ -2296,7 +2262,6 @@ const exercises = [
   },
   
   {
-    id: "reh035",
     name: "Puente con foco en isquiotibiales",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Isquiotibiales y glúteos",
@@ -2308,7 +2273,6 @@ const exercises = [
   },
   
   {
-    id: "reh036",
     name: "Estocada isométrica",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Piernas y rodillas",
@@ -2320,7 +2284,6 @@ const exercises = [
   },
   
   {
-    id: "reh037",
     name: "Sentadilla contra pared",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Cuádriceps y rodillas",
@@ -2332,7 +2295,6 @@ const exercises = [
   },
   
   {
-    id: "reh038",
     name: "Sentadilla con talones elevados",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Rodillas y cuádriceps",
@@ -2344,7 +2306,6 @@ const exercises = [
   },
   
   {
-    id: "reh039",
     name: "Rotación controlada de rodilla",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Rodillas",
@@ -2356,7 +2317,6 @@ const exercises = [
   },
   
   {
-    id: "reh040",
     name: "Subida en reversa al step",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Rodillas y piernas",
@@ -2368,7 +2328,6 @@ const exercises = [
   },
   
   {
-    id: "reh041",
     name: "Rotaciones de tobillo",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Tobillos",
@@ -2380,7 +2339,6 @@ const exercises = [
   },
   
   {
-    id: "reh042",
     name: "Extensión plantar",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Pantorrillas y tobillos",
@@ -2392,7 +2350,6 @@ const exercises = [
   },
   
   {
-    id: "reh043",
     name: "Elevación sobre las puntas de los pies",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Pantorrillas y tobillos",
@@ -2404,7 +2361,6 @@ const exercises = [
   },
   
   {
-    id: "reh044",
     name: "Elevación de la punta del pie",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Tibial anterior y tobillos",
@@ -2416,7 +2372,6 @@ const exercises = [
   },
   
   {
-    id: "reh045",
     name: "Contracción del arco plantar",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Pie",
@@ -2428,7 +2383,6 @@ const exercises = [
   },
   
   {
-    id: "reh046",
     name: "Estiramiento de tobillo",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Tobillos",
@@ -2440,7 +2394,6 @@ const exercises = [
   },
   
   {
-    id: "reh047",
     name: "Estiramiento de gemelos",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Pantorrillas",
@@ -2452,7 +2405,6 @@ const exercises = [
   },
   
   {
-    id: "reh048",
     name: "Equilibrio en un pie",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Tobillos y pies",
@@ -2464,7 +2416,6 @@ const exercises = [
   },
   
   {
-    id: "reh049",
     name: "Apertura de los dedos del pie",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Pie",
@@ -2476,7 +2427,6 @@ const exercises = [
   },
   
   {
-    id: "reh050",
     name: "Movilidad de tobillo con banda",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Tobillos",
@@ -2488,7 +2438,6 @@ const exercises = [
   },
   
   {
-    id: "reh051",
     name: "Inclinación pélvica",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Zona lumbar y core",
@@ -2500,7 +2449,6 @@ const exercises = [
   },
   
   {
-    id: "reh052",
     name: "Bicho muerto",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Core y zona lumbar",
@@ -2512,7 +2460,6 @@ const exercises = [
   },
   
   {
-    id: "reh053",
     name: "Perro ave",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Core y zona lumbar",
@@ -2524,7 +2471,6 @@ const exercises = [
   },
   
   {
-    id: "reh054",
     name: "Gato vaca",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Columna y zona lumbar",
@@ -2536,7 +2482,6 @@ const exercises = [
   },
   
   {
-    id: "reh055",
     name: "Estiramiento lumbar hacia el pecho",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Zona lumbar",
@@ -2548,7 +2493,6 @@ const exercises = [
   },
   
   {
-    id: "reh056",
     name: "Rotación lumbar acostado",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Zona lumbar y cadera",
@@ -2560,7 +2504,6 @@ const exercises = [
   },
   
   {
-    id: "reh057",
     name: "Puente de glúteos",
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Glúteos y zona lumbar",

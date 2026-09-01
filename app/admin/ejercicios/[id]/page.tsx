@@ -25,6 +25,7 @@ import {
   Plus,
   Tag,
   AlertTriangle,
+  HeartPulse,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,12 +63,13 @@ const EXERCISE_TYPES: { value: ExerciseType; label: string; icon: React.ReactNod
   { value: "TECHNIQUE", label: "Técnica", icon: <Wrench className="h-4 w-4" />, color: "text-slate-700", bg: "bg-slate-100" },
   { value: "WARMUP", label: "Calentamiento", icon: <Timer className="h-4 w-4" />, color: "text-rose-700", bg: "bg-rose-100" },
   { value: "COOLDOWN", label: "Vuelta a la calma", icon: <Snowflake className="h-4 w-4" />, color: "text-cyan-700", bg: "bg-cyan-100" },
+  { value: "REHABILITATION", label: "Rehabilitación", icon: <HeartPulse className="h-4 w-4" />, color: "text-indigo-700", bg: "bg-indigo-100"},
   { value: "OTHER", label: "Otro", icon: <Target className="h-4 w-4" />, color: "text-gray-700", bg: "bg-gray-100" },
 ];
 
 const ALL_EQUIPMENT = [
   "Barra", "Mancuernas", "Polea", "Paralelas", "Mancuerna", "Máquina", "Banco",
-  "Cinta", "Elíptica", "Bicicleta", "Remo", "Soga", "Kettlebell", "Balón", "Cajón",
+  "Cinta", "Elíptica", "Bicicleta", "Remo", "Soga", "Kettlebell", "Balón", "Cajón", "Cajón pliométrico",
   "Trineo", "Cuerdas", "Foam roller", "Palo", "Bosu", "Fitball", "Banda", "Pelota",
   "Peso corporal", "Pista"
 ];

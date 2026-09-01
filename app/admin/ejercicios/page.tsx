@@ -1,25 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { 
-  Search, 
-  Plus, 
-  Filter, 
-  Dumbbell, 
-  Heart, 
-  Zap, 
-  Wind, 
-  X,
-  ChevronDown,
-  Flame,
-  StretchHorizontal,
-  Target,
-  Timer,
-  Snowflake,
-  Wrench,
-  Scale
-} from "lucide-react";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { Search, Plus, Filter, Dumbbell, Heart, Zap, Wind, X, ChevronDown, Flame, StretchHorizontal, Target, Timer, Snowflake, Wrench, Scale, HeartPulse } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +42,7 @@ const EXERCISE_TYPE_CONFIG: Record<string, { label: string; icon: React.ReactNod
   TECHNIQUE: { label: "Técnica", icon: <Wrench className="h-3.5 w-3.5" />, color: "text-slate-700", bg: "bg-slate-100" },
   WARMUP: { label: "Calentamiento", icon: <Timer className="h-3.5 w-3.5" />, color: "text-rose-700", bg: "bg-rose-100" },
   COOLDOWN: { label: "Vuelta a la calma", icon: <Snowflake className="h-3.5 w-3.5" />, color: "text-cyan-700", bg: "bg-cyan-100" },
+  REHABILITATION: {label: "Rehabilitación",icon: <HeartPulse className="h-3.5 w-3.5" />,color: "text-indigo-700",bg: "bg-indigo-100"},
   OTHER: { label: "Otro", icon: <Target className="h-3.5 w-3.5" />, color: "text-gray-700", bg: "bg-gray-100" },
 };
 
@@ -67,12 +51,12 @@ const EXERCISE_TYPES = Object.keys(EXERCISE_TYPE_CONFIG);
 const ALL_KNOWN_MUSCLE_GROUPS = [
   "Pecho", "Espalda", "Hombros", "Bíceps", "Tríceps", "Cuádriceps", "Femoral",
   "Glúteos", "Pantorrilla", "Core", "Full body", "Piernas", "Cadera", "Tobillos",
-  "Cuello", "Antebrazos", "Piso pélvico", "Mental"
+  "Cuello", "Antebrazos", "Piso pélvico", "Mental", "Trapecio", "Eternocleidomastoideo", "Isquiotibiales", "Columna Torácica", "Columna Lumbar", 
 ];
 
 const ALL_KNOWN_EQUIPMENT = [
   "Barra", "Mancuernas", "Polea", "Paralelas", "Mancuerna", "Máquina", "Banco",
-  "Cinta", "Elíptica", "Bicicleta", "Remo", "Soga", "Kettlebell", "Balón", "Cajón",
+  "Cinta", "Elíptica", "Bicicleta", "Remo", "Soga", "Kettlebell", "Balón", "Cajón", "Cajón pliométrico",
   "Trineo", "Cuerdas", "Foam roller", "Palo", "Bosu", "Fitball", "Banda", "Pelota",
   "Peso corporal", "Pista"
 ];
@@ -160,16 +144,56 @@ function ExerciseMedia({
   );
 }
 
-export default function ExercisesPage() {
+function ExercisesPageContent() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [selectedType, setSelectedType] = useState<string>("all");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [selectedMuscle, setSelectedMuscle] = useState<string>("all");
-  const [selectedEquipment, setSelectedEquipment] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
+
+  // ── Filtros derivados de la URL (fuente única de verdad) ──
+  const search = searchParams.get("search") ?? "";
+  const selectedType = searchParams.get("type") ?? "all";
+  const selectedMuscle = searchParams.get("muscleGroup") ?? "all";
+  const selectedEquipment = searchParams.get("equipment") ?? "all";
+  const selectedTags = searchParams.getAll("tag");
+  const tagsKey = selectedTags.join(","); // para dependencias estables
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | string[] | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        params.delete(key);
+        if (value === null) continue;
+        if (Array.isArray(value)) {
+          value.forEach((v) => params.append(key, v));
+        } else if (value && value !== "all") {
+          params.set(key, value);
+        }
+      }
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [searchParams, router, pathname]
+  );
+
+  const setSearch = (v: string) => updateParams({ search: v || null });
+  const setSelectedType = (v: string) => updateParams({ type: v === "all" ? null : v });
+  const setSelectedMuscle = (v: string) => updateParams({ muscleGroup: v === "all" ? null : v });
+  const setSelectedEquipment = (v: string) => updateParams({ equipment: v === "all" ? null : v });
+
+  const toggleTag = (tag: string) => {
+    const next = selectedTags.includes(tag)
+      ? selectedTags.filter((t) => t !== tag)
+      : [...selectedTags, tag];
+    updateParams({ tag: next.length ? next : null });
+  };
+
+  const clearFilters = () => {
+    router.replace(pathname, { scroll: false });
+  };
 
   const fetchExercises = useCallback(async () => {
     setLoading(true);
@@ -190,39 +214,24 @@ export default function ExercisesPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedType, selectedMuscle, selectedEquipment, search, selectedTags]);
+  }, [selectedType, selectedMuscle, selectedEquipment, search, tagsKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchExercises();
   }, [fetchExercises]);
 
-  const toggleTag = (tag: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-    );
-  };
-
-  const clearFilters = () => {
-    setSelectedType("all");
-    setSelectedTags([]);
-    setSelectedMuscle("all");
-    setSelectedEquipment("all");
-    setSearch("");
-  };
-
-  const activeFiltersCount = 
+  const activeFiltersCount =
     (selectedType !== "all" ? 1 : 0) +
     selectedTags.length +
     (selectedMuscle !== "all" ? 1 : 0) +
     (selectedEquipment !== "all" ? 1 : 0);
 
-  const filteredExercises = exercises.filter(ex => {
+  const filteredExercises = exercises.filter((ex) => {
     if (selectedTags.length === 0) return true;
-    return selectedTags.every(tag => ex.tags.includes(tag));
+    return selectedTags.every((tag) => ex.tags.includes(tag));
   });
 
-  // Extraer todos los tags únicos de los ejercicios
-  const allTags = Array.from(new Set(exercises.flatMap(ex => ex.tags))).sort();
+  const allTags = Array.from(new Set(exercises.flatMap((ex) => ex.tags))).sort();
 
   return (
     <div className="min-h-screen bg-background">
@@ -439,8 +448,8 @@ export default function ExercisesPage() {
           )}
         </div>
 
-        {/* Grid */}
-        {loading ? (
+                {/* Grid */}
+                {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <Card key={i} className="animate-pulse">
@@ -470,8 +479,8 @@ export default function ExercisesPage() {
               const typeConfig = EXERCISE_TYPE_CONFIG[exercise.type] || EXERCISE_TYPE_CONFIG["OTHER"];
 
               return (
-                <Card 
-                  key={exercise.id} 
+                <Card
+                  key={exercise.id}
                   className="group overflow-hidden hover:shadow-md transition-all cursor-pointer border-border/60"
                   onClick={() => router.push(`/admin/ejercicios/${exercise.id}`)}
                 >
@@ -518,8 +527,8 @@ export default function ExercisesPage() {
                     {exercise.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-3">
                         {exercise.tags.slice(0, 3).map(tag => (
-                          <span 
-                            key={tag} 
+                          <span
+                            key={tag}
                             className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground"
                           >
                             {tag}
@@ -540,5 +549,13 @@ export default function ExercisesPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ExercisesPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-muted-foreground">Cargando...</div>}>
+      <ExercisesPageContent />
+    </Suspense>
   );
 }

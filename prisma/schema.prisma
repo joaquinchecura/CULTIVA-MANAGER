@@ -95,6 +95,7 @@ enum ExerciseType {
   TECHNIQUE
   WARMUP
   COOLDOWN
+  REHABILITATION 
   OTHER
 }
 

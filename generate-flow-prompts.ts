@@ -11,7 +11,7 @@ const ATHLETES = [
   {
     id: 'athlete-a',
     name: 'Atleta Masculino 30s',
-    prompt: 'Muscular man in his early 30s, short dark hair, clean shaven, wearing fitted black athletic shorts and heather white tank top, athletic build, caucasian',
+    prompt: 'Muscular man in his early 30s, short dark hair, clean shaven, wearing black athletic shorts and heather white tank top, athletic build, caucasian',
   },
   {
     id: 'athlete-b', 
@@ -21,12 +21,12 @@ const ATHLETES = [
   {
     id: 'athlete-c',
     name: 'Atleta Masculino 40s',
-    prompt: 'Fit man in his early 40s, short beard and buzz cut, wearing black compression shirt and matching shorts, lean muscular build, athletic, latino',
+    prompt: 'Fit man in his early 40s, short beard and buzz cut, wearing black shirt and matching shorts, lean muscular build, athletic',
   },
   {
     id: 'athlete-d',
     name: 'Atleta Femenino 35s',
-    prompt: 'Athletic woman in her mid 30s, long blond hair, wearing maroon athletic top and black leggings, strong physique, caucasian',
+    prompt: 'Athletic woman in her mid 30s, long blond hair, ponytail,  wearing maroon athletic top and black leggings, strong physique, caucasian',
   },
 ] as const
 
@@ -44,6 +44,7 @@ const TYPE_MODIFIERS: Record<string, string> = {
   TECHNIQUE: 'practicing movement pattern, light weight or PVC pipe, instructional form, slow controlled',
   WARMUP: 'light dynamic movement, warming up body, gradual motion, preparing for exercise',
   COOLDOWN: 'recovery stretching, deep breathing, relaxed posture, post-workout calm, gentle movement',
+  REHABILITATION: 'controlled movement, focused espression, rehabilitation exercise, controlled activation, precise movement',
   OTHER: 'rehabilitation exercise, controlled activation, mind-muscle connection, precise small movement',
 }
 

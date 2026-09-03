@@ -1,0 +1,670 @@
+{
+  "totalExercises": 801,
+  "exercisesWithAnyMismatch": 312,
+  "muscleGroup": {
+    "Espalda baja": [
+      "Estiramiento Lumbar",
+      "Estiramiento Lumbar con rotación",
+      "Rotación espinal acostado"
+    ],
+    "Tibial anterior": [
+      "Estiramiento de Tibial sentado"
+    ],
+    "Pectorales": [
+      "Estiramiento de Pecho contra pared",
+      "Estiramiento de Pecho en puerta",
+      "Estiramiento de Pectorales contra pared"
+    ],
+    "Dorsales": [
+      "Estiramiento de Dorsales con abrazo",
+      "Estiramiento de Dorsales sobre la cabeza"
+    ],
+    "Flexores de cadera": [
+      "Estiramiento de Flexores de Cadera arrodillado",
+      "Estiramiento de Flexores de Cadera"
+    ],
+    "Gemelos": [
+      "Estiramiento de Gemelos en escalón",
+      "Estiramiento de Gemelos contra pared"
+    ],
+    "Sóleo": [
+      "Estiramiento de Sóleo de pie"
+    ],
+    "Aductores": [
+      "Estiramiento de Aductores sentado",
+      "Estiramiento de Aductores"
+    ],
+    "Columna torácica": [
+      "Rotación torácica acostado de lado",
+      "Flexión y extensión de columna",
+      "Extensión torácica con apoyo",
+      "Rotación de brazo bajo el cuerpo",
+      "Rotación torácica en cuadrupedia",
+      "Rotación torácica sentado",
+      "Extensión torácica contra pared",
+      "Alcance frontal sobre roller",
+      "Flexión de columna sentado",
+      "Rotación controlada de columna",
+      "Rotaciones torácicas",
+      "Extensiones de columna torácica"
+    ],
+    "Cuello y trapecio": [
+      "Estiramiento de trapecio superior"
+    ],
+    "Cuello y escápulas": [
+      "Estiramiento del elevador de la escápula"
+    ],
+    "Espalda alta": [
+      "Retracción escapular",
+      "Apertura escapular con banda",
+      "Retracción escapular boca abajo"
+    ],
+    "Escápulas y serrato anterior": [
+      "Rechazo escapular",
+      "Protracción escapular"
+    ],
+    "Espalda alta y escápulas": [
+      "Deslizamiento escapular en pared"
+    ],
+    "Espalda alta y hombros": [
+      "Elevaciones Y-T-W"
+    ],
+    "Serrato anterior y escápulas": [
+      "Deslizamiento escapular con activación del serrato",
+      "Empuje escapular acostado"
+    ],
+    "Escápulas y espalda alta": [
+      "Depresión escapular",
+      "Rotaciones escapulares"
+    ],
+    "Hombros y manguito rotador": [
+      "Rotación externa de hombro con banda",
+      "Rotación externa de brazo contra pared"
+    ],
+    "Hombros y escápulas": [
+      "Deslizamientos de hombros contra pared"
+    ],
+    "Hombros y espalda alta": [
+      "Apertura de hombros con banda",
+      "Extensión de hombros con banda"
+    ],
+    "Rodillas y piernas": [
+      "Descenso desde cajón",
+      "Sentadilla asistida con banda",
+      "Subida en reversa al step"
+    ],
+    "Isquiotibiales y glúteos": [
+      "Puente con foco en isquiotibiales"
+    ],
+    "Piernas y rodillas": [
+      "Estocada isométrica"
+    ],
+    "Cuádriceps y rodillas": [
+      "Sentadilla contra pared"
+    ],
+    "Rodillas y cuádriceps": [
+      "Sentadilla con talones elevados"
+    ],
+    "Rodillas": [
+      "Rotación controlada de rodilla",
+      "Círculos de rodillas"
+    ],
+    "Pantorrillas y tobillos": [
+      "Extensión plantar",
+      "Elevación sobre las puntas de los pies"
+    ],
+    "Tibial anterior y tobillos": [
+      "Elevación de la punta del pie"
+    ],
+    "Pie": [
+      "Contracción del arco plantar",
+      "Apertura de los dedos del pie"
+    ],
+    "Pantorrillas": [
+      "Estiramiento de gemelos",
+      "Elevación de talones"
+    ],
+    "Tobillos y pies": [
+      "Equilibrio en un pie"
+    ],
+    "Zona lumbar y core": [
+      "Inclinación pélvica"
+    ],
+    "Core y zona lumbar": [
+      "Bicho muerto",
+      "Perro ave",
+      "Elevación de torso",
+      "Plancha lateral"
+    ],
+    "Columna y zona lumbar": [
+      "Gato vaca"
+    ],
+    "Zona lumbar": [
+      "Estiramiento lumbar hacia el pecho"
+    ],
+    "Zona lumbar y cadera": [
+      "Rotación lumbar acostado"
+    ],
+    "Glúteos y zona lumbar": [
+      "Puente de glúteos"
+    ],
+    "Cadera y zona lumbar": [
+      "Bisagra de cadera"
+    ],
+    "Tren superior y core": [
+      "Lanzamiento de balón medicinal",
+      "Escalada de cuerda",
+      "Flexión con toque de hombro"
+    ],
+    "Cuerpo completo": [
+      "Tire Flip",
+      "Turkish Get Up",
+      "Sprint multidireccional",
+      "Escalera de sprints",
+      "Power Clean",
+      "Sprint reactivo",
+      "Sprint en el lugar",
+      "Med Ball Slam",
+      "Shuffle reactivo",
+      "Step Jacks",
+      "Medio burpee",
+      "Sprint en bicicleta de aire",
+      "Thruster con peso",
+      "Complex con barra",
+      "Burpees",
+      "Thrusters HIIT",
+      "Sprint con intervalos cortos",
+      "Caminata de oso",
+      "Coordinación brazo y pierna opuesta",
+      "Saltos coordinados",
+      "Paso atrás con brazos coordinados",
+      "Paso diagonal con alcance"
+    ],
+    "Tren inferior": [
+      "Carrera en zigzag",
+      "Cambio rápido de dirección",
+      "Desplazamiento lateral",
+      "Carrera en escalera de agilidad",
+      "Cone Shuttle",
+      "Salto reactivo",
+      "Shuffle reactivo"
+    ],
+    "Piernas y hombros": [
+      "Sentadilla con brazos elevados",
+      "Alcance de brazo en equilibrio"
+    ],
+    "Piernas y cadera": [
+      "Estocadas laterales sin salto",
+      "Sentadilla muy lenta",
+      "Zancada controlada"
+    ],
+    "Core y espalda": [
+      "Remo en plancha"
+    ],
+    "Cadera y cadena posterior": [
+      "Swing con kettlebell"
+    ],
+    "Tren superior": [
+      "Golpes con soga",
+      "Ondas con soga"
+    ],
+    "Core y glúteos": [
+      "Puente alternando piernas"
+    ],
+    "Cadera y glúteos": [
+      "Puente de glúteos controlado"
+    ],
+    "Pies y tobillos": [
+      "Caminata talón-punta"
+    ],
+    "Core y cadera": [
+      "Balanceo en cuadrupedia"
+    ],
+    "Piernas y core": [
+      "Marcha coordinada",
+      "Rodillas altas coordinadas"
+    ],
+    "Pies y piernas": [
+      "Pasos rápidos en escalera de coordinación",
+      "Toque alternado de punta de pie"
+    ],
+    "Columna": [
+      "Rotación de columna sentado",
+      "Gato-vaca",
+      "Ondulaciones de columna"
+    ],
+    "Muñecas": [
+      "Movilidad de muñecas",
+      "Rotación de muñeca",
+      "Wrist mobility circles",
+      "Movilidad de muñecas dinámica",
+      "Prehab de muñecas"
+    ],
+    "Isquiotibiales / Glúteos": [
+      "Hiperextensiones inversas",
+      "Peso muerto unilateral",
+      "Peso muerto rumano con mancuernas",
+      "Peso muerto rumano con kettlebell"
+    ],
+    "Pecho / Espalda": [
+      "Pull-over con kettlebell",
+      "Pull-over en máquina",
+      "Pull-over con cuerda"
+    ],
+    "Espalda / Piernas": [
+      "Peso muerto landmine",
+      "Peso muerto block pull",
+      "Peso muerto rack pull"
+    ],
+    "Espalda / Core": [
+      "Dominadas L-sit"
+    ],
+    "Core / Hombros": [
+      "Plancha con pica"
+    ],
+    "Piernas / Glúteos": [
+      "Peso muerto sumo"
+    ],
+    "Espalda baja / Glúteos": [
+      "Hiperextensiones en 45°",
+      "Hiperextensiones con banda",
+      "Hiperextensiones unilateral"
+    ],
+    "Tríceps / Pecho": [
+      "Fondos con kettlebell"
+    ],
+    "Cuádriceps / Glúteos": [
+      "Sentadilla sumo"
+    ],
+    "Pecho / Hombros / Tríceps": [
+      "Press con TRX"
+    ],
+    "Core / Glúteos": [
+      "Plancha con elevación de pierna"
+    ],
+    "Brazos": [
+      "Foam rolling de tríceps",
+      "Estiramiento de tríceps",
+      "Relajación progresiva de brazos",
+      "Movilidad de nervio ulnar"
+    ]
+  },
+  "equipment": {
+    "Pared": [
+      "Estiramiento de Hombro contra pared con rotación",
+      "Estiramiento de Pecho contra pared",
+      "Estiramiento de Bíceps en pared",
+      "Estiramiento de Tríceps en pared",
+      "Estiramiento de Sóleo de pie",
+      "Sentadilla contra pared"
+    ],
+    "Step": [
+      "Estiramiento de Gemelos en escalón"
+    ],
+    "Puerta": [
+      "Estiramiento de Pecho en puerta"
+    ],
+    "Bandas": [
+      "Almeja",
+      "Caminata lateral con banda",
+      "Apertura escapular con banda",
+      "Rotación externa de hombro con banda",
+      "Apertura de hombros con banda",
+      "Extensión de hombros con banda",
+      "Extensión de rodilla con banda",
+      "Sentadilla asistida con banda",
+      "Movilidad de tobillo con banda"
+    ],
+    "Balón medicinal": [
+      "Lanzamiento de balón medicinal",
+      "Med Ball Slam",
+      "Russian twist con balón",
+      "Wall ball con giro",
+      "Medicine ball rotational throw",
+      "Medicine ball chest pass"
+    ],
+    "Neumático": [
+      "Tire Flip"
+    ],
+    "Cuerda": [
+      "Escalada de cuerda"
+    ],
+    "Escalera de agilidad": [
+      "Carrera en escalera de agilidad"
+    ],
+    "Bicicleta de aire": [
+      "Sprint en bicicleta de aire"
+    ],
+    "Pendiente": [
+      "Sprint en pendiente"
+    ],
+    "Plataforma o step": [
+      "Subida a plataforma con equilibrio"
+    ],
+    "Escalera de coordinación": [
+      "Pasos rápidos en escalera de coordinación"
+    ],
+    "Step o plataforma": [
+      "Subir y bajar step en 4 tiempos"
+    ],
+    "Banda elástica": [
+      "Rotación de hombros con banda",
+      "Pájaro con banda",
+      "Curl explosivo",
+      "Face pull con banda",
+      "Russian twist con banda",
+      "Patada de tríceps con banda",
+      "Curl femoral con banda",
+      "Crunch con banda",
+      "Cruces unilaterales",
+      "Remo con banda",
+      "Prensa con banda",
+      "Curl con banda",
+      "Sentadilla con banda",
+      "Elevación lateral con banda",
+      "Dead bug con banda",
+      "Bird dog con banda",
+      "Psoas stretch con banda",
+      "Puente con banda",
+      "Lunge con banda",
+      "Equilibrio en una pierna con banda"
+    ],
+    "Barra T": [
+      "Remo T-bar"
+    ],
+    "Mancuerna / Kettlebell": [
+      "Sentadilla goblet",
+      "Peso muerto unilateral"
+    ],
+    "Bancos": [
+      "Fondos entre bancos"
+    ],
+    "Mancuerna + Banco": [
+      "Patada de tríceps con mancuerna en banco",
+      "Pájaro con mancuerna en banco"
+    ],
+    "Banco / Paralelas": [
+      "Elevación de piernas L-sit"
+    ],
+    "Máquina de jalón": [
+      "Jalón a una mano",
+      "Jalón en máquina"
+    ],
+    "Polea baja": [
+      "Curl en polea baja",
+      "Patada de tríceps con cable"
+    ],
+    "Máquina de aperturas": [
+      "Aperturas en máquina"
+    ],
+    "Máquina de hip thrust": [
+      "Hip thrust en máquina"
+    ],
+    "Banco inclinado": [
+      "Elevación de piernas en banco inclinado"
+    ],
+    "Banco de hiperextensiones": [
+      "Hiperextensiones inversas",
+      "Hiperextensiones unilateral"
+    ],
+    "Máquina de extensión de cuádriceps": [
+      "Extensión de cuádriceps unilateral",
+      "Extensión de cuádriceps en máquina"
+    ],
+    "TRX": [
+      "Remo en TRX",
+      "Curl con TRX",
+      "Press con TRX",
+      "TRX y-fly",
+      "TRX squat",
+      "Row en TRX unilateral",
+      "Row en TRX"
+    ],
+    "Máquina de curl femoral": [
+      "Curl femoral sentado",
+      "Curl femoral unilateral"
+    ],
+    "Mancuernas / Peso corporal": [
+      "Elevación de talón de pie"
+    ],
+    "Kettlebell + Banco": [
+      "Pull-over con kettlebell"
+    ],
+    "Polea alta + Cuerda": [
+      "Jalón con cuerda",
+      "Crunch con cuerda",
+      "Face pull con cuerda alta",
+      "Pull-over con cuerda"
+    ],
+    "Barra / Mancuerna / Peso corporal": [
+      "Hip thrust b-stance",
+      "Sentadilla sumo"
+    ],
+    "Landmine": [
+      "Peso muerto landmine",
+      "Press landmine"
+    ],
+    "Poleas bajas": [
+      "Aperturas en polea baja",
+      "Cruces altos"
+    ],
+    "Banco plano": [
+      "Russian twist en banco",
+      "Fondos en banco"
+    ],
+    "Polea alta + Barra / Cuerda": [
+      "Extensión de tríceps en polea alta"
+    ],
+    "Polea alta + Barra en V": [
+      "Jalón agarre cerrado"
+    ],
+    "Máquina de pull-over": [
+      "Pull-over en máquina"
+    ],
+    "Mancuernas + Banco inclinado": [
+      "Aperturas en banco inclinado"
+    ],
+    "Polea + Cuerda": [
+      "Face pull unilateral"
+    ],
+    "Máquina Smith": [
+      "Hip thrust con barra smith",
+      "Sentadilla en máquina smith"
+    ],
+    "Polea baja + Cuerda": [
+      "Face pull con cuerda baja"
+    ],
+    "Máquina de press de hombros": [
+      "Press de hombros en máquina"
+    ],
+    "Barra / Mancuernas": [
+      "Curl de pie"
+    ],
+    "Máquina de pantorrilla sentado": [
+      "Elevación de talón sentado"
+    ],
+    "Banda elástica + Banco": [
+      "Hip thrust con banda"
+    ],
+    "Banco de hiperextensiones 45°": [
+      "Hiperextensiones en 45°"
+    ],
+    "Poleas altas": [
+      "Cruces bajos"
+    ],
+    "Barra fija / TRX": [
+      "Remo invertido"
+    ],
+    "Máquina de elevación lateral": [
+      "Elevación lateral en máquina"
+    ],
+    "Máquina de patada de tríceps": [
+      "Patada de tríceps en máquina"
+    ],
+    "Máquina de prensa inclinada": [
+      "Prensa inclinada"
+    ],
+    "Barra de dominadas": [
+      "Elevación de piernas colgado",
+      "Burpee con pull-up",
+      "Burpee con muscle-up"
+    ],
+    "Máquina de pájaro / Pec deck inverso": [
+      "Pájaro en máquina"
+    ],
+    "Barra + Bloques / Discos": [
+      "Peso muerto block pull"
+    ],
+    "Banda elástica + Banco de hiperextensiones": [
+      "Hiperextensiones con banda"
+    ],
+    "Kettlebell + Paralelas": [
+      "Fondos con kettlebell"
+    ],
+    "Barra + Peso adicional": [
+      "Dominadas con peso"
+    ],
+    "Mancuernas + Banco declinado": [
+      "Press declinado con mancuernas",
+      "Aperturas en banco declinado"
+    ],
+    "Banda elástica + Anclaje bajo": [
+      "Extensión de cuádriceps con banda"
+    ],
+    "Máquina de prensa": [
+      "Prensa unilateral"
+    ],
+    "Polea baja + Barra recta": [
+      "Curl con cable"
+    ],
+    "Banda elástica + Anclaje alto": [
+      "Cruces con banda"
+    ],
+    "Barra + Rack": [
+      "Peso muerto rack pull"
+    ],
+    "Mancuerna + Banco plano": [
+      "Elevación de piernas con mancuerna entre pies"
+    ],
+    "Banco declinado": [
+      "Crunch en banco declinado"
+    ],
+    "Peso corporal + Soporte": [
+      "Extensión de cuádriceps sissy"
+    ],
+    "Máquina de remo": [
+      "Remo de 500m",
+      "Remo de resistencia",
+      "Remo HIIT"
+    ],
+    "Cinta de correr": [
+      "Caminata inclinada en cinta"
+    ],
+    "Bicicleta estática": [
+      "Bicicleta estática intervalada"
+    ],
+    "Soga de batalla": [
+      "Soga pesada"
+    ],
+    "Banco o step": [
+      "Step up rápido",
+      "Step-up lateral",
+      "Plyo step-jump",
+      "Plyo lateral step-up",
+      "Plyo step-down",
+      "Plyo step-up"
+    ],
+    "Pista o terreno inclinado": [
+      "Sprint en pendiente"
+    ],
+    "Máquina escaladora": [
+      "Escalador de montaña"
+    ],
+    "Trineo (sled)": [
+      "Sled reverse",
+      "Sled lateral push",
+      "Sled bear crawl push",
+      "Sprint con trineo"
+    ],
+    "Mancuernas o kettlebells": [
+      "Farmer carry con giro",
+      "Step-up con press",
+      "Equilibrio en una pierna con peso"
+    ],
+    "Mancuerna o disco": [
+      "Dead bug con peso"
+    ],
+    "Kettlebell o mancuerna": [
+      "Turkish half get-up",
+      "Turkish get-down"
+    ],
+    "Mancuerna o kettlebell": [
+      "Farmer suitcase carry",
+      "Deadlift unilateral"
+    ],
+    "Mancuerna ligera o tobilleras": [
+      "Bird dog con peso"
+    ],
+    "Barra o mancuernas": [
+      "Clean muscle clean",
+      "Snatch hang snatch",
+      "Clean hang clean",
+      "Press tempo",
+      "Drill de recepción"
+    ],
+    "Trineo (sled) con cuerda": [
+      "Sled pull"
+    ],
+    "Mancuernas o kettlebells de pesos distintos": [
+      "Farmer carry con peso diferente"
+    ],
+    "Sandbag": [
+      "Sandbag load",
+      "Sandbag press",
+      "Thruster con sandbag",
+      "Snatch con sandbag"
+    ],
+    "Palo o bastón": [
+      "Dislocaciones con palo en agarre cerrado",
+      "Dislocaciones con palo en agarre ancho",
+      "Snatch con palo",
+      "Peso muerto rumano con palo",
+      "Clean muscle clean con palo",
+      "Jerk power jerk con palo",
+      "Sentadilla sumo con palo",
+      "Clean hang clean con palo",
+      "Drill de overhead"
+    ],
+    "Vallas o conos": [
+      "Hurdle hop",
+      "Hurdle hop a una pierna"
+    ],
+    "Cajones pliométricos": [
+      "Depth drop jump",
+      "Depth landing con salto"
+    ],
+    "Banda elástica de resistencia": [
+      "Salto con banda"
+    ],
+    "Paracaídas de resistencia": [
+      "Sprint con paracaídas"
+    ],
+    "Bosu + mancuerna o kettlebell": [
+      "Deadlift unilateral en bosu",
+      "Press unilateral en bosu",
+      "Row unilateral en bosu"
+    ],
+    "Fitball + mancuernas": [
+      "Press en fitball"
+    ],
+    "Barra o palo": [
+      "Posición de overhead"
+    ],
+    "Banco o cajón": [
+      "Sentadilla box"
+    ],
+    "Bandas de compresión": [
+      "Recuperación con compresión"
+    ]
+  }
+}

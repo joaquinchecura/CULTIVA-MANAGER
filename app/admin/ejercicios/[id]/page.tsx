@@ -71,15 +71,16 @@ const ALL_EQUIPMENT = [
   "Barra", "Mancuernas", "Polea", "Paralelas", "Mancuerna", "Máquina", "Banco",
   "Cinta", "Elíptica", "Bicicleta", "Remo", "Soga", "Kettlebell", "Balón", "Cajón", "Cajón pliométrico",
   "Trineo", "Cuerdas", "Foam roller", "Palo", "Bosu", "Fitball", "Banda", "Pelota",
-  "Peso corporal", "Pista"
+  "Peso corporal", "Pista",
+  "TRX", "Sandbag", "Pared", "Balón medicinal", // 👈 nuevas
 ];
 
 const ALL_MUSCLE_GROUPS = [
   "Pecho", "Espalda", "Hombros", "Bíceps", "Tríceps", "Cuádriceps", "Femoral",
   "Glúteos", "Pantorrilla", "Core", "Full body", "Piernas", "Cadera", "Tobillos",
-  "Cuello", "Antebrazos", "Piso pélvico", "Mental"
+  "Cuello", "Antebrazos", "Piso pélvico", "Mental",
+  "Muñecas", // 👈 nueva
 ];
-
 // ✅ YA NO DEFINIMOS Exercise LOCALMENTE — usamos el importado
 
 export default function ExerciseDetailPage({ params }: { params: Promise<{ id: string }> }) {

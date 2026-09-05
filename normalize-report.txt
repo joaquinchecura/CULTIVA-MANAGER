@@ -1,0 +1,302 @@
+=== NORMALIZACIÓN DE FILTROS ===
+Ejercicios modificados: 218
+
+--- Cambios aplicados (sinónimos + compuestos separados) ---
+[muscleGroup] Estiramiento Lumbar: "Espalda baja" -> "Columna Lumbar"
+[muscleGroup] Estiramiento de Pecho contra pared: "Pectorales" -> "Pecho"
+[muscleGroup] Estiramiento Lumbar con rotación: "Espalda baja" -> "Columna Lumbar"
+[muscleGroup] Estiramiento de Dorsales con abrazo: "Dorsales" -> "Espalda"
+[muscleGroup] Estiramiento de Gemelos en escalón: "Gemelos" -> "Pantorrilla"
+[muscleGroup] Estiramiento de Pecho en puerta: "Pectorales" -> "Pecho"
+[muscleGroup] Estiramiento de Sóleo de pie: "Sóleo" -> "Pantorrilla"
+[muscleGroup] Estiramiento de Pectorales contra pared: "Pectorales" -> "Pecho"
+[muscleGroup] Estiramiento de Gemelos contra pared: "Gemelos" -> "Pantorrilla"
+[muscleGroup] Estiramiento de Dorsales sobre la cabeza: "Dorsales" -> "Espalda"
+[muscleGroup] Rotación espinal acostado: "Espalda baja" -> "Columna Lumbar"
+[equipment]   Almeja: "Bandas" -> "Banda"
+[equipment]   Caminata lateral con banda: "Bandas" -> "Banda"
+[muscleGroup] Estiramiento de trapecio superior: "Cuello y trapecio" -> "Cuello" (+tags: trapecio)
+[muscleGroup] Estiramiento del elevador de la escápula: "Cuello y escápulas" -> "Cuello" (+tags: escapulas)
+[muscleGroup] Rechazo escapular: "Escápulas y serrato anterior" -> "Escápulas" (+tags: serrato_anterior)
+[muscleGroup] Deslizamiento escapular en pared: "Espalda alta y escápulas" -> "Espalda alta" (+tags: escapulas)
+[equipment]   Apertura escapular con banda: "Bandas" -> "Banda"
+[muscleGroup] Elevaciones Y-T-W: "Espalda alta y hombros" -> "Espalda alta" (+tags: hombros)
+[muscleGroup] Deslizamiento escapular con activación del serrato: "Serrato anterior y escápulas" -> "Serrato anterior" (+tags: escapulas)
+[muscleGroup] Depresión escapular: "Escápulas y espalda alta" -> "Escápulas" (+tags: espalda_alta)
+[muscleGroup] Rotaciones escapulares: "Escápulas y espalda alta" -> "Escápulas" (+tags: espalda_alta)
+[muscleGroup] Empuje escapular acostado: "Serrato anterior y escápulas" -> "Serrato anterior" (+tags: escapulas)
+[muscleGroup] Rotación externa de hombro con banda: "Hombros y manguito rotador" -> "Hombros" (+tags: manguito_rotador)
+[equipment]   Rotación externa de hombro con banda: "Bandas" -> "Banda"
+[muscleGroup] Deslizamientos de hombros contra pared: "Hombros y escápulas" -> "Hombros" (+tags: escapulas)
+[muscleGroup] Protracción escapular: "Escápulas y serrato anterior" -> "Escápulas" (+tags: serrato_anterior)
+[muscleGroup] Apertura de hombros con banda: "Hombros y espalda alta" -> "Hombros" (+tags: espalda_alta)
+[equipment]   Apertura de hombros con banda: "Bandas" -> "Banda"
+[muscleGroup] Rotación externa de brazo contra pared: "Hombros y manguito rotador" -> "Hombros" (+tags: manguito_rotador)
+[muscleGroup] Extensión de hombros con banda: "Hombros y espalda alta" -> "Hombros" (+tags: espalda_alta)
+[equipment]   Extensión de hombros con banda: "Bandas" -> "Banda"
+[equipment]   Extensión de rodilla con banda: "Bandas" -> "Banda"
+[muscleGroup] Descenso desde cajón: "Rodillas y piernas" -> "Piernas" (+tags: piernas)
+[muscleGroup] Sentadilla asistida con banda: "Rodillas y piernas" -> "Piernas" (+tags: piernas)
+[equipment]   Sentadilla asistida con banda: "Bandas" -> "Banda"
+[muscleGroup] Puente con foco en isquiotibiales: "Isquiotibiales y glúteos" -> "Isquiotibiales" (+tags: gluteos)
+[muscleGroup] Estocada isométrica: "Piernas y rodillas" -> "Piernas" (+tags: rodillas)
+[muscleGroup] Sentadilla contra pared: "Cuádriceps y rodillas" -> "Cuádriceps" (+tags: rodillas)
+[muscleGroup] Sentadilla con talones elevados: "Rodillas y cuádriceps" -> "Piernas" (+tags: cuadriceps)
+[muscleGroup] Rotación controlada de rodilla: "Rodillas" -> "Piernas"
+[muscleGroup] Subida en reversa al step: "Rodillas y piernas" -> "Piernas" (+tags: piernas)
+[muscleGroup] Extensión plantar: "Pantorrillas y tobillos" -> "Pantorrilla" (+tags: tobillos)
+[muscleGroup] Elevación sobre las puntas de los pies: "Pantorrillas y tobillos" -> "Pantorrilla" (+tags: tobillos)
+[muscleGroup] Elevación de la punta del pie: "Tibial anterior y tobillos" -> "Tibial anterior" (+tags: tobillos)
+[muscleGroup] Contracción del arco plantar: "Pie" -> "Tobillos"
+[muscleGroup] Estiramiento de gemelos: "Pantorrillas" -> "Pantorrilla"
+[muscleGroup] Equilibrio en un pie: "Tobillos y pies" -> "Tobillos" (+tags: pies)
+[muscleGroup] Apertura de los dedos del pie: "Pie" -> "Tobillos"
+[equipment]   Movilidad de tobillo con banda: "Bandas" -> "Banda"
+[muscleGroup] Inclinación pélvica: "Zona lumbar y core" -> "Columna Lumbar" (+tags: core)
+[muscleGroup] Bicho muerto: "Core y zona lumbar" -> "Core" (+tags: zona_lumbar)
+[muscleGroup] Perro ave: "Core y zona lumbar" -> "Core" (+tags: zona_lumbar)
+[muscleGroup] Gato vaca: "Columna y zona lumbar" -> "Columna" (+tags: zona_lumbar)
+[muscleGroup] Estiramiento lumbar hacia el pecho: "Zona lumbar" -> "Columna Lumbar"
+[muscleGroup] Rotación lumbar acostado: "Zona lumbar y cadera" -> "Columna Lumbar" (+tags: cadera)
+[muscleGroup] Puente de glúteos: "Glúteos y zona lumbar" -> "Glúteos" (+tags: zona_lumbar)
+[muscleGroup] Elevación de torso: "Core y zona lumbar" -> "Core" (+tags: zona_lumbar)
+[muscleGroup] Plancha lateral: "Core y zona lumbar" -> "Core" (+tags: zona_lumbar)
+[muscleGroup] Bisagra de cadera: "Cadera y zona lumbar" -> "Cadera" (+tags: zona_lumbar)
+[muscleGroup] Lanzamiento de balón medicinal: "Tren superior y core" -> "Tren superior" (+tags: core)
+[muscleGroup] Tire Flip: "Cuerpo completo" -> "Full body"
+[muscleGroup] Turkish Get Up: "Cuerpo completo" -> "Full body"
+[muscleGroup] Escalada de cuerda: "Tren superior y core" -> "Tren superior" (+tags: core)
+[equipment]   Escalada de cuerda: "Cuerda" -> "Cuerdas"
+[muscleGroup] Sprint multidireccional: "Cuerpo completo" -> "Full body"
+[muscleGroup] Escalera de sprints: "Cuerpo completo" -> "Full body"
+[muscleGroup] Power Clean: "Cuerpo completo" -> "Full body"
+[muscleGroup] Sprint reactivo: "Cuerpo completo" -> "Full body"
+[muscleGroup] Sprint en el lugar: "Cuerpo completo" -> "Full body"
+[muscleGroup] Med Ball Slam: "Cuerpo completo" -> "Full body"
+[muscleGroup] Shuffle reactivo: "Cuerpo completo" -> "Full body"
+[muscleGroup] Step Jacks: "Cuerpo completo" -> "Full body"
+[muscleGroup] Medio burpee: "Cuerpo completo" -> "Full body"
+[muscleGroup] Sentadilla con brazos elevados: "Piernas y hombros" -> "Piernas" (+tags: hombros)
+[muscleGroup] Estocadas laterales sin salto: "Piernas y cadera" -> "Piernas" (+tags: cadera)
+[muscleGroup] Flexión con toque de hombro: "Tren superior y core" -> "Tren superior" (+tags: core)
+[muscleGroup] Remo en plancha: "Core y espalda" -> "Core" (+tags: espalda)
+[muscleGroup] Swing con kettlebell: "Cadera y cadena posterior" -> "Cadera" (+tags: cadena_posterior)
+[muscleGroup] Sprint en bicicleta de aire: "Cuerpo completo" -> "Full body"
+[equipment]   Sprint en bicicleta de aire: "Bicicleta de aire" -> "Bicicleta"
+[equipment]   Sprint en pendiente: "Pendiente" -> "Pista"
+[muscleGroup] Thruster con peso: "Cuerpo completo" -> "Full body"
+[muscleGroup] Complex con barra: "Cuerpo completo" -> "Full body"
+[muscleGroup] Burpees: "Cuerpo completo" -> "Full body"
+[muscleGroup] Thrusters HIIT: "Cuerpo completo" -> "Full body"
+[muscleGroup] Sprint con intervalos cortos: "Cuerpo completo" -> "Full body"
+[muscleGroup] Elevación de talones: "Pantorrillas" -> "Pantorrilla"
+[muscleGroup] Puente alternando piernas: "Core y glúteos" -> "Core" (+tags: gluteos)
+[muscleGroup] Alcance de brazo en equilibrio: "Piernas y hombros" -> "Piernas" (+tags: hombros)
+[muscleGroup] Puente de glúteos controlado: "Cadera y glúteos" -> "Cadera" (+tags: gluteos)
+[muscleGroup] Caminata talón-punta: "Pies y tobillos" -> "Pies" (+tags: tobillos)
+[equipment]   Subida a plataforma con equilibrio: "Plataforma o step" -> "Plataforma" (+tags: step)
+[muscleGroup] Sentadilla muy lenta: "Piernas y cadera" -> "Piernas" (+tags: cadera)
+[muscleGroup] Zancada controlada: "Piernas y cadera" -> "Piernas" (+tags: cadera)
+[muscleGroup] Balanceo en cuadrupedia: "Core y cadera" -> "Core" (+tags: cadera)
+[muscleGroup] Marcha coordinada: "Piernas y core" -> "Piernas" (+tags: core)
+[muscleGroup] Rodillas altas coordinadas: "Piernas y core" -> "Piernas" (+tags: core)
+[muscleGroup] Pasos rápidos en escalera de coordinación: "Pies y piernas" -> "Pies" (+tags: piernas)
+[muscleGroup] Caminata de oso: "Cuerpo completo" -> "Full body"
+[muscleGroup] Coordinación brazo y pierna opuesta: "Cuerpo completo" -> "Full body"
+[equipment]   Subir y bajar step en 4 tiempos: "Step o plataforma" -> "Step" (+tags: plataforma)
+[muscleGroup] Saltos coordinados: "Cuerpo completo" -> "Full body"
+[muscleGroup] Toque alternado de punta de pie: "Pies y piernas" -> "Pies" (+tags: piernas)
+[muscleGroup] Paso atrás con brazos coordinados: "Cuerpo completo" -> "Full body"
+[muscleGroup] Paso diagonal con alcance: "Cuerpo completo" -> "Full body"
+[muscleGroup] Círculos de rodillas: "Rodillas" -> "Piernas"
+[equipment]   Rotación de hombros con banda: "Banda elástica" -> "Banda"
+[equipment]   Remo T-bar: "Barra T" -> "Barra"
+[equipment]   Sentadilla goblet: "Mancuerna / Kettlebell" -> "Mancuerna" (+tags: kettlebell)
+[equipment]   Patada de tríceps con mancuerna en banco: "Mancuerna + Banco" -> "Mancuerna" (+tags: banco)
+[equipment]   Elevación de piernas L-sit: "Banco / Paralelas" -> "Banco" (+tags: paralelas)
+[equipment]   Pájaro con mancuerna en banco: "Mancuerna + Banco" -> "Mancuerna" (+tags: banco)
+[equipment]   Pájaro con banda: "Banda elástica" -> "Banda"
+[muscleGroup] Hiperextensiones inversas: "Isquiotibiales / Glúteos" -> "Isquiotibiales" (+tags: gluteos)
+[equipment]   Curl explosivo: "Banda elástica" -> "Banda"
+[equipment]   Face pull con banda: "Banda elástica" -> "Banda"
+[equipment]   Russian twist con banda: "Banda elástica" -> "Banda"
+[equipment]   Elevación de talón de pie: "Mancuernas / Peso corporal" -> "Mancuernas" (+tags: peso_corporal)
+[muscleGroup] Pull-over con kettlebell: "Pecho / Espalda" -> "Pecho" (+tags: espalda)
+[equipment]   Pull-over con kettlebell: "Kettlebell + Banco" -> "Kettlebell" (+tags: banco)
+[equipment]   Jalón con cuerda: "Polea alta + Cuerda" -> "Polea alta" (+tags: cuerda)
+[equipment]   Patada de tríceps con banda: "Banda elástica" -> "Banda"
+[equipment]   Hip thrust b-stance: "Barra / Mancuerna / Peso corporal" -> "Barra" (+tags: mancuerna, peso_corporal)
+[muscleGroup] Peso muerto unilateral: "Isquiotibiales / Glúteos" -> "Isquiotibiales" (+tags: gluteos)
+[equipment]   Peso muerto unilateral: "Mancuerna / Kettlebell" -> "Mancuerna" (+tags: kettlebell)
+[muscleGroup] Peso muerto landmine: "Espalda / Piernas" -> "Espalda" (+tags: piernas)
+[equipment]   Curl femoral con banda: "Banda elástica" -> "Banda"
+[equipment]   Extensión de tríceps en polea alta: "Polea alta + Barra / Cuerda" -> "Polea alta" (+tags: barra, cuerda)
+[muscleGroup] Dominadas L-sit: "Espalda / Core" -> "Espalda" (+tags: core)
+[equipment]   Crunch con banda: "Banda elástica" -> "Banda"
+[equipment]   Jalón agarre cerrado: "Polea alta + Barra en V" -> "Polea alta" (+tags: barra_en_v)
+[equipment]   Cruces unilaterales: "Banda elástica" -> "Banda"
+[muscleGroup] Pull-over en máquina: "Pecho / Espalda" -> "Pecho" (+tags: espalda)
+[equipment]   Aperturas en banco inclinado: "Mancuernas + Banco inclinado" -> "Mancuernas" (+tags: banco_inclinado)
+[equipment]   Face pull unilateral: "Polea + Cuerda" -> "Polea" (+tags: cuerda)
+[muscleGroup] Plancha con pica: "Core / Hombros" -> "Core" (+tags: hombros)
+[equipment]   Face pull con cuerda baja: "Polea baja + Cuerda" -> "Polea baja" (+tags: cuerda)
+[muscleGroup] Peso muerto sumo: "Piernas / Glúteos" -> "Piernas" (+tags: gluteos)
+[equipment]   Crunch con cuerda: "Polea alta + Cuerda" -> "Polea alta" (+tags: cuerda)
+[equipment]   Curl de pie: "Barra / Mancuernas" -> "Barra" (+tags: mancuernas)
+[equipment]   Hip thrust con banda: "Banda elástica + Banco" -> "Banda" (+tags: banco)
+[muscleGroup] Hiperextensiones en 45°: "Espalda baja / Glúteos" -> "Columna Lumbar" (+tags: gluteos)
+[equipment]   Face pull con cuerda alta: "Polea alta + Cuerda" -> "Polea alta" (+tags: cuerda)
+[muscleGroup] Peso muerto rumano con mancuernas: "Isquiotibiales / Glúteos" -> "Isquiotibiales" (+tags: gluteos)
+[equipment]   Remo invertido: "Barra fija / TRX" -> "Barra fija" (+tags: trx)
+[muscleGroup] Pull-over con cuerda: "Pecho / Espalda" -> "Pecho" (+tags: espalda)
+[equipment]   Pull-over con cuerda: "Polea alta + Cuerda" -> "Polea alta" (+tags: cuerda)
+[equipment]   Remo con banda: "Banda elástica" -> "Banda"
+[equipment]   Prensa con banda: "Banda elástica" -> "Banda"
+[equipment]   Pájaro en máquina: "Máquina de pájaro / Pec deck inverso" -> "Máquina de pájaro" (+tags: pec_deck_inverso)
+[muscleGroup] Peso muerto block pull: "Espalda / Piernas" -> "Espalda" (+tags: piernas)
+[equipment]   Peso muerto block pull: "Barra + Bloques / Discos" -> "Barra" (+tags: bloques, discos)
+[muscleGroup] Hiperextensiones con banda: "Espalda baja / Glúteos" -> "Columna Lumbar" (+tags: gluteos)
+[equipment]   Hiperextensiones con banda: "Banda elástica + Banco de hiperextensiones" -> "Banda" (+tags: banco_de_hiperextensiones)
+[muscleGroup] Fondos con kettlebell: "Tríceps / Pecho" -> "Tríceps" (+tags: pecho)
+[equipment]   Fondos con kettlebell: "Kettlebell + Paralelas" -> "Kettlebell" (+tags: paralelas)
+[muscleGroup] Sentadilla sumo: "Cuádriceps / Glúteos" -> "Cuádriceps" (+tags: gluteos)
+[equipment]   Sentadilla sumo: "Barra / Mancuerna / Peso corporal" -> "Barra" (+tags: mancuerna, peso_corporal)
+[equipment]   Dominadas con peso: "Barra + Peso adicional" -> "Barra" (+tags: peso_adicional)
+[equipment]   Press declinado con mancuernas: "Mancuernas + Banco declinado" -> "Mancuernas" (+tags: banco_declinado)
+[muscleGroup] Press con TRX: "Pecho / Hombros / Tríceps" -> "Pecho" (+tags: hombros, triceps)
+[equipment]   Curl con banda: "Banda elástica" -> "Banda"
+[equipment]   Extensión de cuádriceps con banda: "Banda elástica + Anclaje bajo" -> "Banda" (+tags: anclaje_bajo)
+[muscleGroup] Peso muerto rumano con kettlebell: "Isquiotibiales / Glúteos" -> "Isquiotibiales" (+tags: gluteos)
+[equipment]   Aperturas en banco declinado: "Mancuernas + Banco declinado" -> "Mancuernas" (+tags: banco_declinado)
+[equipment]   Curl con cable: "Polea baja + Barra recta" -> "Polea baja" (+tags: barra_recta)
+[equipment]   Cruces con banda: "Banda elástica + Anclaje alto" -> "Banda" (+tags: anclaje_alto)
+[muscleGroup] Peso muerto rack pull: "Espalda / Piernas" -> "Espalda" (+tags: piernas)
+[equipment]   Peso muerto rack pull: "Barra + Rack" -> "Barra" (+tags: rack)
+[equipment]   Elevación de piernas con mancuerna entre pies: "Mancuerna + Banco plano" -> "Mancuerna" (+tags: banco_plano)
+[equipment]   Sentadilla con banda: "Banda elástica" -> "Banda"
+[equipment]   Elevación lateral con banda: "Banda elástica" -> "Banda"
+[muscleGroup] Hiperextensiones unilateral: "Espalda baja / Glúteos" -> "Columna Lumbar" (+tags: gluteos)
+[muscleGroup] Plancha con elevación de pierna: "Core / Glúteos" -> "Core" (+tags: gluteos)
+[equipment]   Extensión de cuádriceps sissy: "Peso corporal + Soporte" -> "Peso corporal" (+tags: soporte)
+[equipment]   Caminata inclinada en cinta: "Cinta de correr" -> "Cinta"
+[equipment]   Bicicleta estática intervalada: "Bicicleta estática" -> "Bicicleta"
+[equipment]   Soga pesada: "Soga de batalla" -> "Cuerdas"
+[equipment]   Step up rápido: "Banco o step" -> "Banco" (+tags: step)
+[equipment]   Sprint en pendiente: "Pista o terreno inclinado" -> "Pista"
+[equipment]   Farmer carry con giro: "Mancuernas o kettlebells" -> "Mancuernas" (+tags: kettlebells)
+[equipment]   Dead bug con banda: "Banda elástica" -> "Banda"
+[equipment]   Dead bug con peso: "Mancuerna o disco" -> "Mancuerna" (+tags: disco)
+[equipment]   Turkish half get-up: "Kettlebell o mancuerna" -> "Kettlebell" (+tags: mancuerna)
+[equipment]   Farmer suitcase carry: "Mancuerna o kettlebell" -> "Mancuerna" (+tags: kettlebell)
+[equipment]   Bird dog con peso: "Mancuerna ligera o tobilleras" -> "Mancuerna ligera" (+tags: tobilleras)
+[equipment]   Clean muscle clean: "Barra o mancuernas" -> "Barra" (+tags: mancuernas)
+[equipment]   Snatch hang snatch: "Barra o mancuernas" -> "Barra" (+tags: mancuernas)
+[equipment]   Step-up con press: "Mancuernas o kettlebells" -> "Mancuernas" (+tags: kettlebells)
+[equipment]   Bird dog con banda: "Banda elástica" -> "Banda"
+[equipment]   Farmer carry con peso diferente: "Mancuernas o kettlebells de pesos distintos" -> "Mancuernas" (+tags: kettlebells_de_pesos_distintos)
+[equipment]   Clean hang clean: "Barra o mancuernas" -> "Barra" (+tags: mancuernas)
+[equipment]   Step-up lateral: "Banco o step" -> "Banco" (+tags: step)
+[equipment]   Turkish get-down: "Kettlebell o mancuerna" -> "Kettlebell" (+tags: mancuerna)
+[equipment]   Dislocaciones con palo en agarre cerrado: "Palo o bastón" -> "Palo"
+[equipment]   Psoas stretch con banda: "Banda elástica" -> "Banda"
+[equipment]   Dislocaciones con palo en agarre ancho: "Palo o bastón" -> "Palo"
+[muscleGroup] Foam rolling de tríceps: "Brazos" -> "Antebrazos"
+[muscleGroup] Estiramiento de tríceps: "Brazos" -> "Antebrazos"
+[muscleGroup] Relajación progresiva de brazos: "Brazos" -> "Antebrazos"
+[equipment]   Hurdle hop: "Vallas o conos" -> "Vallas" (+tags: conos)
+[equipment]   Plyo step-jump: "Banco o step" -> "Banco" (+tags: step)
+[equipment]   Hurdle hop a una pierna: "Vallas o conos" -> "Vallas" (+tags: conos)
+[equipment]   Depth drop jump: "Cajones pliométricos" -> "Cajón pliométrico"
+[equipment]   Plyo lateral step-up: "Banco o step" -> "Banco" (+tags: step)
+[equipment]   Salto con banda: "Banda elástica de resistencia" -> "Banda"
+[equipment]   Depth landing con salto: "Cajones pliométricos" -> "Cajón pliométrico"
+[equipment]   Plyo step-down: "Banco o step" -> "Banco" (+tags: step)
+[equipment]   Plyo step-up: "Banco o step" -> "Banco" (+tags: step)
+[equipment]   Deadlift unilateral: "Mancuerna o kettlebell" -> "Mancuerna" (+tags: kettlebell)
+[equipment]   Puente con banda: "Banda elástica" -> "Banda"
+[equipment]   Lunge con banda: "Banda elástica" -> "Banda"
+[equipment]   Equilibrio en una pierna con peso: "Mancuernas o kettlebells" -> "Mancuernas" (+tags: kettlebells)
+[equipment]   Deadlift unilateral en bosu: "Bosu + mancuerna o kettlebell" -> "Bosu" (+tags: mancuerna, kettlebell)
+[equipment]   Press unilateral en bosu: "Bosu + mancuerna o kettlebell" -> "Bosu" (+tags: mancuerna, kettlebell)
+[equipment]   Equilibrio en una pierna con banda: "Banda elástica" -> "Banda"
+[equipment]   Press en fitball: "Fitball + mancuernas" -> "Fitball" (+tags: mancuernas)
+[equipment]   Row unilateral en bosu: "Bosu + mancuerna o kettlebell" -> "Bosu" (+tags: mancuerna, kettlebell)
+[equipment]   Snatch con palo: "Palo o bastón" -> "Palo"
+[equipment]   Peso muerto rumano con palo: "Palo o bastón" -> "Palo"
+[equipment]   Clean muscle clean con palo: "Palo o bastón" -> "Palo"
+[equipment]   Press tempo: "Barra o mancuernas" -> "Barra" (+tags: mancuernas)
+[equipment]   Jerk power jerk con palo: "Palo o bastón" -> "Palo"
+[equipment]   Posición de overhead: "Barra o palo" -> "Barra" (+tags: palo)
+[equipment]   Sentadilla sumo con palo: "Palo o bastón" -> "Palo"
+[equipment]   Clean hang clean con palo: "Palo o bastón" -> "Palo"
+[equipment]   Drill de overhead: "Palo o bastón" -> "Palo"
+[equipment]   Sentadilla box: "Banco o cajón" -> "Banco" (+tags: cajon)
+[equipment]   Drill de recepción: "Barra o mancuernas" -> "Barra" (+tags: mancuernas)
+[muscleGroup] Movilidad de nervio ulnar: "Brazos" -> "Antebrazos"
+[equipment]   Recuperación con compresión: "Bandas de compresión" -> "Banda"
+
+--- Categorías NUEVAS genuinas encontradas (no tocadas, decidí si agregarlas al frontend) ---
+muscleGroup: Columna, Muñecas
+equipment:   Pared, Balón medicinal, Neumático, Escalera de agilidad, TRX, Sandbag
+
+--- SIN RESOLVER (revisar a mano — no matchean ni sinónimo ni lista canónica) ---
+muscleGroup "Tibial anterior": Estiramiento de Tibial sentado
+muscleGroup "Flexores de cadera": Estiramiento de Flexores de Cadera arrodillado, Estiramiento de Flexores de Cadera
+muscleGroup "Aductores": Estiramiento de Aductores sentado, Estiramiento de Aductores
+muscleGroup "Columna torácica": Rotación torácica acostado de lado, Flexión y extensión de columna, Extensión torácica con apoyo, Rotación de brazo bajo el cuerpo, Rotación torácica en cuadrupedia, Rotación torácica sentado, Extensión torácica contra pared, Alcance frontal sobre roller, Flexión de columna sentado, Rotación controlada de columna, Rotaciones torácicas, Extensiones de columna torácica
+muscleGroup "Espalda alta": Retracción escapular, Apertura escapular con banda, Retracción escapular boca abajo
+muscleGroup "Escápulas y serrato anterior": Rechazo escapular, Protracción escapular
+muscleGroup "Espalda alta y escápulas": Deslizamiento escapular en pared
+muscleGroup "Espalda alta y hombros": Elevaciones Y-T-W
+muscleGroup "Serrato anterior y escápulas": Deslizamiento escapular con activación del serrato, Empuje escapular acostado
+muscleGroup "Escápulas y espalda alta": Depresión escapular, Rotaciones escapulares
+muscleGroup "Tibial anterior y tobillos": Elevación de la punta del pie
+muscleGroup "Columna y zona lumbar": Gato vaca
+muscleGroup "Tren superior y core": Lanzamiento de balón medicinal, Escalada de cuerda, Flexión con toque de hombro
+muscleGroup "Tren inferior": Carrera en zigzag, Cambio rápido de dirección, Desplazamiento lateral, Carrera en escalera de agilidad, Cone Shuttle, Salto reactivo, Shuffle reactivo
+muscleGroup "Tren superior": Golpes con soga, Ondas con soga
+muscleGroup "Pies y tobillos": Caminata talón-punta
+muscleGroup "Pies y piernas": Pasos rápidos en escalera de coordinación, Toque alternado de punta de pie
+equipment "Step": Estiramiento de Gemelos en escalón
+equipment "Puerta": Estiramiento de Pecho en puerta
+equipment "Plataforma o step": Subida a plataforma con equilibrio
+equipment "Escalera de coordinación": Pasos rápidos en escalera de coordinación
+equipment "Step o plataforma": Subir y bajar step en 4 tiempos
+equipment "Bancos": Fondos entre bancos
+equipment "Máquina de jalón": Jalón a una mano, Jalón en máquina
+equipment "Polea baja": Curl en polea baja, Patada de tríceps con cable
+equipment "Máquina de aperturas": Aperturas en máquina
+equipment "Máquina de hip thrust": Hip thrust en máquina
+equipment "Banco inclinado": Elevación de piernas en banco inclinado
+equipment "Banco de hiperextensiones": Hiperextensiones inversas, Hiperextensiones unilateral
+equipment "Máquina de extensión de cuádriceps": Extensión de cuádriceps unilateral, Extensión de cuádriceps en máquina
+equipment "Máquina de curl femoral": Curl femoral sentado, Curl femoral unilateral
+equipment "Polea alta + Cuerda": Jalón con cuerda, Crunch con cuerda, Face pull con cuerda alta, Pull-over con cuerda
+equipment "Landmine": Peso muerto landmine, Press landmine
+equipment "Poleas bajas": Aperturas en polea baja, Cruces altos
+equipment "Banco plano": Russian twist en banco, Fondos en banco
+equipment "Polea alta + Barra / Cuerda": Extensión de tríceps en polea alta
+equipment "Polea alta + Barra en V": Jalón agarre cerrado
+equipment "Máquina de pull-over": Pull-over en máquina
+equipment "Máquina Smith": Hip thrust con barra smith, Sentadilla en máquina smith
+equipment "Polea baja + Cuerda": Face pull con cuerda baja
+equipment "Máquina de press de hombros": Press de hombros en máquina
+equipment "Máquina de pantorrilla sentado": Elevación de talón sentado
+equipment "Banco de hiperextensiones 45°": Hiperextensiones en 45°
+equipment "Poleas altas": Cruces bajos
+equipment "Barra fija / TRX": Remo invertido
+equipment "Máquina de elevación lateral": Elevación lateral en máquina
+equipment "Máquina de patada de tríceps": Patada de tríceps en máquina
+equipment "Máquina de prensa inclinada": Prensa inclinada
+equipment "Barra de dominadas": Elevación de piernas colgado, Burpee con pull-up, Burpee con muscle-up
+equipment "Máquina de pájaro / Pec deck inverso": Pájaro en máquina
+equipment "Máquina de prensa": Prensa unilateral
+equipment "Polea baja + Barra recta": Curl con cable
+equipment "Banco declinado": Crunch en banco declinado
+equipment "Máquina de remo": Remo de 500m, Remo de resistencia, Remo HIIT
+equipment "Máquina escaladora": Escalador de montaña
+equipment "Trineo (sled)": Sled reverse, Sled lateral push, Sled bear crawl push, Sprint con trineo
+equipment "Mancuerna ligera o tobilleras": Bird dog con peso
+equipment "Trineo (sled) con cuerda": Sled pull
+equipment "Vallas o conos": Hurdle hop, Hurdle hop a una pierna
+equipment "Paracaídas de resistencia": Sprint con paracaídas

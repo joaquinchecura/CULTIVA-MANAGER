@@ -51,14 +51,16 @@ const EXERCISE_TYPES = Object.keys(EXERCISE_TYPE_CONFIG);
 const ALL_KNOWN_MUSCLE_GROUPS = [
   "Pecho", "Espalda", "Hombros", "Bíceps", "Tríceps", "Cuádriceps", "Femoral",
   "Glúteos", "Pantorrilla", "Core", "Full body", "Piernas", "Cadera", "Tobillos",
-  "Cuello", "Antebrazos", "Piso pélvico", "Mental", "Trapecio", "Eternocleidomastoideo", "Isquiotibiales", "Columna Torácica", "Columna Lumbar", 
+  "Cuello", "Antebrazos", "Piso pélvico", "Mental", "Trapecio", "Eternocleidomastoideo",
+  "Isquiotibiales", "Columna Torácica", "Columna Lumbar", "Muñecas", // 👈 nueva
 ];
 
 const ALL_KNOWN_EQUIPMENT = [
   "Barra", "Mancuernas", "Polea", "Paralelas", "Mancuerna", "Máquina", "Banco",
   "Cinta", "Elíptica", "Bicicleta", "Remo", "Soga", "Kettlebell", "Balón", "Cajón", "Cajón pliométrico",
   "Trineo", "Cuerdas", "Foam roller", "Palo", "Bosu", "Fitball", "Banda", "Pelota",
-  "Peso corporal", "Pista"
+  "Peso corporal", "Pista",
+  "TRX", "Sandbag", "Pared", "Balón medicinal", // 👈 nuevas
 ];
 
 // ─── ExerciseMedia inline (no necesita archivo separado) ──

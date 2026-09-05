@@ -81,6 +81,7 @@ const ALL_MUSCLE_GROUPS = [
   "Cuello", "Antebrazos", "Piso pélvico", "Mental",
   "Muñecas", // 👈 nueva
 ];
+
 // ✅ YA NO DEFINIMOS Exercise LOCALMENTE — usamos el importado
 
 export default function ExerciseDetailPage({ params }: { params: Promise<{ id: string }> }) {

@@ -793,16 +793,6 @@ const exercises = [
     isPublic: true,
   },
   {
-    name: "Postura del niño",
-    type: "STRETCHING" as ExerciseType,
-    muscleGroup: "Espalda",
-    equipment: "Peso corporal",
-    tags: ["postura_del_nino", "balasana", "espalda", "relajacion", "yoga", "lumbalgia"],
-    description: "Postura de yoga (Balasana) que consiste en arrodillarse y sentarse sobre los talones con el torso inclinado hacia adelante y los brazos extendidos. Es una de las posturas más relajantes y restaurativas del yoga. Estira suavemente los erectores espinales, los glúteos y los flexores de cadera, alivia la tensión lumbar, calma el sistema nervioso y favorece la respiración diafragmática profunda. Es ideal como postura de descanso entre ejercicios o como ejercicio de recuperación.",
-    clientDescription: "Arrodillate sobre una colchoneta con las rodillas separadas al ancho de las caderas o un poco más anchas. Sentate sobre los talones. Inclinate hacia adelante extendiendo los brazos por delante de vos sobre el suelo. Apoyá la frente en el suelo o en una almohadilla. Dejá que el pecho caiga hacia el suelo entre las rodillas. Relajá completamente los hombros, el cuello y la espalda. Mantené la posición 45-60 segundos o el tiempo que necesites para relajarte. Respirá profundo, enfocándote en expandir la espalda con cada inhalación. Si sentís dolor en las rodillas, colocá una almohadilla debajo de ellas o entre los glúteos y los talones. Si la frente no llega al suelo, apoyala en las manos o en un bloque.",
-    isPublic: true,
-  },
-  {
     name: "Cobra",
     type: "STRETCHING" as ExerciseType,
     muscleGroup: "Espalda",
@@ -856,18 +846,7 @@ const exercises = [
     clientDescription: "Parate junto a una pared y apoyá la palma y el brazo contra ella. Mantené el brazo extendido y girá lentamente el torso en dirección contraria a la pared hasta sentir un estiramiento cómodo en el pecho y la parte frontal del hombro. Mantené el abdomen ligeramente activo y evitá arquear demasiado la espalda. Sostené la posición durante 20-30 segundos respirando profundo. Cambiá de lado.",
     isPublic: true,
   },
-  
-  {
-    name: "Estiramiento de Glúteos acostado",
-    type: "STRETCHING" as ExerciseType,
-    muscleGroup: "Glúteos",
-    equipment: "Peso corporal",
-    tags: ["estiramiento", "glúteos", "cadera", "piriforme", "flexibilidad", "acostado"],
-    description: "Estiramiento pasivo de los glúteos y musculatura profunda de la cadera realizado acostado. Favorece la movilidad de la cadera, reduce la sensación de tensión en los glúteos y puede ser útil después de correr, entrenar piernas o permanecer sentado durante períodos prolongados.",
-    clientDescription: "Acostate boca arriba y flexioná ambas rodillas. Apoyá un tobillo sobre el muslo de la pierna contraria formando una figura similar a un cuatro. Sujetá la pierna de apoyo y acercala lentamente hacia el pecho hasta sentir un estiramiento cómodo en el glúteo de la pierna cruzada. Mantené la espalda apoyada y relajá los hombros. Sostené 30-45 segundos y cambiá de lado.",
-    isPublic: true,
-  },
-  
+
   {
     name: "Estiramiento de Bíceps en pared",
     type: "STRETCHING" as ExerciseType,
@@ -1056,7 +1035,7 @@ const exercises = [
   },
   
   {
-    name: "Estiramiento de Isquiotibiales sentado",
+    name: "Estiramiento de Isquiotibiales sentado A",
     type: "STRETCHING" as ExerciseType,
     muscleGroup: "Femoral",
     equipment: "Peso corporal",
@@ -1089,7 +1068,7 @@ const exercises = [
   },
   
   {
-    name: "Estiramiento de Isquiotibiales sentado",
+    name: "Estiramiento de Isquiotibiales sentado B",
     type: "STRETCHING" as ExerciseType,
     muscleGroup: "Femoral",
     equipment: "Peso corporal",
@@ -1202,8 +1181,8 @@ const exercises = [
     type: "PLYOMETRIC" as ExerciseType,
     muscleGroup: "Piernas",
     equipment: "Cajón pliométrico",
-    tags: ["box jump", "plyometrico", "potencia", "cuadriceps", "gluteos"],
-    description: "Ejercicio pliométrico de salto vertical sobre una caja o plataforma elevada. Desarrolla potencia explosiva en la cadena posterior y mejora la capacidad de salto.",
+    tags: ["box jump", "Salto", "cajón", "pliométrico", "potencia", "cuadriceps", "gluteos"],
+    description: "Ejercicio pliométrico de salto vertical sobre una cajón o plataforma elevada. Desarrolla potencia explosiva en la cadena posterior y mejora la capacidad de salto.",
     clientDescription: "Parado frente a un cajón pliométrico con los pies a la altura de los hombros, flexioná las rodillas y las caderas en una sentadilla parcial. Impulsate explosivamente hacia arriba, llevando las rodillas hacia el pecho, y aterrizá con ambos pies sobre el cajón en posición de sentadilla. Bajá caminando o saltando suavemente al suelo. Mantené el torso erguido durante todo el movimiento.",
     isPublic: true,
   },
@@ -1212,7 +1191,7 @@ const exercises = [
     type: "PLYOMETRIC" as ExerciseType,
     muscleGroup: "Piernas",
     equipment: "Peso corporal",
-    tags: ["squat jump", "plyometrico", "piernas", "cuadriceps", "gluteos", "cardio"],
+    tags: ["squat jump", "pliométrico", "salto", "piernas", "cuadriceps", "gluteos", "cardio"],
     description: "Ejercicio pliométrico de salto vertical desde una posición de sentadilla. Trabaja la potencia explosiva de las piernas sin necesidad de equipo.",
     clientDescription: "De pie con los pies a la altura de los hombros, flexioná las rodillas y las caderas en una sentadilla parcial. Impulsate explosivamente hacia arriba, extendiendo completamente las caderas y las rodillas en el aire. Aterrizá suavemente sobre las puntas de los pies con las rodillas ligeramente flexionadas, amortiguando el impacto, y descendé inmediatamente a la siguiente sentadilla para repetir.",
     isPublic: true,
@@ -2024,7 +2003,7 @@ const exercises = [
     type: "REHABILITATION" as ExerciseType,
     muscleGroup: "Espalda alta",
     equipment: "Peso corporal",
-    tags: ["rehabilitación", "correctivo", "escápulas", "pared", "movilidad", "postura", "escapulas"],
+    tags: ["rehabilitación", "correctivo", "escápulas", "pared", "movilidad", "postura"],
     description: "Ejercicio de movilidad y control escapular que utiliza la pared como referencia para mejorar la coordinación de los hombros y la parte superior de la espalda.",
     clientDescription: "Apoyá los brazos contra la pared manteniendo el contacto. Deslizá lentamente los brazos hacia arriba y luego bajalos. Intentá mantener una postura estable y evitá arquear excesivamente la zona lumbar.",
     isPublic: true,
@@ -2581,17 +2560,6 @@ const exercises = [
 },
 
 {
-  name: "Turkish Get Up",
-  type: "FUNCTIONAL" as ExerciseType,
-  muscleGroup: "Full body",
-  equipment: "Kettlebell",
-  tags: ["funcional", "metabólico", "kettlebell", "turkish get up", "estabilidad", "full body"],
-  description: "Movimiento complejo de cuerpo completo que combina varias transiciones desde el suelo hasta la posición de pie mientras se sostiene una carga por encima de la cabeza.",
-  clientDescription: "Acostate boca arriba sosteniendo la kettlebell con un brazo extendido hacia el techo. Realizá cada transición lentamente hasta quedar de pie y después regresá al suelo siguiendo el recorrido inverso. Mantené la carga estable y controlá cada fase.",
-  isPublic: true,
-},
-
-{
   name: "Escalada de cuerda",
   type: "FUNCTIONAL" as ExerciseType,
   muscleGroup: "Tren superior",
@@ -2731,17 +2699,6 @@ const exercises = [
   tags: ["funcional", "metabólico", "balón medicinal", "slam", "potencia", "HIIT"],
   description: "Ejercicio explosivo de cuerpo completo que consiste en lanzar el balón medicinal con fuerza contra el suelo utilizando la extensión de cadera y la musculatura del tronco.",
   clientDescription: "Sostené el balón con ambas manos y eleválo por encima de la cabeza. Extendé el cuerpo y luego utilizá el abdomen, los brazos y la cadera para lanzar el balón con fuerza contra el suelo. Flexioná las piernas para recogerlo con control.",
-  isPublic: true,
-},
-
-{
-  name: "Shuffle reactivo",
-  type: "FUNCTIONAL" as ExerciseType,
-  muscleGroup: "Full body",
-  equipment: "Peso corporal",
-  tags: ["funcional", "metabólico", "agilidad", "shuffle", "reacción", "condicionamiento"],
-  description: "Ejercicio de desplazamiento lateral reactivo orientado a mantener el control del movimiento mientras se responde rápidamente a diferentes estímulos.",
-  clientDescription: "Adoptá una postura atlética y mantenete preparado para desplazarte. Respondé al estímulo indicado realizando un shuffle lateral rápido. Mantené el control del cuerpo y regresá a la posición inicial cuando corresponda.",
   isPublic: true,
 },
 
@@ -3496,16 +3453,6 @@ const exercises = [
   tags: ["movilidad articular", "columna torácica", "rotación", "espalda"],
   description: "Rotación controlada del torso destinada a mejorar la movilidad de la columna torácica manteniendo la pelvis estable.",
   clientDescription: "Colocate en una posición estable, sentado o en cuadrupedia. Girá lentamente el torso hacia un lado manteniendo las caderas quietas. Volvé al centro y repetí hacia el otro lado. Buscá movimiento en la parte alta de la espalda.",
-  isPublic: true,
-},
-{
-  name: "Gato-vaca",
-  type: "MOBILITY" as ExerciseType,
-  muscleGroup: "Columna",
-  equipment: "Peso corporal",
-  tags: ["movilidad articular", "columna", "gato vaca", "espalda"],
-  description: "Movimiento alternado de flexión y extensión de la columna realizado en cuadrupedia para favorecer la movilidad de toda la espalda.",
-  clientDescription: "Ponete en cuatro apoyos. Al exhalar, redondeá suavemente la espalda llevando el mentón hacia el pecho. Después invertí el movimiento, extendiendo la columna de forma cómoda mientras abrís el pecho. Movete lentamente y coordiná la respiración.",
   isPublic: true,
 },
 {

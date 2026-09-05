@@ -1,0 +1,2420 @@
+{
+  "generatedAt": "2026-09-05T15:33:17.821Z",
+  "inputFile": "C:\\Users\\joaqu\\Desktop\\CODE-MANAGER\\prisma\\seed.ts",
+  "summary": {
+    "rawExerciseObjects": 801,
+    "uniqueNames": 780,
+    "duplicateNameGroups": 20,
+    "errors": 0,
+    "warnings": 218,
+    "publicExercises": 801
+  },
+  "allowedTypes": [
+    "BALANCE",
+    "CARDIO",
+    "COOLDOWN",
+    "FUNCTIONAL",
+    "MOBILITY",
+    "OTHER",
+    "PLYOMETRIC",
+    "REHABILITATION",
+    "STRENGTH",
+    "STRETCHING",
+    "TECHNIQUE",
+    "WARMUP"
+  ],
+  "statistics": {
+    "byType": {
+      "STRENGTH": 150,
+      "FUNCTIONAL": 109,
+      "MOBILITY": 95,
+      "STRETCHING": 85,
+      "REHABILITATION": 80,
+      "CARDIO": 50,
+      "WARMUP": 50,
+      "PLYOMETRIC": 40,
+      "TECHNIQUE": 40,
+      "COOLDOWN": 37,
+      "BALANCE": 35,
+      "OTHER": 30
+    },
+    "byMuscleGroup": {
+      "Piernas": 162,
+      "Full body": 141,
+      "Core": 80,
+      "Espalda": 68,
+      "Hombros": 67,
+      "Cadera": 38,
+      "Pecho": 35,
+      "Cuádriceps": 25,
+      "Cuello": 24,
+      "Glúteos": 17,
+      "Tríceps": 16,
+      "Bíceps": 14,
+      "Tobillos": 14,
+      "Pantorrilla": 13,
+      "Columna torácica": 12,
+      "Columna Lumbar": 9,
+      "Isquiotibiales": 9,
+      "Femoral": 7,
+      "Antebrazos": 7,
+      "Tren inferior": 7,
+      "Espalda alta": 5,
+      "Tren superior": 5,
+      "Muñecas": 5,
+      "Escápulas": 4,
+      "Columna": 4,
+      "Pies": 3,
+      "Tibial anterior": 2,
+      "Flexores de cadera": 2,
+      "Aductores": 2,
+      "Serrato anterior": 2,
+      "Mental": 1,
+      "Piso pélvico": 1
+    },
+    "byEquipment": {
+      "Peso corporal": 424,
+      "Barra": 52,
+      "Banda": 45,
+      "Mancuernas": 34,
+      "Kettlebell": 22,
+      "Mancuerna": 18,
+      "Palo": 17,
+      "Cajón pliométrico": 15,
+      "Banco": 13,
+      "Foam roller": 10,
+      "Bosu": 8,
+      "Fitball": 7,
+      "TRX": 7,
+      "Bicicleta": 6,
+      "Cuerdas": 6,
+      "Pared": 6,
+      "Balón medicinal": 6,
+      "Polea alta": 6,
+      "Polea": 5,
+      "Máquina": 5,
+      "Pista": 5,
+      "Cinta": 4,
+      "Pelota": 4,
+      "Polea baja": 4,
+      "Trineo (sled)": 4,
+      "Sandbag": 4,
+      "Soga": 3,
+      "Cajón": 3,
+      "Barra de dominadas": 3,
+      "Máquina de remo": 3,
+      "Paralelas": 2,
+      "Trineo": 2,
+      "Step": 2,
+      "Máquina de jalón": 2,
+      "Banco de hiperextensiones": 2,
+      "Máquina de extensión de cuádriceps": 2,
+      "Máquina de curl femoral": 2,
+      "Landmine": 2,
+      "Poleas bajas": 2,
+      "Banco plano": 2,
+      "Máquina Smith": 2,
+      "Vallas": 2,
+      "Elíptica": 1,
+      "Remo": 1,
+      "Balón": 1,
+      "Puerta": 1,
+      "Neumático": 1,
+      "Escalera de agilidad": 1,
+      "Plataforma": 1,
+      "Escalera de coordinación": 1,
+      "Bancos": 1,
+      "Máquina de aperturas": 1,
+      "Máquina de hip thrust": 1,
+      "Banco inclinado": 1,
+      "Máquina de pull-over": 1,
+      "Máquina de press de hombros": 1,
+      "Máquina de pantorrilla sentado": 1,
+      "Banco de hiperextensiones 45°": 1,
+      "Poleas altas": 1,
+      "Barra fija": 1,
+      "Máquina de elevación lateral": 1,
+      "Máquina de patada de tríceps": 1,
+      "Máquina de prensa inclinada": 1,
+      "Máquina de pájaro": 1,
+      "Máquina de prensa": 1,
+      "Banco declinado": 1,
+      "Máquina escaladora": 1,
+      "Mancuerna ligera": 1,
+      "Trineo (sled) con cuerda": 1,
+      "Paracaídas de resistencia": 1
+    },
+    "bySourceArray": {
+      "newExercises": 454,
+      "exercises": 347
+    }
+  },
+  "issues": {
+    "errors": [],
+    "warnings": [
+      {
+        "severity": "WARNING",
+        "index": 196,
+        "name": "Deslizamiento escapular en pared",
+        "issue": "DUPLICATE_TAGS"
+      },
+      {
+        "severity": "WARNING",
+        "index": 200,
+        "name": "Deslizamiento escapular con activación del serrato",
+        "issue": "DUPLICATE_TAGS"
+      },
+      {
+        "severity": "WARNING",
+        "index": 203,
+        "name": "Empuje escapular acostado",
+        "issue": "DUPLICATE_TAGS"
+      },
+      {
+        "severity": "WARNING",
+        "index": 205,
+        "name": "Rotación externa de hombro con banda",
+        "issue": "DUPLICATE_TAGS"
+      },
+      {
+        "severity": "WARNING",
+        "index": 206,
+        "name": "Deslizamientos de hombros contra pared",
+        "issue": "DUPLICATE_TAGS"
+      },
+      {
+        "severity": "WARNING",
+        "index": 213,
+        "name": "Extensión de hombros con banda",
+        "issue": "DUPLICATE_TAGS"
+      },
+      {
+        "severity": "WARNING",
+        "index": 218,
+        "name": "Puente con foco en isquiotibiales",
+        "issue": "DUPLICATE_TAGS"
+      },
+      {
+        "severity": "WARNING",
+        "index": 221,
+        "name": "Sentadilla con talones elevados",
+        "issue": "DUPLICATE_TAGS"
+      },
+      {
+        "severity": "WARNING",
+        "index": 293,
+        "name": "Puente alternando piernas",
+        "issue": "DUPLICATE_TAGS"
+      },
+      {
+        "severity": "WARNING",
+        "index": 302,
+        "name": "Puente de glúteos controlado",
+        "issue": "DUPLICATE_TAGS"
+      },
+      {
+        "severity": "WARNING",
+        "index": 37,
+        "name": "Elevación de talones",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "STRENGTH",
+            "muscleGroup": "Pantorrilla",
+            "equipment": "Máquina"
+          },
+          {
+            "type": "FUNCTIONAL",
+            "muscleGroup": "Pantorrilla",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 292,
+        "name": "Elevación de talones",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "STRENGTH",
+            "muscleGroup": "Pantorrilla",
+            "equipment": "Máquina"
+          },
+          {
+            "type": "FUNCTIONAL",
+            "muscleGroup": "Pantorrilla",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 48,
+        "name": "Burpees",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "CARDIO",
+            "muscleGroup": "Full body",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "FUNCTIONAL",
+            "muscleGroup": "Full body",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 282,
+        "name": "Burpees",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "CARDIO",
+            "muscleGroup": "Full body",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "FUNCTIONAL",
+            "muscleGroup": "Full body",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 53,
+        "name": "Turkish get-up",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "FUNCTIONAL",
+            "muscleGroup": "Full body",
+            "equipment": "Kettlebell"
+          },
+          {
+            "type": "FUNCTIONAL",
+            "muscleGroup": "Full body",
+            "equipment": "Kettlebell"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 247,
+        "name": "Turkish Get Up",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "FUNCTIONAL",
+            "muscleGroup": "Full body",
+            "equipment": "Kettlebell"
+          },
+          {
+            "type": "FUNCTIONAL",
+            "muscleGroup": "Full body",
+            "equipment": "Kettlebell"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 65,
+        "name": "Gato-vaca",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 3,
+        "variants": [
+          {
+            "type": "MOBILITY",
+            "muscleGroup": "Espalda",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "REHABILITATION",
+            "muscleGroup": "Columna",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "MOBILITY",
+            "muscleGroup": "Columna",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 237,
+        "name": "Gato vaca",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 3,
+        "variants": [
+          {
+            "type": "MOBILITY",
+            "muscleGroup": "Espalda",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "REHABILITATION",
+            "muscleGroup": "Columna",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "MOBILITY",
+            "muscleGroup": "Columna",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 334,
+        "name": "Gato-vaca",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 3,
+        "variants": [
+          {
+            "type": "MOBILITY",
+            "muscleGroup": "Espalda",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "REHABILITATION",
+            "muscleGroup": "Columna",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "MOBILITY",
+            "muscleGroup": "Columna",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 75,
+        "name": "Estiramiento de hombros",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "STRETCHING",
+            "muscleGroup": "Hombros",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "COOLDOWN",
+            "muscleGroup": "Hombros",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 153,
+        "name": "Estiramiento de hombros",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "STRETCHING",
+            "muscleGroup": "Hombros",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "COOLDOWN",
+            "muscleGroup": "Hombros",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 78,
+        "name": "Estiramiento de espalda",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "STRETCHING",
+            "muscleGroup": "Espalda",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "COOLDOWN",
+            "muscleGroup": "Espalda",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 152,
+        "name": "Estiramiento de espalda",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "STRETCHING",
+            "muscleGroup": "Espalda",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "COOLDOWN",
+            "muscleGroup": "Espalda",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 80,
+        "name": "Postura del niño",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "STRETCHING",
+            "muscleGroup": "Espalda",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "STRETCHING",
+            "muscleGroup": "Espalda",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 109,
+        "name": "Postura del Niño",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "STRETCHING",
+            "muscleGroup": "Espalda",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "STRETCHING",
+            "muscleGroup": "Espalda",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 86,
+        "name": "Estiramiento de Glúteos acostado",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "STRETCHING",
+            "muscleGroup": "Glúteos",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "STRETCHING",
+            "muscleGroup": "Glúteos",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 111,
+        "name": "Estiramiento de Glúteos acostado",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "STRETCHING",
+            "muscleGroup": "Glúteos",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "STRETCHING",
+            "muscleGroup": "Glúteos",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 92,
+        "name": "Rotación de Cuello",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "STRETCHING",
+            "muscleGroup": "Cuello",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "MOBILITY",
+            "muscleGroup": "Cuello",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 562,
+        "name": "Rotación de cuello",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "STRETCHING",
+            "muscleGroup": "Cuello",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "MOBILITY",
+            "muscleGroup": "Cuello",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 104,
+        "name": "Estiramiento de Isquiotibiales sentado",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "STRETCHING",
+            "muscleGroup": "Femoral",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "STRETCHING",
+            "muscleGroup": "Femoral",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 107,
+        "name": "Estiramiento de Isquiotibiales sentado",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "STRETCHING",
+            "muscleGroup": "Femoral",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "STRETCHING",
+            "muscleGroup": "Femoral",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 145,
+        "name": "Rotaciones de cuello",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "WARMUP",
+            "muscleGroup": "Cuello",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "REHABILITATION",
+            "muscleGroup": "Cuello",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 189,
+        "name": "Rotaciones de cuello",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "WARMUP",
+            "muscleGroup": "Cuello",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "REHABILITATION",
+            "muscleGroup": "Cuello",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 147,
+        "name": "Caminata de oso",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "WARMUP",
+            "muscleGroup": "Full body",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "MOBILITY",
+            "muscleGroup": "Full body",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 318,
+        "name": "Caminata de oso",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "WARMUP",
+            "muscleGroup": "Full body",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "MOBILITY",
+            "muscleGroup": "Full body",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 220,
+        "name": "Sentadilla contra pared",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "REHABILITATION",
+            "muscleGroup": "Cuádriceps",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "FUNCTIONAL",
+            "muscleGroup": "Piernas",
+            "equipment": "Pared"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 268,
+        "name": "Sentadilla contra pared",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "REHABILITATION",
+            "muscleGroup": "Cuádriceps",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "FUNCTIONAL",
+            "muscleGroup": "Piernas",
+            "equipment": "Pared"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 242,
+        "name": "Plancha lateral",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "REHABILITATION",
+            "muscleGroup": "Core",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "STRENGTH",
+            "muscleGroup": "Core",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 447,
+        "name": "Plancha lateral",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "REHABILITATION",
+            "muscleGroup": "Core",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "STRENGTH",
+            "muscleGroup": "Core",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 257,
+        "name": "Shuffle reactivo",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "FUNCTIONAL",
+            "muscleGroup": "Tren inferior",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "FUNCTIONAL",
+            "muscleGroup": "Full body",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 261,
+        "name": "Shuffle reactivo",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "FUNCTIONAL",
+            "muscleGroup": "Tren inferior",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "FUNCTIONAL",
+            "muscleGroup": "Full body",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 279,
+        "name": "Sprint en pendiente",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "FUNCTIONAL",
+            "muscleGroup": "Piernas",
+            "equipment": "Pista"
+          },
+          {
+            "type": "CARDIO",
+            "muscleGroup": "Piernas",
+            "equipment": "Pista"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 495,
+        "name": "Sprint en pendiente",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "FUNCTIONAL",
+            "muscleGroup": "Piernas",
+            "equipment": "Pista"
+          },
+          {
+            "type": "CARDIO",
+            "muscleGroup": "Piernas",
+            "equipment": "Pista"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 296,
+        "name": "Mountain climber lento",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "MOBILITY",
+            "muscleGroup": "Core",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "CARDIO",
+            "muscleGroup": "Core",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 486,
+        "name": "Mountain climber lento",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "MOBILITY",
+            "muscleGroup": "Core",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "CARDIO",
+            "muscleGroup": "Core",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 387,
+        "name": "Sentadilla sissy",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "STRENGTH",
+            "muscleGroup": "Cuádriceps",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "BALANCE",
+            "muscleGroup": "Piernas",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 653,
+        "name": "Sentadilla sissy",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "STRENGTH",
+            "muscleGroup": "Cuádriceps",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "BALANCE",
+            "muscleGroup": "Piernas",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 471,
+        "name": "Step up lateral",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "CARDIO",
+            "muscleGroup": "Piernas",
+            "equipment": "Banco"
+          },
+          {
+            "type": "FUNCTIONAL",
+            "muscleGroup": "Piernas",
+            "equipment": "Banco"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 534,
+        "name": "Step-up lateral",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "CARDIO",
+            "muscleGroup": "Piernas",
+            "equipment": "Banco"
+          },
+          {
+            "type": "FUNCTIONAL",
+            "muscleGroup": "Piernas",
+            "equipment": "Banco"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 591,
+        "name": "Relajación progresiva de cuello",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "STRETCHING",
+            "muscleGroup": "Cuello",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "COOLDOWN",
+            "muscleGroup": "Cuello",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 755,
+        "name": "Relajación progresiva de cuello",
+        "issue": "DUPLICATE_NAME_DIFFERENT_DATA",
+        "duplicateCount": 2,
+        "variants": [
+          {
+            "type": "STRETCHING",
+            "muscleGroup": "Cuello",
+            "equipment": "Peso corporal"
+          },
+          {
+            "type": "COOLDOWN",
+            "muscleGroup": "Cuello",
+            "equipment": "Peso corporal"
+          }
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 7,
+        "name": "Pull-over",
+        "issue": "GENERIC_DESCRIPTION",
+        "description": "Ejercicio de aislamiento que trabaja el pectoral mayor, dorsal ancho y serrato anterior. Consiste en llevar una mancuerna desde una posición extendida sobre el pecho en un arco por detrás de la cabeza hasta sentir un estiramiento en el pecho y la espalda. Es excelente para mejorar la movilidad del hombro y desarrollar la caja torácica."
+      },
+      {
+        "severity": "WARNING",
+        "index": 20,
+        "name": "Face pull",
+        "issue": "GENERIC_DESCRIPTION",
+        "description": "Ejercicio de aislamiento realizado en polea que trabaja el deltoides posterior, rotadores externos del hombro, romboides y trapecio medio. Es uno de los ejercicios más importantes para la salud del hombro, ya que fortalece los músculos que contrarrestan los desequilibrios causados por demasiado trabajo de press y pectorales. Es fundamental para prevenir lesiones de manguito rotador."
+      },
+      {
+        "severity": "WARNING",
+        "index": 27,
+        "name": "Extensiones en polea",
+        "issue": "GENERIC_DESCRIPTION",
+        "description": "Ejercicio de aislamiento para el tríceps realizado en polea alta que trabaja las tres cabezas del tríceps, con énfasis en la cabeza lateral y medial. La resistencia constante de la polea mantiene tensión en el músculo durante todo el recorrido. Puede realizarse con cuerda, barra recta o barra en V según la variante deseada."
+      },
+      {
+        "severity": "WARNING",
+        "index": 117,
+        "name": "Salto al cajón",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.048
+      },
+      {
+        "severity": "WARNING",
+        "index": 118,
+        "name": "Salto con peso corporal",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.056
+      },
+      {
+        "severity": "WARNING",
+        "index": 119,
+        "name": "Lunges saltados",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 120,
+        "name": "Clapping push-ups",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 121,
+        "name": "Broad jump",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 122,
+        "name": "Tuck jump",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 124,
+        "name": "Skater jumps",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 127,
+        "name": "Pájaro en bosu",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.053
+      },
+      {
+        "severity": "WARNING",
+        "index": 128,
+        "name": "Single leg deadlift",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 140,
+        "name": "Jumping jacks",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 142,
+        "name": "Arm circles",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 143,
+        "name": "Leg swings",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 144,
+        "name": "Trotar en el lugar",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 150,
+        "name": "Caminata lenta",
+        "issue": "GENERIC_DESCRIPTION",
+        "description": "Ejercicio de full body tipo cooldown. Requiere peso corporal."
+      },
+      {
+        "severity": "WARNING",
+        "index": 151,
+        "name": "Respiración diafragmática",
+        "issue": "GENERIC_DESCRIPTION",
+        "description": "Ejercicio de core tipo cooldown. Requiere peso corporal."
+      },
+      {
+        "severity": "WARNING",
+        "index": 152,
+        "name": "Estiramiento de espalda",
+        "issue": "GENERIC_DESCRIPTION",
+        "description": "Ejercicio de espalda tipo cooldown. Requiere peso corporal."
+      },
+      {
+        "severity": "WARNING",
+        "index": 153,
+        "name": "Estiramiento de hombros",
+        "issue": "GENERIC_DESCRIPTION",
+        "description": "Ejercicio de hombros tipo cooldown. Requiere peso corporal."
+      },
+      {
+        "severity": "WARNING",
+        "index": 154,
+        "name": "Estiramiento de piernas",
+        "issue": "GENERIC_DESCRIPTION",
+        "description": "Ejercicio de piernas tipo cooldown. Requiere peso corporal."
+      },
+      {
+        "severity": "WARNING",
+        "index": 155,
+        "name": "Foam roller de espalda",
+        "issue": "GENERIC_DESCRIPTION",
+        "description": "Ejercicio de espalda tipo cooldown. Requiere foam roller."
+      },
+      {
+        "severity": "WARNING",
+        "index": 156,
+        "name": "Shavasana",
+        "issue": "GENERIC_DESCRIPTION",
+        "description": "Ejercicio de full body tipo cooldown. Requiere peso corporal."
+      },
+      {
+        "severity": "WARNING",
+        "index": 157,
+        "name": "Meditación",
+        "issue": "GENERIC_DESCRIPTION",
+        "description": "Ejercicio de mental tipo cooldown. Requiere peso corporal."
+      },
+      {
+        "severity": "WARNING",
+        "index": 158,
+        "name": "Vacío abdominal",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 159,
+        "name": "Kegel",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 160,
+        "name": "Respiración costal",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 161,
+        "name": "Activación glútea",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 163,
+        "name": "Masaje con pelota",
+        "issue": "GENERIC_DESCRIPTION",
+        "description": "Ejercicio de full body tipo other. Requiere pelota."
+      },
+      {
+        "severity": "WARNING",
+        "index": 164,
+        "name": "Rotaciones de cadera en 90/90",
+        "issue": "GENERIC_DESCRIPTION",
+        "description": "Ejercicio de movilidad de cadera realizado desde la posición 90/90 que trabaja la rotación interna y externa de la articulación. Mejora el control articular, la movilidad de la cadera y la capacidad de realizar movimientos de rotación de manera controlada."
+      },
+      {
+        "severity": "WARNING",
+        "index": 184,
+        "name": "Retracción de mentón",
+        "issue": "GENERIC_DESCRIPTION",
+        "description": "Ejercicio de control cervical que trabaja la alineación de la cabeza y activa suavemente la musculatura profunda del cuello. Ayuda a mejorar la posición cervical y a reducir el hábito de llevar la cabeza hacia adelante."
+      },
+      {
+        "severity": "WARNING",
+        "index": 195,
+        "name": "Rechazo escapular",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.059
+      },
+      {
+        "severity": "WARNING",
+        "index": 201,
+        "name": "Depresión escapular",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.056
+      },
+      {
+        "severity": "WARNING",
+        "index": 202,
+        "name": "Rotaciones escapulares",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 219,
+        "name": "Estocada isométrica",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.059
+      },
+      {
+        "severity": "WARNING",
+        "index": 236,
+        "name": "Perro ave",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 237,
+        "name": "Gato vaca",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 242,
+        "name": "Plancha lateral",
+        "issue": "GENERIC_DESCRIPTION",
+        "description": "Ejercicio de estabilidad lateral del tronco que trabaja la musculatura del core mientras se mantiene el cuerpo alineado."
+      },
+      {
+        "severity": "WARNING",
+        "index": 245,
+        "name": "Tire Flip",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 249,
+        "name": "Sprint multidireccional",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 254,
+        "name": "Cone Shuttle",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 255,
+        "name": "Power Clean",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 256,
+        "name": "Salto reactivo",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 257,
+        "name": "Shuffle reactivo",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.048
+      },
+      {
+        "severity": "WARNING",
+        "index": 258,
+        "name": "Sprint reactivo",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.063
+      },
+      {
+        "severity": "WARNING",
+        "index": 261,
+        "name": "Shuffle reactivo",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.056
+      },
+      {
+        "severity": "WARNING",
+        "index": 262,
+        "name": "Step Jacks",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 263,
+        "name": "Marcha con rodillas elevadas",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.056
+      },
+      {
+        "severity": "WARNING",
+        "index": 264,
+        "name": "Medio burpee",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.05
+      },
+      {
+        "severity": "WARNING",
+        "index": 267,
+        "name": "Plancha con paso lateral",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.059
+      },
+      {
+        "severity": "WARNING",
+        "index": 270,
+        "name": "Subidas al cajón",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.071
+      },
+      {
+        "severity": "WARNING",
+        "index": 274,
+        "name": "Remo en plancha",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.05
+      },
+      {
+        "severity": "WARNING",
+        "index": 275,
+        "name": "Swing con kettlebell",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.059
+      },
+      {
+        "severity": "WARNING",
+        "index": 280,
+        "name": "Thruster con peso",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.059
+      },
+      {
+        "severity": "WARNING",
+        "index": 282,
+        "name": "Burpees",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 285,
+        "name": "Skipping HIIT",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 286,
+        "name": "Saltos laterales",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.059
+      },
+      {
+        "severity": "WARNING",
+        "index": 289,
+        "name": "Saltos al cajón",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.053
+      },
+      {
+        "severity": "WARNING",
+        "index": 290,
+        "name": "Thrusters HIIT",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 300,
+        "name": "Equilibrio sobre una pierna",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.056
+      },
+      {
+        "severity": "WARNING",
+        "index": 305,
+        "name": "Bear hold controlado",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 306,
+        "name": "Alcance controlado en pared",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.053
+      },
+      {
+        "severity": "WARNING",
+        "index": 308,
+        "name": "Sentadilla muy lenta",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.05
+      },
+      {
+        "severity": "WARNING",
+        "index": 309,
+        "name": "Zancada controlada",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.063
+      },
+      {
+        "severity": "WARNING",
+        "index": 313,
+        "name": "Marcha coordinada",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.056
+      },
+      {
+        "severity": "WARNING",
+        "index": 314,
+        "name": "Rodillas altas coordinadas",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.063
+      },
+      {
+        "severity": "WARNING",
+        "index": 315,
+        "name": "Paso lateral cruzado",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.056
+      },
+      {
+        "severity": "WARNING",
+        "index": 318,
+        "name": "Caminata de oso",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 319,
+        "name": "Pasos laterales rápidos",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 322,
+        "name": "Paso lateral alternado",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.077
+      },
+      {
+        "severity": "WARNING",
+        "index": 324,
+        "name": "Saltos coordinados",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 333,
+        "name": "Rotaciones torácicas",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 334,
+        "name": "Gato-vaca",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 483,
+        "name": "Caminata rápida",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 485,
+        "name": "Burpees con push-up",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 486,
+        "name": "Mountain climber lento",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 493,
+        "name": "Remo HIIT",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.05
+      },
+      {
+        "severity": "WARNING",
+        "index": 496,
+        "name": "Escalador de montaña",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.045
+      },
+      {
+        "severity": "WARNING",
+        "index": 497,
+        "name": "Bird dog contralateral",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.048
+      },
+      {
+        "severity": "WARNING",
+        "index": 498,
+        "name": "Sled reverse",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 500,
+        "name": "Farmer carry con giro",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.053
+      },
+      {
+        "severity": "WARNING",
+        "index": 502,
+        "name": "Sled lateral push",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.067
+      },
+      {
+        "severity": "WARNING",
+        "index": 503,
+        "name": "Bear crawl",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 506,
+        "name": "Kettlebell goblet squat",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.056
+      },
+      {
+        "severity": "WARNING",
+        "index": 508,
+        "name": "Farmer suitcase carry",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.042
+      },
+      {
+        "severity": "WARNING",
+        "index": 509,
+        "name": "Box lateral jump",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.053
+      },
+      {
+        "severity": "WARNING",
+        "index": 511,
+        "name": "Bird dog",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0
+      },
+      {
+        "severity": "WARNING",
+        "index": 718,
+        "name": "Marcha lateral",
+        "issue": "LOW_NAME_DESCRIPTION_RELATION",
+        "similarity": 0.048
+      },
+      {
+        "severity": "WARNING",
+        "index": 223,
+        "name": "Subida en reversa al step",
+        "issue": "NAME_EQUIPMENT_POSSIBLE_MISMATCH",
+        "keyword": "step",
+        "equipment": "Peso corporal"
+      },
+      {
+        "severity": "WARNING",
+        "index": 262,
+        "name": "Step Jacks",
+        "issue": "NAME_EQUIPMENT_POSSIBLE_MISMATCH",
+        "keyword": "step",
+        "equipment": "Peso corporal"
+      },
+      {
+        "severity": "WARNING",
+        "index": 397,
+        "name": "Hip thrust con barra smith",
+        "issue": "NAME_EQUIPMENT_POSSIBLE_MISMATCH",
+        "keyword": "barra",
+        "equipment": "Máquina Smith"
+      },
+      {
+        "severity": "WARNING",
+        "index": 458,
+        "name": "Step up con mancuerna",
+        "issue": "NAME_EQUIPMENT_POSSIBLE_MISMATCH",
+        "keyword": "step",
+        "equipment": "Mancuernas"
+      },
+      {
+        "severity": "WARNING",
+        "index": 471,
+        "name": "Step up lateral",
+        "issue": "NAME_EQUIPMENT_POSSIBLE_MISMATCH",
+        "keyword": "step",
+        "equipment": "Banco"
+      },
+      {
+        "severity": "WARNING",
+        "index": 472,
+        "name": "Step up con salto",
+        "issue": "NAME_EQUIPMENT_POSSIBLE_MISMATCH",
+        "keyword": "step",
+        "equipment": "Banco"
+      },
+      {
+        "severity": "WARNING",
+        "index": 492,
+        "name": "Step up rápido",
+        "issue": "NAME_EQUIPMENT_POSSIBLE_MISMATCH",
+        "keyword": "step",
+        "equipment": "Banco"
+      },
+      {
+        "severity": "WARNING",
+        "index": 523,
+        "name": "Step-up con press",
+        "issue": "NAME_EQUIPMENT_POSSIBLE_MISMATCH",
+        "keyword": "step",
+        "equipment": "Mancuernas"
+      },
+      {
+        "severity": "WARNING",
+        "index": 534,
+        "name": "Step-up lateral",
+        "issue": "NAME_EQUIPMENT_POSSIBLE_MISMATCH",
+        "keyword": "step",
+        "equipment": "Banco"
+      },
+      {
+        "severity": "WARNING",
+        "index": 619,
+        "name": "Plyo step-jump",
+        "issue": "NAME_EQUIPMENT_POSSIBLE_MISMATCH",
+        "keyword": "step",
+        "equipment": "Banco"
+      },
+      {
+        "severity": "WARNING",
+        "index": 622,
+        "name": "Plyo step-over",
+        "issue": "NAME_EQUIPMENT_POSSIBLE_MISMATCH",
+        "keyword": "step",
+        "equipment": "Cajón pliométrico"
+      },
+      {
+        "severity": "WARNING",
+        "index": 634,
+        "name": "Plyo lateral step-up",
+        "issue": "NAME_EQUIPMENT_POSSIBLE_MISMATCH",
+        "keyword": "step",
+        "equipment": "Banco"
+      },
+      {
+        "severity": "WARNING",
+        "index": 638,
+        "name": "Plyo step-down",
+        "issue": "NAME_EQUIPMENT_POSSIBLE_MISMATCH",
+        "keyword": "step",
+        "equipment": "Banco"
+      },
+      {
+        "severity": "WARNING",
+        "index": 643,
+        "name": "Plyo step-up",
+        "issue": "NAME_EQUIPMENT_POSSIBLE_MISMATCH",
+        "keyword": "step",
+        "equipment": "Banco"
+      },
+      {
+        "severity": "WARNING",
+        "index": 55,
+        "name": "Desplantes laterales",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "desplantes",
+          "laterales"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 70,
+        "name": "Thoracic rotation",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "thoracic",
+          "rotation"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 117,
+        "name": "Salto al cajón",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "salto",
+          "cajon"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 118,
+        "name": "Salto con peso corporal",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "salto",
+          "corporal"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 119,
+        "name": "Lunges saltados",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "lunges",
+          "saltados"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 195,
+        "name": "Rechazo escapular",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "rechazo",
+          "escapular"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 202,
+        "name": "Rotaciones escapulares",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "rotaciones",
+          "escapulares"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 203,
+        "name": "Empuje escapular acostado",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "empuje",
+          "escapular",
+          "acostado"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 215,
+        "name": "Descenso desde cajón",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "descenso",
+          "cajon"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 223,
+        "name": "Subida en reversa al step",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "subida",
+          "reversa"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 226,
+        "name": "Elevación sobre las puntas de los pies",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "elevacion",
+          "puntas"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 227,
+        "name": "Elevación de la punta del pie",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "elevacion",
+          "punta"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 234,
+        "name": "Inclinación pélvica",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "inclinacion",
+          "pelvica"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 250,
+        "name": "Escalera de sprints",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "escalera",
+          "sprints"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 303,
+        "name": "Caminata talón-punta",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "caminata",
+          "talon",
+          "punta"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 310,
+        "name": "Sostén de brazo extendido",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "sosten",
+          "brazo",
+          "extendido"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 317,
+        "name": "Toque de rodilla con mano opuesta",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "toque",
+          "rodilla",
+          "opuesta"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 319,
+        "name": "Pasos laterales rápidos",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "pasos",
+          "laterales",
+          "rapidos"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 323,
+        "name": "Subir y bajar step en 4 tiempos",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "subir",
+          "bajar",
+          "tiempos"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 325,
+        "name": "Toque alternado de punta de pie",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "toque",
+          "alternado",
+          "punta"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 327,
+        "name": "Pasos adelante y atrás",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "pasos",
+          "adelante",
+          "atras"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 333,
+        "name": "Rotaciones torácicas",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "rotaciones",
+          "toracicas"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 365,
+        "name": "Hiperextensiones inversas",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "hiperextensiones",
+          "inversas"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 383,
+        "name": "Dominadas explosivas",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "dominadas",
+          "explosivas"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 457,
+        "name": "Mountain climber cruzado",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "mountain",
+          "climber",
+          "cruzado"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 461,
+        "name": "Zancadas dinámicas laterales",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "zancadas",
+          "dinamicas",
+          "laterales"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 486,
+        "name": "Mountain climber lento",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "mountain",
+          "climber",
+          "lento"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 487,
+        "name": "Jumping jack con toque de talón",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "jumping",
+          "toque",
+          "talon"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 500,
+        "name": "Farmer carry con giro",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "farmer",
+          "carry"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 508,
+        "name": "Farmer suitcase carry",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "farmer",
+          "suitcase",
+          "carry"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 527,
+        "name": "Farmer carry con peso diferente",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "farmer",
+          "carry",
+          "diferente"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 541,
+        "name": "Turkish windmill",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "turkish",
+          "windmill"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 545,
+        "name": "World's greatest stretch",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "world",
+          "greatest",
+          "stretch"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 546,
+        "name": "Puente unilateral",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "puente",
+          "unilateral"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 547,
+        "name": "Wrist extensor stretch",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "wrist",
+          "extensor",
+          "stretch"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 551,
+        "name": "World's greatest stretch con hamstring",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "world",
+          "greatest",
+          "stretch",
+          "hamstring"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 555,
+        "name": "Dislocaciones con palo en agarre cerrado",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "dislocaciones",
+          "agarre",
+          "cerrado"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 561,
+        "name": "Dislocaciones con palo en agarre ancho",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "dislocaciones",
+          "agarre",
+          "ancho"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 563,
+        "name": "Wrist flexor stretch",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "wrist",
+          "flexor",
+          "stretch"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 566,
+        "name": "Hip external rotation",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "external",
+          "rotation"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 569,
+        "name": "Shoulder cross-body",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "shoulder",
+          "cross"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 574,
+        "name": "Hip internal rotation",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "internal",
+          "rotation"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 576,
+        "name": "Wrist mobility circles",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "wrist",
+          "mobility",
+          "circles"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 579,
+        "name": "Postura del guerrero II",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "postura",
+          "guerrero"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 582,
+        "name": "Stretch de perro boca abajo",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "stretch",
+          "perro",
+          "abajo"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 586,
+        "name": "Postura del guerrero III",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "postura",
+          "guerrero"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 590,
+        "name": "Yoga supine twist",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "supine",
+          "twist"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 596,
+        "name": "Stretch de adductor lateral",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "stretch",
+          "adductor",
+          "lateral"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 606,
+        "name": "Fascial stretch de línea media",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "fascial",
+          "stretch",
+          "linea",
+          "media"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 607,
+        "name": "Postura del cisne",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "postura",
+          "cisne"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 608,
+        "name": "Postura del perro",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "postura",
+          "perro"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 610,
+        "name": "Yoga seated forward fold",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "seated",
+          "forward"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 611,
+        "name": "Postura del puente",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "postura",
+          "puente"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 614,
+        "name": "Yoga lunge twist",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "lunge",
+          "twist"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 615,
+        "name": "Postura del guerrero I",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "postura",
+          "guerrero"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 616,
+        "name": "Stretch de adductor sentado",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "stretch",
+          "adductor",
+          "sentado"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 624,
+        "name": "Medicine ball rotational throw",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "medicine",
+          "rotational",
+          "throw"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 633,
+        "name": "Depth landing",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "depth",
+          "landing"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 639,
+        "name": "Medicine ball chest pass",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "medicine",
+          "chest"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 650,
+        "name": "Deadlift unilateral",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "deadlift",
+          "unilateral"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 654,
+        "name": "Stability ball plank circle",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "stability",
+          "plank",
+          "circle"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 663,
+        "name": "Deadlift unilateral en bosu",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "deadlift",
+          "unilateral"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 671,
+        "name": "Yoga side plank with leg raise",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "plank",
+          "raise"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 673,
+        "name": "Puente con elevación de pierna",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "puente",
+          "elevacion",
+          "pierna"
+        ]
+      },
+      {
+        "severity": "WARNING",
+        "index": 790,
+        "name": "Técnica de levantar objetos",
+        "issue": "TAGS_DO_NOT_REFLECT_NAME",
+        "nameTokens": [
+          "tecnica",
+          "levantar",
+          "objetos"
+        ]
+      }
+    ]
+  }
+}

@@ -278,9 +278,9 @@ function extractArrayObjects(text) {
     const objects = [];
 
     let objectStart = -1;
-    let braceDepth = 0;
-    let currentQuote = null;
-    let escaped = false;
+let braceDepth = 0;
+let currentQuote = null;
+let objectEscaped = false;
 
     for (
       let i = 0;
@@ -290,14 +290,14 @@ function extractArrayObjects(text) {
       const char = body[i];
 
       if (currentQuote) {
-        if (escaped) {
-          escaped = false;
+        if (objectEscaped) {
+          objectEscaped = false;
         } else if (char === "\\") {
-          escaped = true;
+          objectEscaped = true;
         } else if (char === currentQuote) {
           currentQuote = null;
         }
-
+      
         continue;
       }
 

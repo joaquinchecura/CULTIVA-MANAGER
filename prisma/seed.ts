@@ -713,16 +713,6 @@ const exercises = [
     isPublic: true,
   },
   {
-    name: "Estiramiento de isquiotibiales",
-    type: "STRETCHING" as ExerciseType,
-    muscleGroup: "Femoral",
-    equipment: "Peso corporal",
-    tags: ["estiramiento", "isquiotibiales", "flexibilidad", "femoral", "sentado", "piernas"],
-    description: "Estiramiento pasivo de los músculos isquiotibiales (bíceps femoral, semimembranoso y semitendinoso) realizado desde una posición sentada con una pierna extendida. Mejora la flexibilidad de la cadena posterior, reduce la rigidez lumbar, previene lesiones de rodilla y mejora la capacidad de realizar sentadillas profundas y levantamientos de piernas. Es fundamental para corredores, ciclistas y cualquier persona que pase mucho tiempo sentada.",
-    clientDescription: "Sentate en el suelo sobre una colchoneta con una pierna extendida hacia adelante y la otra flexionada con el pie apoyado contra el muslo interno de la pierna extendida. Mantené la espalda recta y el pecho arriba. Inclinate hacia adelante desde las caderas (no desde la cintura) intentando alcanzar los dedos del pie extendido con las manos. Bajá hasta sentir un estiramiento cómodo en la parte posterior del muslo. No fuerces: el estiramiento debe ser suave, nunca doloroso. Mantené la posición 30-45 segundos respirando profundo. Volvé al centro y cambiá de pierna. Si no llegás a los dedos, agarrá la pantorrilla o la rodilla. Lo importante es sentir el estiramiento, no tocar el pie.",
-    isPublic: true,
-  },
-  {
     name: "Estiramiento de pectorales",
     type: "STRETCHING" as ExerciseType,
     muscleGroup: "Pecho",

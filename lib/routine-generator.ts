@@ -42,17 +42,22 @@ export interface GeneratedRoutinePreview {
 
 // Configuración de cuántos ejercicios "principales" entran por día y de
 // qué tipos, según el objetivo. Editable acá si querés ajustar la mezcla.
-const GOAL_CONFIG: Record
-  RoutineGoal,
-  { mainCount: number; mainTypes: ExerciseType[]; warmup: boolean; cooldown: boolean; extra: { type: ExerciseType; count: number }[] }
-> = {
-  HYPERTROPHY:     { mainCount: 6, mainTypes: ["STRENGTH"],               warmup: true,  cooldown: true,  extra: [] },
-  STRENGTH:        { mainCount: 5, mainTypes: ["STRENGTH"],               warmup: true,  cooldown: false, extra: [] },
-  ENDURANCE:       { mainCount: 4, mainTypes: ["STRENGTH", "FUNCTIONAL"], warmup: true,  cooldown: true,  extra: [{ type: "CARDIO", count: 2 }] },
-  WEIGHT_LOSS:     { mainCount: 4, mainTypes: ["STRENGTH", "FUNCTIONAL"], warmup: true,  cooldown: true,  extra: [{ type: "CARDIO", count: 2 }] },
-  MAINTENANCE:     { mainCount: 5, mainTypes: ["STRENGTH"],               warmup: true,  cooldown: true,  extra: [] },
-  REHABILITATION:  { mainCount: 5, mainTypes: ["REHABILITATION", "MOBILITY"], warmup: false, cooldown: false, extra: [] },
-};
+interface GoalConfig {
+    mainCount: number;
+    mainTypes: ExerciseType[];
+    warmup: boolean;
+    cooldown: boolean;
+    extra: { type: ExerciseType; count: number }[];
+  }
+  
+  const GOAL_CONFIG: Record<RoutineGoal, GoalConfig> = {
+    HYPERTROPHY:     { mainCount: 6, mainTypes: ["STRENGTH"],               warmup: true,  cooldown: true,  extra: [] },
+    STRENGTH:        { mainCount: 5, mainTypes: ["STRENGTH"],               warmup: true,  cooldown: false, extra: [] },
+    ENDURANCE:       { mainCount: 4, mainTypes: ["STRENGTH", "FUNCTIONAL"], warmup: true,  cooldown: true,  extra: [{ type: "CARDIO", count: 2 }] },
+    WEIGHT_LOSS:     { mainCount: 4, mainTypes: ["STRENGTH", "FUNCTIONAL"], warmup: true,  cooldown: true,  extra: [{ type: "CARDIO", count: 2 }] },
+    MAINTENANCE:     { mainCount: 5, mainTypes: ["STRENGTH"],               warmup: true,  cooldown: true,  extra: [] },
+    REHABILITATION:  { mainCount: 5, mainTypes: ["REHABILITATION", "MOBILITY"], warmup: false, cooldown: false, extra: [] },
+  };
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];

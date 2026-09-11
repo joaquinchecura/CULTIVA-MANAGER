@@ -64,6 +64,7 @@ export default function GenerarRutinaPage() {
   const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState<GeneratedDay[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedWeek, setSelectedWeek] = useState(1);
 
   useEffect(() => {
     fetch("/api/members")
@@ -143,6 +144,7 @@ export default function GenerarRutinaPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error al generar la rutina");
       setPreview(data.days);
+      setSelectedWeek(1);
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -209,11 +211,12 @@ export default function GenerarRutinaPage() {
     }
   }
 
-  // Vista de un solo día representativo si sameEachWeek, o de la semana 1 si varía
-  const daysToShow = preview
-    ? sameEachWeek
-      ? preview.slice(0, frequencyPerWeek)
-      : preview.slice(0, frequencyPerWeek)
+  // Solo los días de la semana seleccionada, con su índice real dentro de `preview`
+  // (los handlers de edición necesitan ese índice real, no la posición dentro del filtro)
+  const currentWeekEntries = preview
+    ? preview
+        .map((day, index) => ({ day, index }))
+        .filter(({ day }) => day.weekNumber === selectedWeek)
     : [];
 
   return (
@@ -420,9 +423,7 @@ export default function GenerarRutinaPage() {
       {preview && (
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">
-              Preview {sameEachWeek ? "(igual todas las semanas)" : `— Semana 1 de ${totalWeeks}`}
-            </h2>
+            <h2 className="text-lg font-semibold">Preview de la rutina</h2>
             <button
               onClick={handleSave}
               disabled={saving}
@@ -432,10 +433,30 @@ export default function GenerarRutinaPage() {
             </button>
           </div>
 
-          {daysToShow.map((day, dayIndex) => (
+          {!sameEachWeek && totalWeeks > 1 && (
+            <div className="flex flex-wrap gap-2">
+              {Array.from({ length: totalWeeks }, (_, i) => i + 1).map((week) => (
+                <button
+                  key={week}
+                  type="button"
+                  onClick={() => setSelectedWeek(week)}
+                  className={`px-3 py-1.5 rounded-full text-sm border ${
+                    selectedWeek === week
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white text-gray-700 border-gray-300"
+                  }`}
+                >
+                  Semana {week}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {currentWeekEntries.map(({ day, index: dayIndex }) => (
             <div key={dayIndex} className="bg-white border rounded-xl p-4">
               <h3 className="font-semibold mb-3">
-                {day.dayName} {!sameEachWeek && `— Semana ${day.weekNumber}`}
+                {day.dayName}
+                {!sameEachWeek && ` — Semana ${day.weekNumber}`}
               </h3>
               <div className="space-y-2">
                 {day.exercises.map((ex, exIndex) => (

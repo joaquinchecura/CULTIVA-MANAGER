@@ -33,12 +33,11 @@ export default async function RutinasPage({
     search?: string
     goal?: string
     status?: string
-    view?: string       // ← agregar view
+    view?: string
   }>
 }) {
   const params = await searchParams
 
-  // Una sola declaración — condicional según view
   const routines = params.view === "templates"
     ? await getTemplates()
     : await getRoutines(params.search)
@@ -60,6 +59,8 @@ export default async function RutinasPage({
   }
 
   const isTemplateView = params.view === "templates"
+  // Rutinas asignadas → generador nuevo (por cliente). Templates → generador viejo (manual).
+  const newRoutineHref = isTemplateView ? "/admin/rutinas/nueva" : "/admin/rutinas/generar"
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -74,7 +75,7 @@ export default async function RutinasPage({
             {stats.total} {isTemplateView ? "templates" : "rutinas"} · {stats.active} activas
           </p>
         </div>
-        <Link href="/admin/rutinas/nueva">
+        <Link href={newRoutineHref}>
           <Button className="gap-2">
             <Plus size={16} /> {isTemplateView ? "Nuevo template" : "Nueva rutina"}
           </Button>
@@ -151,7 +152,6 @@ export default async function RutinasPage({
             className="pl-9 h-9 text-sm"
           />
         </div>
-        {/* Preservar view en el form */}
         {isTemplateView && <input type="hidden" name="view" value="templates" />}
         <select
           name="goal"
@@ -200,7 +200,7 @@ export default async function RutinasPage({
               ? "Creá un template genérico para reutilizar con varios clientes"
               : "Creá la primera rutina para un cliente"}
           </p>
-          <Link href="/admin/rutinas/nueva" className="inline-block mt-4">
+          <Link href={newRoutineHref} className="inline-block mt-4">
             <Button size="sm" className="gap-2">
               <Plus size={16} /> {isTemplateView ? "Nuevo template" : "Nueva rutina"}
             </Button>

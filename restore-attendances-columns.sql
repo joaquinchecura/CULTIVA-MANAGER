@@ -1,4 +1,0 @@
-ALTER TABLE "attendances" ADD COLUMN IF NOT EXISTS "userAgent" TEXT;
-ALTER TABLE "attendances" ADD COLUMN IF NOT EXISTS "deviceBrand" TEXT;
-ALTER TABLE "attendances" ADD COLUMN IF NOT EXISTS "deviceModel" TEXT;
-ALTER TABLE "attendances" ADD COLUMN IF NOT EXISTS "deviceOS" TEXT;

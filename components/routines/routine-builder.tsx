@@ -2,7 +2,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { createRoutine, updateRoutine } from "@/app/actions/routines"
 import { ExerciseSelector } from "./exercise-selector"
 import { Button } from "@/components/ui/button"
@@ -82,7 +82,9 @@ export function RoutineBuilder({ members, initialData, defaultMemberId }: Routin
   // Step 1
 
   const [memberId, setMemberId] = useState(initialData?.memberId || defaultMemberId || "")
-  const [isTemplate, setIsTemplate] = useState(initialData?.isTemplate || false)
+  const searchParams = useSearchParams()
+  const templateFromQuery = searchParams.get("template") === "true"
+  const [isTemplate, setIsTemplate] = useState(initialData?.isTemplate || templateFromQuery)
   const [name,        setName]        = useState(initialData?.name        || "")
   const [description, setDescription] = useState(initialData?.description || "")
   const [goal,        setGoal]        = useState(initialData?.goal        || "")

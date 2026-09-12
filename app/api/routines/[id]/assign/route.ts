@@ -26,7 +26,6 @@ export async function POST(
       return NextResponse.json({ error: "Rutina no encontrada" }, { status: 404 });
     }
 
-    // api/routines/[id]/assign/route.ts — agregar antes del create
 await prisma.routine.updateMany({
   where: { memberId, isActive: true },
   data: { isActive: false },

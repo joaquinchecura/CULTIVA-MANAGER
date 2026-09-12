@@ -75,11 +75,26 @@ export default async function RutinasPage({
             {stats.total} {isTemplateView ? "templates" : "rutinas"} · {stats.active} activas
           </p>
         </div>
-        <Link href={newRoutineHref}>
-          <Button className="gap-2">
-            <Plus size={16} /> {isTemplateView ? "Nuevo template" : "Nueva rutina"}
-          </Button>
-        </Link>
+        {isTemplateView ? (
+  <Link href="/admin/rutinas/nueva?template=true">
+    <Button className="gap-2">
+      <Plus size={16} /> Nuevo template
+    </Button>
+  </Link>
+) : (
+  <div className="flex gap-2">
+    <Link href="/admin/rutinas/nueva">
+      <Button variant="outline" className="gap-2">
+        <Plus size={16} /> Rutina manual
+      </Button>
+    </Link>
+    <Link href="/admin/rutinas/generar">
+      <Button className="gap-2">
+        <Plus size={16} /> Rutina automática
+      </Button>
+    </Link>
+  </div>
+)}
       </div>
 
       {/* Stats Cards */}
@@ -200,11 +215,14 @@ export default async function RutinasPage({
               ? "Creá un template genérico para reutilizar con varios clientes"
               : "Creá la primera rutina para un cliente"}
           </p>
-          <Link href={newRoutineHref} className="inline-block mt-4">
-            <Button size="sm" className="gap-2">
-              <Plus size={16} /> {isTemplateView ? "Nuevo template" : "Nueva rutina"}
-            </Button>
-          </Link>
+          <Link
+  href={isTemplateView ? "/admin/rutinas/nueva?template=true" : "/admin/rutinas/generar"}
+  className="inline-block mt-4"
+>
+  <Button size="sm" className="gap-2">
+    <Plus size={16} /> {isTemplateView ? "Nuevo template" : "Rutina automática"}
+  </Button>
+</Link>
         </div>
       ) : (
         <div className="grid gap-4">

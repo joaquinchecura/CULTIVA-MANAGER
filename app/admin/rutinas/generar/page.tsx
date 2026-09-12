@@ -203,7 +203,7 @@ export default function GenerarRutinaPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error al guardar la rutina");
-      router.push(`/admin/members/${memberId}/rutinas/${data.id}`);
+      router.push(`/admin/rutinas/${data.id}/editar`);
     } catch (e: any) {
       setError(e.message);
     } finally {

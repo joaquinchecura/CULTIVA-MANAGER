@@ -16,8 +16,8 @@ export default async function NuevaRutinaPage({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900">Nueva rutina</h2>
-        <p className="text-slate-500 mt-1">Armá una rutina personalizada para un cliente</p>
+        <h2 className="text-2xl font-bold text-slate-900">Nueva rutina manual o template</h2>
+        <p className="text-slate-500 mt-1">Armá una rutina personalizada para un cliente o crea una genérica</p>
       </div>
       <RoutineBuilder
         members={members}

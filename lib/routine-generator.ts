@@ -1,8 +1,16 @@
 import { RoutineGoal, ExerciseType, Exercise, RoutineRule } from "@prisma/client";
 
+export type ExperienceLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+
+const ADVANCED_TAGS = ["avanzado", "olimpico", "halterofilia"];
+
+function isCompound(ex: Exercise): boolean {
+  return ex.tags.includes("compound");
+}
+
 export interface SplitDay {
-  name: string;          // "Push", "Full Body", "Día 1", lo que el coach quiera
-  muscleGroups: string[]; // grupos musculares que se buscan ese día
+  name: string;
+  muscleGroups: string[];
 }
 
 export interface GeneratorInput {
@@ -10,10 +18,13 @@ export interface GeneratorInput {
   frequencyPerWeek: number;
   totalWeeks: number;
   sameEachWeek: boolean;
-  splitDays: SplitDay[];        // longitud debe ser igual a frequencyPerWeek
-  availableEquipment: string[] | null; // null = sin filtro de equipamiento
-  exercises: Exercise[];        // pool completo, ya traído de la DB
-  rules: RoutineRule[];         // reglas ya traídas de la DB
+  splitDays: SplitDay[];
+  availableEquipment: string[] | null;
+  exercises: Exercise[];
+  rules: RoutineRule[];
+  experienceLevel?: ExperienceLevel;       // default: INTERMEDIATE
+  avoidMuscleGroups?: string[];            // default: []
+  prioritizeCompound?: boolean;            // default: true
 }
 
 export interface GeneratedExercise {
@@ -22,8 +33,8 @@ export interface GeneratedExercise {
   type: ExerciseType;
   muscleGroup: string | null;
   sets: number;
-  reps: string;   // "8-12" o "45s"
-  rest: string;   // "90s"
+  reps: string;
+  rest: string;
   order: number;
 }
 
@@ -40,24 +51,22 @@ export interface GeneratedRoutinePreview {
   days: GeneratedDay[];
 }
 
-// Configuración de cuántos ejercicios "principales" entran por día y de
-// qué tipos, según el objetivo. Editable acá si querés ajustar la mezcla.
 interface GoalConfig {
-    mainCount: number;
-    mainTypes: ExerciseType[];
-    warmup: boolean;
-    cooldown: boolean;
-    extra: { type: ExerciseType; count: number }[];
-  }
-  
-  const GOAL_CONFIG: Record<RoutineGoal, GoalConfig> = {
-    HYPERTROPHY:     { mainCount: 6, mainTypes: ["STRENGTH"],               warmup: true,  cooldown: true,  extra: [] },
-    STRENGTH:        { mainCount: 5, mainTypes: ["STRENGTH"],               warmup: true,  cooldown: false, extra: [] },
-    ENDURANCE:       { mainCount: 4, mainTypes: ["STRENGTH", "FUNCTIONAL"], warmup: true,  cooldown: true,  extra: [{ type: "CARDIO", count: 2 }] },
-    WEIGHT_LOSS:     { mainCount: 4, mainTypes: ["STRENGTH", "FUNCTIONAL"], warmup: true,  cooldown: true,  extra: [{ type: "CARDIO", count: 2 }] },
-    MAINTENANCE:     { mainCount: 5, mainTypes: ["STRENGTH"],               warmup: true,  cooldown: true,  extra: [] },
-    REHABILITATION:  { mainCount: 5, mainTypes: ["REHABILITATION", "MOBILITY"], warmup: false, cooldown: false, extra: [] },
-  };
+  mainCount: number;
+  mainTypes: ExerciseType[];
+  warmup: boolean;
+  cooldown: boolean;
+  extra: { type: ExerciseType; count: number }[];
+}
+
+const GOAL_CONFIG: Record<RoutineGoal, GoalConfig> = {
+  HYPERTROPHY:     { mainCount: 6, mainTypes: ["STRENGTH"],               warmup: true,  cooldown: true,  extra: [] },
+  STRENGTH:        { mainCount: 5, mainTypes: ["STRENGTH"],               warmup: true,  cooldown: false, extra: [] },
+  ENDURANCE:       { mainCount: 4, mainTypes: ["STRENGTH", "FUNCTIONAL"], warmup: true,  cooldown: true,  extra: [{ type: "CARDIO", count: 2 }] },
+  WEIGHT_LOSS:     { mainCount: 4, mainTypes: ["STRENGTH", "FUNCTIONAL"], warmup: true,  cooldown: true,  extra: [{ type: "CARDIO", count: 2 }] },
+  MAINTENANCE:     { mainCount: 5, mainTypes: ["STRENGTH"],               warmup: true,  cooldown: true,  extra: [] },
+  REHABILITATION:  { mainCount: 5, mainTypes: ["REHABILITATION", "MOBILITY"], warmup: false, cooldown: false, extra: [] },
+};
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -88,28 +97,51 @@ function filterPool(
   exercises: Exercise[],
   muscleGroups: string[],
   types: ExerciseType[],
-  equipment: string[] | null
+  equipment: string[] | null,
+  avoidMuscleGroups: string[],
+  experienceLevel: ExperienceLevel
 ): Exercise[] {
   return exercises.filter((ex) => {
     if (!ex.isPublic) return false;
     if (!types.includes(ex.type)) return false;
     if (muscleGroups.length && !(ex.muscleGroup && muscleGroups.includes(ex.muscleGroup))) return false;
     if (equipment && ex.equipment && !equipment.includes(ex.equipment)) return false;
+    if (avoidMuscleGroups.length && ex.muscleGroup && avoidMuscleGroups.includes(ex.muscleGroup)) return false;
+
+    if (experienceLevel === "BEGINNER") {
+      if (ex.type === "TECHNIQUE") return false;
+      if (ex.tags.some((t) => ADVANCED_TAGS.includes(t))) return false;
+    } else if (experienceLevel === "INTERMEDIATE") {
+      if (ex.tags.some((t) => ADVANCED_TAGS.includes(t))) return false;
+    }
+    // ADVANCED: sin restricciones adicionales
+
     return true;
   });
 }
 
-// Elige `count` ejercicios repartiendo lo más parejo posible entre los
-// muscleGroups del día (round-robin), excluyendo los ya usados si se pide.
+// Ordena el pool priorizando ejercicios compuestos (si corresponde) antes de agrupar por músculo
+function orderPool(pool: Exercise[], prioritizeCompound: boolean): Exercise[] {
+  if (!prioritizeCompound) return shuffle(pool);
+  const compound = shuffle(pool.filter(isCompound));
+  const rest = shuffle(pool.filter((e) => !isCompound(e)));
+  return [...compound, ...rest];
+}
+
 function pickExercises(
   exercises: Exercise[],
   muscleGroups: string[],
   types: ExerciseType[],
   equipment: string[] | null,
+  avoidMuscleGroups: string[],
+  experienceLevel: ExperienceLevel,
+  prioritizeCompound: boolean,
   count: number,
   exclude: Set<string>
 ): Exercise[] {
-  const pool = shuffle(filterPool(exercises, muscleGroups, types, equipment));
+  const filtered = filterPool(exercises, muscleGroups, types, equipment, avoidMuscleGroups, experienceLevel);
+  const pool = orderPool(filtered, prioritizeCompound);
+
   const byMuscle = new Map<string, Exercise[]>();
   for (const ex of pool) {
     const key = ex.muscleGroup || "otro";
@@ -123,11 +155,11 @@ function pickExercises(
   while (picked.length < count && round < 10) {
     for (const g of groups) {
       if (picked.length >= count) break;
+      // candidates ya vienen en orden de prioridad (compuestos primero) gracias a orderPool
       const candidates = (byMuscle.get(g) || []).filter((e) => !exclude.has(e.id) && !picked.some((p) => p.id === e.id));
       if (candidates.length) picked.push(candidates[0]);
     }
     round++;
-    // si después de una vuelta completa no sumó nada nuevo, cortamos para no loopear infinito
     if (round === 1 && picked.length === 0) break;
   }
   return picked.slice(0, count);
@@ -139,6 +171,9 @@ function buildDayExercises(
   exercises: Exercise[],
   rules: RoutineRule[],
   equipment: string[] | null,
+  avoidMuscleGroups: string[],
+  experienceLevel: ExperienceLevel,
+  prioritizeCompound: boolean,
   exclude: Set<string>
 ): GeneratedExercise[] {
   const config = GOAL_CONFIG[goal];
@@ -160,20 +195,26 @@ function buildDayExercises(
   };
 
   if (config.warmup) {
-    const wu = pickExercises(exercises, [], ["WARMUP"], equipment, 1, new Set());
+    const wu = pickExercises(exercises, [], ["WARMUP"], equipment, [], experienceLevel, false, 1, new Set());
     wu.forEach(pushExercise);
   }
 
-  const main = pickExercises(exercises, splitDay.muscleGroups, config.mainTypes, equipment, config.mainCount, exclude);
+  const main = pickExercises(
+    exercises, splitDay.muscleGroups, config.mainTypes, equipment,
+    avoidMuscleGroups, experienceLevel, prioritizeCompound, config.mainCount, exclude
+  );
   main.forEach(pushExercise);
 
   for (const extra of config.extra) {
-    const ex = pickExercises(exercises, splitDay.muscleGroups, [extra.type], equipment, extra.count, exclude);
+    const ex = pickExercises(
+      exercises, splitDay.muscleGroups, [extra.type], equipment,
+      avoidMuscleGroups, experienceLevel, prioritizeCompound, extra.count, exclude
+    );
     ex.forEach(pushExercise);
   }
 
   if (config.cooldown) {
-    const cd = pickExercises(exercises, splitDay.muscleGroups, ["STRETCHING", "COOLDOWN"], equipment, 2, new Set());
+    const cd = pickExercises(exercises, [], ["STRETCHING", "COOLDOWN"], equipment, [], experienceLevel, false, 2, new Set());
     cd.forEach(pushExercise);
   }
 
@@ -181,7 +222,13 @@ function buildDayExercises(
 }
 
 export function generateRoutinePreview(input: GeneratorInput): GeneratedRoutinePreview {
-  const { goal, frequencyPerWeek, totalWeeks, sameEachWeek, splitDays, availableEquipment, exercises, rules } = input;
+  const {
+    goal, frequencyPerWeek, totalWeeks, sameEachWeek, splitDays, availableEquipment,
+    exercises, rules,
+    experienceLevel = "INTERMEDIATE",
+    avoidMuscleGroups = [],
+    prioritizeCompound = true,
+  } = input;
 
   if (splitDays.length !== frequencyPerWeek) {
     throw new Error(`splitDays debe tener ${frequencyPerWeek} elementos (uno por día de la semana), recibió ${splitDays.length}`);
@@ -190,11 +237,10 @@ export function generateRoutinePreview(input: GeneratorInput): GeneratedRoutineP
   const days: GeneratedDay[] = [];
   let sessionNumber = 1;
 
-  // Si la rutina es igual todas las semanas, generamos una sola vez el
-  // contenido de cada día y lo reusamos. Si varía, regeneramos por semana
-  // excluyendo lo usado en la semana inmediatamente anterior para dar variedad.
   const fixedWeekExercises: GeneratedExercise[][] | null = sameEachWeek
-    ? splitDays.map((sd) => buildDayExercises(goal, sd, exercises, rules, availableEquipment, new Set()))
+    ? splitDays.map((sd) =>
+        buildDayExercises(goal, sd, exercises, rules, availableEquipment, avoidMuscleGroups, experienceLevel, prioritizeCompound, new Set())
+      )
     : null;
 
   let previousWeekIds: Set<string>[] = splitDays.map(() => new Set());
@@ -207,7 +253,10 @@ export function generateRoutinePreview(input: GeneratorInput): GeneratedRoutineP
       if (fixedWeekExercises) {
         dayExercises = fixedWeekExercises[dayOfWeek - 1];
       } else {
-        dayExercises = buildDayExercises(goal, splitDay, exercises, rules, availableEquipment, previousWeekIds[dayOfWeek - 1]);
+        dayExercises = buildDayExercises(
+          goal, splitDay, exercises, rules, availableEquipment,
+          avoidMuscleGroups, experienceLevel, prioritizeCompound, previousWeekIds[dayOfWeek - 1]
+        );
         previousWeekIds[dayOfWeek - 1] = new Set(dayExercises.map((e) => e.exerciseId));
       }
 
@@ -225,7 +274,6 @@ export function generateRoutinePreview(input: GeneratorInput): GeneratedRoutineP
   return { days };
 }
 
-// Plantillas de split predefinidas — el coach elige una o arma "Personalizado" a mano
 export const SPLIT_PRESETS: Record<string, { label: string; days: SplitDay[] }> = {
   FULL_BODY: {
     label: "Full Body",
@@ -248,8 +296,6 @@ export const SPLIT_PRESETS: Record<string, { label: string; days: SplitDay[] }> 
   },
 };
 
-// Dado un preset y la cantidad de días/semana, repite el ciclo hasta
-// completar frequencyPerWeek (ej. PPL con 6 días → Push,Pull,Legs,Push,Pull,Legs)
 export function resolveSplitDays(presetKey: string, frequencyPerWeek: number): SplitDay[] {
   const preset = SPLIT_PRESETS[presetKey];
   if (!preset) throw new Error(`Preset desconocido: ${presetKey}`);

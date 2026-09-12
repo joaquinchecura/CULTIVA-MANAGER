@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import { generateRoutinePreview, SplitDay } from "@/lib/routine-generator";
+import { generateRoutinePreview, SplitDay, ExperienceLevel } from "@/lib/routine-generator";
 import { RoutineGoal } from "@prisma/client";
 
 export async function POST(req: NextRequest) {
@@ -16,6 +16,9 @@ export async function POST(req: NextRequest) {
     sameEachWeek,
     splitDays,
     availableEquipment,
+    experienceLevel,
+    avoidMuscleGroups,
+    prioritizeCompound,
   }: {
     goal: RoutineGoal;
     frequencyPerWeek: number;
@@ -23,6 +26,9 @@ export async function POST(req: NextRequest) {
     sameEachWeek: boolean;
     splitDays: SplitDay[];
     availableEquipment: string[] | null;
+    experienceLevel?: ExperienceLevel;
+    avoidMuscleGroups?: string[];
+    prioritizeCompound?: boolean;
   } = body;
 
   const [exercises, rules] = await Promise.all([
@@ -40,6 +46,9 @@ export async function POST(req: NextRequest) {
       availableEquipment: availableEquipment && availableEquipment.length ? availableEquipment : null,
       exercises,
       rules,
+      experienceLevel,
+      avoidMuscleGroups,
+      prioritizeCompound,
     });
     return NextResponse.json(preview);
   } catch (error: any) {

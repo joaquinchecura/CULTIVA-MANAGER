@@ -7,6 +7,7 @@ import {
   resolveSplitDays,
   type SplitDay,
   type GeneratedDay,
+  type ExperienceLevel,
 } from "@/lib/routine-generator";
 import { RoutineGoal } from "@prisma/client";
 
@@ -40,6 +41,23 @@ const EQUIPMENT_OPTIONS = [
   "Bosu",
 ];
 
+const EXPERIENCE_LABELS: Record<ExperienceLevel, string> = {
+  BEGINNER: "Principiante",
+  INTERMEDIATE: "Intermedio",
+  ADVANCED: "Avanzado",
+};
+
+const AVOID_MUSCLE_OPTIONS = [
+  "Columna Lumbar",
+  "Columna torácica",
+  "Cuello",
+  "Hombros",
+  "Rodillas",
+  "Tobillos",
+  "Cadera",
+  "Muñecas",
+];
+
 export default function GenerarRutinaPage() {
   const router = useRouter();
 
@@ -58,6 +76,10 @@ export default function GenerarRutinaPage() {
   const [customSplitDays, setCustomSplitDays] = useState<SplitDay[]>([]);
   const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
   const [useEquipmentFilter, setUseEquipmentFilter] = useState(false);
+
+  const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel>("INTERMEDIATE");
+  const [avoidMuscleGroups, setAvoidMuscleGroups] = useState<string[]>([]);
+  const [prioritizeCompound, setPrioritizeCompound] = useState(true);
 
   // --- Estado de generación ---
   const [generating, setGenerating] = useState(false);
@@ -139,6 +161,9 @@ export default function GenerarRutinaPage() {
           sameEachWeek,
           splitDays,
           availableEquipment: useEquipmentFilter ? selectedEquipment : null,
+          experienceLevel,
+          avoidMuscleGroups,
+          prioritizeCompound,
         }),
       });
       const data = await res.json();
@@ -369,6 +394,63 @@ export default function GenerarRutinaPage() {
             </div>
           )}
         </div>
+
+{/* NIVEL Y PREFERENCIAS */}
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <div>
+    <label className="block text-sm font-medium mb-1">Nivel de experiencia</label>
+    <select
+      className="w-full border rounded-lg px-3 py-2"
+      value={experienceLevel}
+      onChange={(e) => setExperienceLevel(e.target.value as ExperienceLevel)}
+    >
+      {Object.entries(EXPERIENCE_LABELS).map(([value, label]) => (
+        <option key={value} value={value}>
+          {label}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  <div className="flex items-center gap-2 pt-6">
+    <input
+      type="checkbox"
+      id="prioritizeCompound"
+      checked={prioritizeCompound}
+      onChange={(e) => setPrioritizeCompound(e.target.checked)}
+    />
+    <label htmlFor="prioritizeCompound" className="text-sm">
+      Priorizar ejercicios compuestos
+    </label>
+  </div>
+</div>
+
+<div>
+  <label className="block text-sm font-medium mb-2">Evitar zonas (lesiones, contraindicaciones)</label>
+  <div className="flex flex-wrap gap-2">
+    {AVOID_MUSCLE_OPTIONS.map((muscle) => {
+      const active = avoidMuscleGroups.includes(muscle);
+      return (
+        <button
+          key={muscle}
+          type="button"
+          onClick={() =>
+            setAvoidMuscleGroups((prev) =>
+              active ? prev.filter((m) => m !== muscle) : [...prev, muscle]
+            )
+          }
+          className={`px-3 py-1 rounded-full text-xs border ${
+            active
+              ? "bg-red-600 text-white border-red-600"
+              : "bg-white text-gray-700 border-gray-300"
+          }`}
+        >
+          {muscle}
+        </button>
+      );
+    })}
+  </div>
+</div>
 
         {/* EQUIPAMIENTO */}
         <div>

@@ -86,7 +86,7 @@ export function ExerciseSelector({ onSelect, selectedIds = [] }: ExerciseSelecto
           <Plus size={14} /> Agregar ejercicio
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl h-[80vh] flex flex-col bg-white border-slate-200 p-0 overflow-hidden">
+      <DialogContent className="max-w-5xl h-[85vh] flex flex-col bg-white border-slate-200 p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
           <DialogTitle className="flex items-center gap-2 text-slate-900">
             <Dumbbell size={18} /> Biblioteca de ejercicios
@@ -189,105 +189,90 @@ export function ExerciseSelector({ onSelect, selectedIds = [] }: ExerciseSelecto
                   const config = exerciseTypeConfig[ex.type] || exerciseTypeConfig["OTHER"];
 
                   return (
-                    <TooltipProvider key={ex.id} >
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <button
-                            onClick={() => {
-                              if (!isSelected) {
-                                onSelect(ex);
-                                setOpen(false);
-                              }
-                            }}
-                            disabled={isSelected}
-                            className={`w-full text-left rounded-lg border transition-all ${
-                              isSelected
-                                ? "border-slate-200 bg-slate-50 opacity-50 cursor-not-allowed"
-                                : "border-slate-200 bg-white hover:border-blue-300 hover:shadow-sm hover:bg-blue-50/30"
-                            }`}
-                          >
-                            <div className="flex items-start gap-3 p-3">
-                              {/* Thumbnail */}
-                              <div className="w-14 h-14 rounded-md bg-slate-100 shrink-0 overflow-hidden flex items-center justify-center">
-                                {ex.imageUrl || ex.gifUrl ? (
-                                  <img
-                                    src={ex.imageUrl || ex.gifUrl}
-                                    alt={ex.name}
-                                    className="w-full h-full object-cover"
-                                    loading="lazy"
-                                  />
-                                ) : (
-                                  <Dumbbell className="h-5 w-5 text-slate-300" />
-                                )}
-                              </div>
+<TooltipProvider key={ex.id}>
+  <Tooltip>
+    <TooltipTrigger>
+      <button
+        onClick={() => {
+          if (!isSelected) {
+            onSelect(ex);
+            setOpen(false);
+          }
+        }}
+        disabled={isSelected}
+        className={`w-full text-left rounded-lg border transition-all overflow-hidden ${
+          isSelected
+            ? "border-slate-200 bg-slate-50 opacity-50 cursor-not-allowed"
+            : "border-slate-200 bg-white hover:border-blue-300 hover:shadow-sm hover:bg-blue-50/30"
+        }`}
+      >
+        {/* Thumbnail 3:4, ancho completo de la tarjeta */}
+        <div className="w-full aspect-[3/4] bg-slate-100 overflow-hidden flex items-center justify-center relative">
+          {ex.imageUrl || ex.gifUrl ? (
+            <img
+              src={ex.imageUrl || ex.gifUrl}
+              alt={ex.name}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <Dumbbell className="h-8 w-8 text-slate-300" />
+          )}
+          <span className={`absolute top-2 left-2 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${config.bg} ${config.color}`}>
+            {config.label}
+          </span>
+          {isSelected && (
+            <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+              <span className="text-xs text-slate-500 font-medium">Agregado</span>
+            </div>
+          )}
+        </div>
 
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <h4 className="font-medium text-slate-900 text-sm truncate">
-                                    {ex.name}
-                                  </h4>
-                                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${config.bg} ${config.color}`}>
-                                    {config.label}
-                                  </span>
-                                </div>
+        <div className="p-3">
+          <h4 className="font-medium text-slate-900 text-sm leading-tight">
+            {ex.name}
+          </h4>
 
-                                {ex.clientDescription && (
-                                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                                    {ex.clientDescription}
-                                  </p>
-                                )}
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            {ex.muscleGroup && (
+              <span className="text-[10px] text-slate-500">{ex.muscleGroup}</span>
+            )}
+            {ex.equipment && (
+              <span className="text-[10px] text-slate-400">· {ex.equipment}</span>
+            )}
+          </div>
 
-                                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                                  {ex.muscleGroup && (
-                                    <span className="text-[10px] text-slate-500">{ex.muscleGroup}</span>
-                                  )}
-                                  {ex.equipment && (
-                                    <span className="text-[10px] text-slate-400">· {ex.equipment}</span>
-                                  )}
-                                </div>
+          {ex.tags.length > 0 && (
+            <div className="flex gap-1 mt-1.5 flex-wrap">
+              {ex.tags.slice(0, 3).map((tag) => (
+                <span
+                  key={tag}
+                  className="text-[9px] px-1.5 py-0.5 bg-slate-100 rounded text-slate-500"
+                >
+                  {tag}
+                </span>
+              ))}
+              {ex.tags.length > 3 && (
+                <span className="text-[9px] px-1.5 py-0.5 bg-slate-100 rounded text-slate-400">
+                  +{ex.tags.length - 3}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      </button>
+    </TooltipTrigger>
 
-                                {ex.tags.length > 0 && (
-                                  <div className="flex gap-1 mt-1.5 flex-wrap">
-                                    {ex.tags.slice(0, 3).map((tag) => (
-                                      <span
-                                        key={tag}
-                                        className="text-[9px] px-1.5 py-0.5 bg-slate-100 rounded text-slate-500"
-                                      >
-                                        {tag}
-                                      </span>
-                                    ))}
-                                    {ex.tags.length > 3 && (
-                                      <span className="text-[9px] px-1.5 py-0.5 bg-slate-100 rounded text-slate-400">
-                                        +{ex.tags.length - 3}
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-
-                              <div className="shrink-0 self-center">
-                                {isSelected ? (
-                                  <span className="text-[10px] text-slate-400 font-medium">Agregado</span>
-                                ) : (
-                                  <div className="bg-blue-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Plus size={14} />
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </button>
-                        </TooltipTrigger>
-
-                        {ex.clientDescription && (
-                          <TooltipContent side="right" className="max-w-xs bg-slate-900 text-white border-slate-800">
-                            <p className="text-xs leading-relaxed">{ex.clientDescription}</p>
-                            {ex.gifUrl && (
-                              <p className="text-[10px] text-slate-400 mt-1">🎬 Tiene GIF de demostración</p>
-                            )}
-                          </TooltipContent>
-                        )}
-                      </Tooltip>
-                    </TooltipProvider>
+    {ex.clientDescription && (
+      <TooltipContent side="right" className="max-w-xs bg-slate-900 text-white border-slate-800">
+        <p className="text-xs leading-relaxed">{ex.clientDescription}</p>
+        {ex.gifUrl && (
+          <p className="text-[10px] text-slate-400 mt-1">🎬 Tiene GIF de demostración</p>
+        )}
+      </TooltipContent>
+    )}
+  </Tooltip>
+</TooltipProvider>
                   );
                 })
               )}

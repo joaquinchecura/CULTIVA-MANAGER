@@ -131,14 +131,14 @@ export function ExerciseSelector({ onSelect, selectedIds = [] }: ExerciseSelecto
         {/* Exercise list */}
         <div className="flex-1 overflow-hidden px-6 pb-6">
           <ScrollArea className="h-full">
-            <div className="grid grid-cols-2 gap-3 py-2">
+            <div className="grid grid-cols-4 gap-3 py-2">
               {loading ? (
-                <div className="col-span-2 text-center py-8">
+                <div className="col-span-4 text-center py-8">
                   <div className="animate-spin h-6 w-6 border-2 border-slate-300 border-t-slate-900 rounded-full mx-auto mb-3" />
                   <p className="text-slate-500 text-sm">Cargando ejercicios...</p>
                 </div>
               ) : exercises.length === 0 ? (
-                <div className="col-span-2 text-center py-8">
+                <div className="col-span-4 text-center py-8">
                   <Dumbbell className="h-8 w-8 mx-auto mb-2 text-slate-300" />
                   <p className="text-slate-500 text-sm">No se encontraron ejercicios</p>
                   <p className="text-slate-400 text-xs mt-1">Probá con otros filtros</p>

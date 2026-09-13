@@ -47,19 +47,29 @@ export function ExerciseSelector({ onSelect, selectedIds = [] }: ExerciseSelecto
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+  const [muscleGroupFilter, setMuscleGroupFilter] = useState("");
+  const [muscleGroups, setMuscleGroups] = useState<string[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (open) loadExercises();
-  }, [open, search, typeFilter]);
+  }, [open, search, typeFilter, muscleGroupFilter]);
 
   async function loadExercises() {
     setLoading(true);
     try {
-      const data = await getExercises(search || undefined, typeFilter || undefined);
-      // ✅ USAMOS EL HELPER para mapear null → undefined
-      setExercises(data.map((ex: any) => mapPrismaExercise(ex)));
+      const data = await getExercises(search || undefined, typeFilter || undefined, muscleGroupFilter || undefined);
+      const mapped = data.map((ex: any) => mapPrismaExercise(ex));
+      setExercises(mapped);
+  
+      // Solo la primera carga (sin filtros activos) arma la lista completa de grupos
+      if (!search && !typeFilter && !muscleGroupFilter && muscleGroups.length === 0) {
+        const groups = Array.from(
+          new Set(mapped.map((ex) => ex.muscleGroup).filter((g): g is string => !!g))
+        ).sort();
+        setMuscleGroups(groups);
+      }
     } catch (err) {
       console.error("Error cargando ejercicios:", err);
     } finally {
@@ -76,7 +86,7 @@ export function ExerciseSelector({ onSelect, selectedIds = [] }: ExerciseSelecto
           <Plus size={14} /> Agregar ejercicio
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl h-[80vh] flex flex-col bg-white border-slate-200 p-0 overflow-hidden">
+      <DialogContent className="max-w-4xl h-[80vh] flex flex-col bg-white border-slate-200 p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
           <DialogTitle className="flex items-center gap-2 text-slate-900">
             <Dumbbell size={18} /> Biblioteca de ejercicios
@@ -114,6 +124,18 @@ export function ExerciseSelector({ onSelect, selectedIds = [] }: ExerciseSelecto
               </option>
             ))}
           </select>
+          <select
+  value={muscleGroupFilter}
+  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setMuscleGroupFilter(e.target.value)}
+  className="bg-white border border-slate-200 rounded-md px-3 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+>
+  <option value="">Todos los músculos</option>
+  {muscleGroups.map((g) => (
+    <option key={g} value={g}>
+      {g}
+    </option>
+  ))}
+</select>
         </div>
 
         {/* Type chips */}
@@ -149,7 +171,7 @@ export function ExerciseSelector({ onSelect, selectedIds = [] }: ExerciseSelecto
         {/* Exercise list */}
         <div className="flex-1 overflow-hidden px-6 pb-6">
           <ScrollArea className="h-full">
-            <div className="space-y-2 py-2">
+          <div className="grid grid-cols-2 gap-2 py-2">
               {loading ? (
                 <div className="text-center py-8">
                   <div className="animate-spin h-6 w-6 border-2 border-slate-300 border-t-slate-900 rounded-full mx-auto mb-3" />

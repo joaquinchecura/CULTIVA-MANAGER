@@ -319,7 +319,7 @@ export async function toggleRoutineActive(id: string, isActive: boolean) {
 // EXERCISES
 // ============================================
 
-export async function getExercises(search?: string, type?: string) {
+export async function getExercises(search?: string, type?: string, muscleGroup?: string) {
   const where: any = {}
   if (search) {
     where.OR = [
@@ -328,6 +328,7 @@ export async function getExercises(search?: string, type?: string) {
     ]
   }
   if (type) where.type = type
+  if (muscleGroup) where.muscleGroup = muscleGroup
 
   return prisma.exercise.findMany({
     where,

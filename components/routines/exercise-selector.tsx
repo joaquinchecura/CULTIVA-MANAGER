@@ -76,7 +76,7 @@ export function ExerciseSelector({ onSelect, selectedIds = [] }: ExerciseSelecto
           <Plus size={14} /> Agregar ejercicio
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-6xl w-[95vw] h-[80vh] flex flex-col bg-white border-slate-200 p-0 overflow-hidden">
+      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-6xl h-[80vh] flex flex-col bg-white border-slate-200 p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
           <DialogTitle className="flex items-center gap-2 text-slate-900">
             <Dumbbell size={18} /> Biblioteca de ejercicios

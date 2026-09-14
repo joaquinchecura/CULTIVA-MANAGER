@@ -246,7 +246,7 @@ export default function GenerarRutinaPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
-      <h1 className="text-2xl font-bold">Generador de rutinas</h1>
+      <h1 className="text-2xl font-bold">Generador de rutinas automático</h1>
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm">

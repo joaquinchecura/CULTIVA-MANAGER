@@ -1,0 +1,3 @@
+id,memberId,planId,startDate,endDate,status,autoRenew,classesRemaining,createdAt
+"cmt1x16xk0002j4ceyt7xchrk","cmt1wzns60000ipge23uphk21","cmt1wxt4q0000j4ce4r72a93a","2026-08-20T00:00:00.000Z","2026-09-19T00:00:00.000Z","ACTIVE","false",,"2026-08-20T19:30:47.001Z"
+"cmt1x8of200072l5rnhtciyh8","cmt1x6v2j0001ipgev3k6mz9l","cmt1wk51800001awuvwhec6lo","2026-08-20T00:00:00.000Z","2026-09-19T00:00:00.000Z","ACTIVE","false",,"2026-08-20T19:36:36.254Z"

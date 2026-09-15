@@ -1,0 +1,6 @@
+id,name,type,pack,price,durationDays,classesIncluded,description,isActive,createdAt
+"cmt1wk51800001awuvwhec6lo","GIMNASIO","MONTHLY","GYM_ONLY","100","30","0","GIMNASIO","true","2026-08-20T19:17:31.272Z"
+"cmt1wko3c00011awuoohh4rh8","CLASES","MONTHLY","CLASSES_ONLY","100","30","0","CLASES ","true","2026-08-20T19:17:55.972Z"
+"cmt1wl7jh00021awu0z62730m","GYM + CLASES","MONTHLY","GYM_CLASSES","150","30","0","GYM + CLASES","true","2026-08-20T19:18:21.177Z"
+"cmt1wn2qx00041awubyvt6idw","PERSONAL TRAINER 8","MONTHLY","PERSONAL_TRAINER","200","30","8","PT 8 SESIONES/MES","true","2026-08-20T19:19:48.277Z"
+"cmt1wxt4q0000j4ce4r72a93a","PERSONAL TRAINER 12","MONTHLY","PERSONAL_TRAINER","300","30","12","PT 12 SESIONES/MES","true","2026-08-20T19:28:09.030Z"

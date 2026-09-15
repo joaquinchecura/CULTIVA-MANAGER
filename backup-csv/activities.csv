@@ -1,0 +1,5 @@
+id,name,description,type,defaultDuration,maxCapacity,color,isActive
+"cmt4eo9250000imfw44g9ur4i","PERSONAL TRAINER","CLASE PERSONALIZADA","PERSONAL","60","1",,"true"
+"cmt26yowp0000eh87uffjivvg","FUNCIONAL TRAINING","ENTRENAMIENTO FUNCIONAL","GROUP","60","20",,"true"
+"cmt270ay10001eh87zwft7r2a","H.I.I.T.","ENTRENAMIENTO DE ALTA INTENSIDAD","GROUP","60","20",,"true"
+"cmt271kg20002eh87zuw3y3wg","MOVILIDAD CORPORAL","FLEXIBILIDAD","GROUP","60","20",,"true"

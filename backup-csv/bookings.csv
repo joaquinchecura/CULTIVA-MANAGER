@@ -1,0 +1,8 @@
+id,memberId,scheduleId,bookingDate,status,waitlistPosition
+"cmt4c1p7p0001i1th5mfg6k0x","cmt1wzns60000ipge23uphk21","cmt325ylc0001mdzxygzjz6ft","2026-08-22T12:06:37.286Z","CANCELLED",
+"cmt4crggq0001y5uy21tgtg1g","cmt1wzns60000ipge23uphk21","cmt327clr0003mdzxtrxhf5w7","2026-08-22T12:26:39.003Z","CONFIRMED",
+"cmt4c5obh000110tqz5zyh8er","cmt1wzns60000ipge23uphk21","cmt32a4fx000bmdzxoazae8xc","2026-08-22T12:09:42.749Z","COMPLETED",
+"cmt4djusq0003ui6i8c23nehv","cmt1wzns60000ipge23uphk21","cmt328rry0007mdzxk3rh1srp","2026-08-22T12:48:43.946Z","COMPLETED",
+"cmt4i7iu400031403ngsenrvj","cmt1wzns60000ipge23uphk21","cmt4i7iu4000114037u1vjixy","2026-08-22T14:59:06.652Z","COMPLETED",
+"cmt7uwcqs000344juss9lxksq","cmt1wzns60000ipge23uphk21","cmt7uwcqs000144jupkhjhtn1","2026-08-24T23:17:39.074Z","COMPLETED",
+"cmt96rbv40003mdhlg6i7lsms","cmt1wzns60000ipge23uphk21","cmt96rbv40001mdhl6ep0t8no","2026-08-25T21:37:26.108Z","CONFIRMED",

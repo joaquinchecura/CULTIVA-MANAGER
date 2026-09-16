@@ -142,6 +142,27 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  gymConfigs       GymConfig[]
+  members          Member[]
+  plans            Plan[]
+  memberships      Membership[]
+  activities       Activity[]
+  schedules        Schedule[]
+  bookings         Booking[]
+  attendances      Attendance[]
+  payments         Payment[]
+  cashRegisters    CashRegister[]
+  cashMovements    CashMovement[]
+  exercises        Exercise[]
+  routines         Routine[]
+  routineDays      RoutineDay[]
+  routineExercises RoutineExercise[]
+  sessionLogs      SessionLog[]
+  progressLogs     ProgressLog[]
+  news             News[]
+  holidays         Holiday[]
+  bodyCompositions BodyComposition[]
+
   @@map("organizations")
 }
 

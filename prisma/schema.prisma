@@ -188,6 +188,11 @@ model Member {
   progressLogs          ProgressLog[]
   sessionLogs           SessionLog[] 
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+
   @@map("members")
 }
 
@@ -209,6 +214,11 @@ model Plan {
 
   memberships     Membership[]
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+
   @@map("plans")
 }
 
@@ -226,6 +236,11 @@ model Membership {
 
   member            Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
   plan              Plan     @relation(fields: [planId], references: [id])
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
 
   @@map("memberships")
 }
@@ -246,6 +261,11 @@ model Activity {
 
   schedules       Schedule[]
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+
   @@map("activities")
 }
 
@@ -264,6 +284,11 @@ model Schedule {
   activity    Activity @relation(fields: [activityId], references: [id])
   bookings    Booking[]
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+
   @@unique([activityId, date, startTime])
   @@map("schedules")
 }
@@ -278,6 +303,11 @@ model Booking {
 
   member          Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
   schedule        Schedule      @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
 
   @@unique([memberId, scheduleId])
   @@map("bookings")
@@ -300,6 +330,11 @@ model Attendance {
   deviceOS     String?
   member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+
   @@map("attendances")
 }
 
@@ -320,6 +355,11 @@ model Payment {
 
   member      Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+
   @@map("payments")
 }
 
@@ -334,6 +374,11 @@ model CashRegister {
 
   movements     CashMovement[]
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+
   @@map("cash_registers")
 }
 
@@ -347,6 +392,11 @@ model CashMovement {
   createdAt      DateTime     @default(now())
 
   cashRegister   CashRegister @relation(fields: [cashRegisterId], references: [id], onDelete: Cascade)
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
 
   @@map("cash_movements")
 }
@@ -373,6 +423,11 @@ model Exercise {
   routineExercises RoutineExercise[]
   progressLogs     ProgressLog[]
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+
   @@map("exercises")
 }
 
@@ -393,6 +448,11 @@ model Routine {
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+
   @@map("routines")
 }
 
@@ -408,6 +468,11 @@ model RoutineDay {
   exercises     RoutineExercise[]
   sessionLogs   SessionLog[]     // ← nuevo
   createdAt     DateTime         @default(now())
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
 
   @@map("routine_days")
 }
@@ -425,6 +490,11 @@ model RoutineExercise {
   order         Int
   notes         String?
   
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+
   @@map("routine_exercises")
 }
 
@@ -456,6 +526,11 @@ model SessionLog {
   notes        String?
   progressLogs ProgressLog[]
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+
   @@map("session_logs")
 }
 
@@ -475,6 +550,11 @@ model ProgressLog {
   notes         String?
   date          DateTime    @default(now())
   
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+
   @@map("progress_logs")
 }
 
@@ -491,6 +571,11 @@ model News {
   sentAt      DateTime?
   createdAt   DateTime @default(now())
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+
   @@map("news")
 }
 
@@ -499,6 +584,11 @@ model Holiday {
   date        DateTime @db.Date @unique
   name        String
   description String?
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
 
   @@map("holidays")
 }
@@ -529,6 +619,11 @@ model BodyComposition {
   recordedBy        String   @default("self")
 
   createdAt         DateTime @default(now())
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
 
   @@map("body_compositions")
 }

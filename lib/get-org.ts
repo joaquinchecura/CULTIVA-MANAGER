@@ -20,7 +20,9 @@ export async function requirePlatformAdmin() {
     return { error: NextResponse.json({ error: "No autorizado" }, { status: 401 }) };
   }
 
-  const isPlatformAdmin = sessionClaims?.publicMetadata?.platformAdmin === true;
+  const metadata = sessionClaims?.publicMetadata as { platformAdmin?: boolean } | undefined;
+  const isPlatformAdmin = metadata?.platformAdmin === true;
+
   if (!isPlatformAdmin) {
     return { error: NextResponse.json({ error: "Acceso restringido" }, { status: 403 }) };
   }

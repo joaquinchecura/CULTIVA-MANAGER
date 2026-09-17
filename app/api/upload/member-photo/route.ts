@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { v2 as cloudinary } from 'cloudinary'
 import { z } from 'zod'
+import { requireOrg } from '@/lib/get-org'
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -16,10 +17,15 @@ const bodySchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const body = await request.json()
     const { memberId, imageBase64 } = bodySchema.parse(body)
 
-    const member = await prisma.member.findUnique({ where: { id: memberId } })
+    const member = await prisma.member.findFirst({
+      where: { id: memberId, organizationId: orgId },
+    })
     if (!member) {
       return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 })
     }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { requireOrg } from '@/lib/get-org'
 
 const planSchema = z.object({
   name: z.string().min(1),
@@ -15,7 +16,11 @@ const planSchema = z.object({
 
 export async function GET() {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const plans = await prisma.plan.findMany({
+      where: { organizationId: orgId },
       orderBy: { createdAt: 'desc' },
     })
 
@@ -28,6 +33,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const body = await request.json()
     const validatedData = planSchema.parse(body)
 
@@ -35,6 +43,7 @@ export async function POST(request: Request) {
       data: {
         ...validatedData,
         isActive: true,
+        organizationId: orgId,
       },
     })
 
@@ -50,11 +59,22 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
     if (!id) {
       return NextResponse.json({ error: 'ID requerido' }, { status: 400 })
+    }
+
+    const existing = await prisma.plan.findFirst({
+      where: { id, organizationId: orgId },
+      select: { id: true },
+    })
+    if (!existing) {
+      return NextResponse.json({ error: 'Plan no encontrado' }, { status: 404 })
     }
 
     const body = await request.json()
@@ -77,11 +97,22 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
     if (!id) {
       return NextResponse.json({ error: 'ID requerido' }, { status: 400 })
+    }
+
+    const existing = await prisma.plan.findFirst({
+      where: { id, organizationId: orgId },
+      select: { id: true },
+    })
+    if (!existing) {
+      return NextResponse.json({ error: 'Plan no encontrado' }, { status: 404 })
     }
 
     // Verificar si hay membresías activas con este plan
@@ -90,22 +121,21 @@ export async function DELETE(request: Request) {
     })
 
     if (activeMemberships > 0) {
-      // En vez de borrar, desactivar
       await prisma.plan.update({
         where: { id },
         data: { isActive: false },
       })
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Plan desactivado (tiene membresías activas)' 
+      return NextResponse.json({
+        success: true,
+        message: 'Plan desactivado (tiene membresías activas)'
       })
     }
 
     await prisma.plan.delete({ where: { id } })
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Plan eliminado' 
+    return NextResponse.json({
+      success: true,
+      message: 'Plan eliminado'
     })
   } catch (error) {
     console.error('Error deleting plan:', error)

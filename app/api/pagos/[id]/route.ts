@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { requireOrg } from '@/lib/get-org'
 
 const updatePaymentSchema = z.object({
   amount: z.number().positive().optional(),
@@ -16,7 +17,19 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { id } = await params
+
+    const existing = await prisma.payment.findFirst({
+      where: { id, organizationId: orgId },
+      select: { id: true },
+    })
+    if (!existing) {
+      return NextResponse.json({ error: 'Pago no encontrado' }, { status: 404 })
+    }
+
     const body = await request.json()
     const data = updatePaymentSchema.parse(body)
 
@@ -41,8 +54,16 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { id } = await params
-    await prisma.payment.delete({ where: { id } })
+
+    const result = await prisma.payment.deleteMany({ where: { id, organizationId: orgId } })
+    if (result.count === 0) {
+      return NextResponse.json({ error: 'Pago no encontrado' }, { status: 404 })
+    }
+
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting payment:', error)

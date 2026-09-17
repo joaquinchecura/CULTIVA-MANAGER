@@ -1,19 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { ExerciseType } from "@prisma/client";
+import { requireOrg } from "@/lib/get-org";
 
 // GET /api/exercises - Listar ejercicios con filtros
 export async function GET(req: NextRequest) {
   console.log("🔍 [API] GET /api/exercises called");
 
   try {
-    const { userId } = await auth();
-    console.log("👤 [API] userId:", userId || "NO AUTH");
-
-    if (!userId) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
+    const { orgId, error } = await requireOrg();
+    if (error) return error;
 
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type");
@@ -24,7 +20,12 @@ export async function GET(req: NextRequest) {
 
     console.log("🔍 [API] Filtros:", { type, tag, search, muscleGroup, equipment });
 
-    const where: any = {};
+    const where: any = {
+      OR: [
+        { organizationId: orgId },  // ejercicios propios del profesional
+        { organizationId: null },   // librería global compartida
+      ],
+    };
 
     if (type && type !== "all") where.type = type as ExerciseType;
     if (muscleGroup && muscleGroup !== "all") where.muscleGroup = muscleGroup;
@@ -35,10 +36,14 @@ export async function GET(req: NextRequest) {
     }
 
     if (search) {
-      where.OR = [
-        { name: { contains: search, mode: "insensitive" } },
-        { description: { contains: search, mode: "insensitive" } },
-        // clientDescription omitido hasta migrar la DB
+      where.AND = [
+        {
+          OR: [
+            { name: { contains: search, mode: "insensitive" } },
+            { description: { contains: search, mode: "insensitive" } },
+            // clientDescription omitido hasta migrar la DB
+          ],
+        },
       ];
     }
 
@@ -66,23 +71,21 @@ export async function POST(req: NextRequest) {
   console.log("🔍 [API] POST /api/exercises called");
 
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
+    const { orgId, error } = await requireOrg();
+    if (error) return error;
 
     const body = await req.json();
     console.log("📦 [API] Body:", JSON.stringify(body, null, 2));
 
-    const { 
-      name, 
-      type, 
-      description, 
-      muscleGroup, 
-      equipment, 
-      videoUrl, 
-      imageUrl, 
-      tags 
+    const {
+      name,
+      type,
+      description,
+      muscleGroup,
+      equipment,
+      videoUrl,
+      imageUrl,
+      tags
     } = body;
 
     if (!name || !type) {
@@ -100,6 +103,7 @@ export async function POST(req: NextRequest) {
         imageUrl: imageUrl || null,
         tags: tags || [],
         isPublic: true,
+        organizationId: orgId,  // ejercicio propio del profesional, no global
       },
     });
 

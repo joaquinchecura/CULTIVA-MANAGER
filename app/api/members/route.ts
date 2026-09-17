@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { requireOrg } from "@/lib/get-org";
 
 export async function GET(req: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const { userId, orgId, error } = await requireOrg();
+  if (error) return error;
 
   const { searchParams } = new URL(req.url);
   const search = searchParams.get("search");
   const status = searchParams.get("status");
 
-  const where: any = {};
+  const where: any = { organizationId: orgId };
   if (status) where.status = status;
   if (search) {
     where.OR = [
@@ -24,12 +24,7 @@ export async function GET(req: NextRequest) {
   const members = await prisma.member.findMany({
     where,
     select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      email: true,
-      dni: true,
-      status: true,
+      id: true, firstName: true, lastName: true, email: true, dni: true, status: true,
     },
     orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
   });

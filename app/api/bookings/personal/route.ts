@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
+import { requireOrg } from '@/lib/get-org'
 
 export async function POST(request: Request) {
   try {
-    const { userId } = await auth()
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { orgId, error } = await requireOrg()
+    if (error) return error
 
     const { memberId, activityId, date, startTime, endTime, room } = await request.json()
 
@@ -15,13 +13,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
     }
 
-    // Verificar que el member existe
-    const member = await prisma.member.findUnique({
-      where: { id: memberId },
-    })
-    if (!member) {
-      return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 })
-    }
+    // Verificar que member y activity sean de esta organización
+    const [member, activity] = await Promise.all([
+      prisma.member.findFirst({ where: { id: memberId, organizationId: orgId }, select: { id: true } }),
+      prisma.activity.findFirst({ where: { id: activityId, organizationId: orgId }, select: { id: true } }),
+    ])
+    if (!member) return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 })
+    if (!activity) return NextResponse.json({ error: 'Actividad no encontrada' }, { status: 404 })
 
     // Crear schedule personalizada (cupo = 1)
     const schedule = await prisma.schedule.create({
@@ -32,6 +30,7 @@ export async function POST(request: Request) {
         endTime,
         room: room || null,
         maxCapacity: 1,
+        organizationId: orgId,
       },
     })
 
@@ -41,6 +40,7 @@ export async function POST(request: Request) {
         memberId,
         scheduleId: schedule.id,
         status: 'CONFIRMED',
+        organizationId: orgId,
       },
     })
 

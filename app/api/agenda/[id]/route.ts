@@ -1,16 +1,20 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { requireOrg } from '@/lib/get-org'
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { id } = await params
 
-    const schedule = await prisma.schedule.findUnique({
-      where: { id },
+    const schedule = await prisma.schedule.findFirst({
+      where: { id, organizationId: orgId },
       include: {
         activity: true,
         bookings: {
@@ -28,12 +32,11 @@ export async function GET(
       return NextResponse.json({ error: 'Clase no encontrada' }, { status: 404 })
     }
 
-    // Estadística histórica de la actividad: tasa de asistencia promedio
-    // sobre las últimas 20 clases finalizadas (excluyendo la actual si aún no pasó)
     const now = new Date()
     const pastSchedules = await prisma.schedule.findMany({
       where: {
         activityId: schedule.activityId,
+        organizationId: orgId,
         isCancelled: false,
         date: { lt: now },
       },
@@ -65,13 +68,11 @@ export async function GET(
   }
 }
 
-// Agregar al final del archivo, después del GET existente
-
 const updateSchema = z.object({
   date: z.string().optional(),
   startTime: z.string().optional(),
   endTime: z.string().optional(),
-  room: z.string().nullable().optional(),   // ← antes: z.string().optional()
+  room: z.string().nullable().optional(),
   maxCapacity: z.number().int().positive().optional(),
   isCancelled: z.boolean().optional(),
 })
@@ -81,7 +82,19 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { id } = await params
+
+    const existing = await prisma.schedule.findFirst({
+      where: { id, organizationId: orgId },
+      select: { id: true },
+    })
+    if (!existing) {
+      return NextResponse.json({ error: 'Clase no encontrada' }, { status: 404 })
+    }
+
     const body = await request.json()
     const data = updateSchema.parse(body)
 
@@ -103,15 +116,21 @@ export async function PATCH(
   }
 }
 
-// Agregar al final del archivo, después del PATCH que ya tenés
-
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { id } = await params
-    await prisma.schedule.delete({ where: { id } })
+
+    const result = await prisma.schedule.deleteMany({ where: { id, organizationId: orgId } })
+    if (result.count === 0) {
+      return NextResponse.json({ error: 'Clase no encontrada' }, { status: 404 })
+    }
+
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting schedule:', error)

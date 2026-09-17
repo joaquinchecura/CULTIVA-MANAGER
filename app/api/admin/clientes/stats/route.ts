@@ -1,16 +1,15 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { auth } from '@clerk/nextjs/server'
+import { requireOrg } from '@/lib/get-org'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  const { userId } = await auth()
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { orgId, error } = await requireOrg()
+  if (error) return error
 
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
 
   const [
     total,
@@ -18,15 +17,17 @@ export async function GET() {
     bajasEsteMes,
     allMembers,
   ] = await Promise.all([
-    prisma.member.count(),
-    prisma.member.count({ where: { createdAt: { gte: startOfMonth } } }),
-    prisma.member.count({ 
-      where: { 
+    prisma.member.count({ where: { organizationId: orgId } }),
+    prisma.member.count({ where: { organizationId: orgId, createdAt: { gte: startOfMonth } } }),
+    prisma.member.count({
+      where: {
+        organizationId: orgId,
         status: 'INACTIVE',
         updatedAt: { gte: startOfMonth }
-      } 
+      }
     }),
     prisma.member.findMany({
+      where: { organizationId: orgId },
       select: { city: true, createdAt: true, status: true, birthDate: true },
     }),
   ])

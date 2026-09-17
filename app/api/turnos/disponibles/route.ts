@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { startOfDay, endOfDay } from 'date-fns'
+import { requireOrg } from '@/lib/get-org'
 
 export async function GET(request: Request) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { searchParams } = new URL(request.url)
     const date = searchParams.get('date')
 
@@ -13,6 +17,7 @@ export async function GET(request: Request) {
 
     const schedules = await prisma.schedule.findMany({
       where: {
+        organizationId: orgId,
         date: {
           gte: startOfDay(new Date(date)),
           lte: endOfDay(new Date(date)),
@@ -22,14 +27,11 @@ export async function GET(request: Request) {
       },
       include: {
         activity: true,
-        bookings: {
-          where: { status: 'CONFIRMED' },
-        },
+        bookings: { where: { status: 'CONFIRMED' } },
       },
       orderBy: { startTime: 'asc' },
     })
 
-    // Agregar info de cupo disponible
     const schedulesWithAvailability = schedules.map(schedule => ({
       ...schedule,
       availableSpots: schedule.maxCapacity - schedule.bookings.length,

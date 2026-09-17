@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { GeneratedDay } from "@/lib/routine-generator";
 import { RoutineGoal } from "@prisma/client";
+import { requireOrg } from "@/lib/get-org";
 
 export async function POST(req: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const { orgId, error } = await requireOrg();
+  if (error) return error;
 
   const body = await req.json();
   const {
@@ -24,8 +24,17 @@ export async function POST(req: NextRequest) {
     goal: RoutineGoal;
     frequencyPerWeek: number;
     totalWeeks: number;
-    days: GeneratedDay[]; // el preview ya editado por el coach
+    days: GeneratedDay[];
   } = body;
+
+  // Verificar que el cliente sea de esta organización
+  const member = await prisma.member.findFirst({
+    where: { id: memberId, organizationId: orgId },
+    select: { id: true },
+  });
+  if (!member) {
+    return NextResponse.json({ error: "Cliente no encontrado" }, { status: 404 });
+  }
 
   const routine = await prisma.routine.create({
     data: {
@@ -37,6 +46,7 @@ export async function POST(req: NextRequest) {
       totalWeeks,
       isTemplate: false,
       isActive: true,
+      organizationId: orgId,
       days: {
         create: days.map((day) => ({
           sessionNumber: day.sessionNumber,
@@ -44,6 +54,7 @@ export async function POST(req: NextRequest) {
           dayOfWeek: day.dayOfWeek,
           dayName: day.dayName,
           order: day.order,
+          organizationId: orgId,
           exercises: {
             create: day.exercises.map((ex) => ({
               exerciseId: ex.exerciseId,

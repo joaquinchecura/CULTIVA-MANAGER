@@ -1,26 +1,20 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { requireOrg } from "@/lib/get-org";
 
 export async function POST(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const { orgId, error } = await requireOrg();
+  if (error) return error;
 
   const { id } = await params;
 
   try {
-    const original = await prisma.routine.findUnique({
-      where: { id },
-      include: {
-        days: {
-          include: {
-            exercises: true,
-          },
-        },
-      },
+    const original = await prisma.routine.findFirst({
+      where: { id, organizationId: orgId },
+      include: { days: { include: { exercises: true } } },
     });
 
     if (!original) {
@@ -36,6 +30,7 @@ export async function POST(
           goal: original.goal,
           frequencyPerWeek: original.frequencyPerWeek,
           isActive: false,
+          organizationId: orgId,
         },
       });
 
@@ -48,6 +43,7 @@ export async function POST(
             sessionNumber: day.sessionNumber ?? 1,
             weekNumber: day.weekNumber ?? 1,
             dayOfWeek: day.dayOfWeek ?? null,
+            organizationId: orgId,
           },
         });
 

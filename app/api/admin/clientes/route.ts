@@ -1,26 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { auth } from '@clerk/nextjs/server'
+import { requireOrg } from '@/lib/get-org'
 
 export const dynamic = 'force-dynamic'
 
 // GET /api/admin/clientes
 export async function GET(req: NextRequest) {
-  const { userId } = await auth()
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { orgId, error } = await requireOrg()
+  if (error) return error
 
   const { searchParams } = new URL(req.url)
   const id = searchParams.get('id')
 
   if (id) {
-    const member = await prisma.member.findUnique({
-      where: { id },
+    const member = await prisma.member.findFirst({
+      where: { id, organizationId: orgId },
       include: { memberships: { include: { plan: true } } },
     })
     return NextResponse.json(member)
   }
 
   const members = await prisma.member.findMany({
+    where: { organizationId: orgId },
     include: {
       memberships: {
         where: { status: 'ACTIVE' },
@@ -36,8 +37,8 @@ export async function GET(req: NextRequest) {
 
 // POST /api/admin/clientes
 export async function POST(req: NextRequest) {
-  const { userId } = await auth()
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { userId, orgId, error } = await requireOrg()
+  if (error) return error
 
   try {
     const body = await req.json()
@@ -46,6 +47,7 @@ export async function POST(req: NextRequest) {
         ...body,
         status: 'ACTIVE',
         createdBy: userId,
+        organizationId: orgId,
       },
     })
     return NextResponse.json(member)
@@ -57,15 +59,18 @@ export async function POST(req: NextRequest) {
 
 // DELETE /api/admin/clientes?id=xxx
 export async function DELETE(req: NextRequest) {
-  const { userId } = await auth()
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { orgId, error } = await requireOrg()
+  if (error) return error
 
   const { searchParams } = new URL(req.url)
   const id = searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
 
   try {
-    await prisma.member.delete({ where: { id } })
+    const result = await prisma.member.deleteMany({ where: { id, organizationId: orgId } })
+    if (result.count === 0) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error(error)

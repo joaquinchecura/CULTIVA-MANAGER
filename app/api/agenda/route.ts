@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
-import { startOfDay, endOfDay, format, parseISO } from 'date-fns'
+import { startOfDay, endOfDay, parseISO } from 'date-fns'
+import { requireOrg } from '@/lib/get-org'
 
 const createScheduleSchema = z.object({
   activityId: z.string(),
@@ -14,28 +15,23 @@ const createScheduleSchema = z.object({
 
 export async function GET(request: Request) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { searchParams } = new URL(request.url)
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
     const date = searchParams.get('date')
 
-    let where: any = { isHoliday: false }
+    let where: any = { isHoliday: false, organizationId: orgId }
 
     if (date) {
-      // Vista diaria
       const d = parseISO(date)
-      where.date = {
-        gte: startOfDay(d),
-        lte: endOfDay(d),
-      }
+      where.date = { gte: startOfDay(d), lte: endOfDay(d) }
     } else if (startDate && endDate) {
-      // Vista semanal/mensual
       const start = parseISO(startDate)
       const end = parseISO(endDate)
-      where.date = {
-        gte: startOfDay(start),
-        lte: endOfDay(end),
-      }
+      where.date = { gte: startOfDay(start), lte: endOfDay(end) }
     } else {
       return NextResponse.json({ error: 'Date or date range is required' }, { status: 400 })
     }
@@ -48,7 +44,7 @@ export async function GET(request: Request) {
       include: { activity: true, bookings: true },
       orderBy: { startTime: 'asc' },
     })
-    
+
     return NextResponse.json(schedules)
   } catch (error) {
     console.error('Error fetching schedules:', error)
@@ -58,11 +54,23 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const body = await request.json()
     const validatedData = createScheduleSchema.parse(body)
 
+    // Verificar que la actividad sea de esta organización
+    const activity = await prisma.activity.findFirst({
+      where: { id: validatedData.activityId, organizationId: orgId },
+      select: { id: true },
+    })
+    if (!activity) {
+      return NextResponse.json({ error: 'Actividad no encontrada' }, { status: 404 })
+    }
+
     const schedule = await prisma.schedule.create({
-      data: validatedData,
+      data: { ...validatedData, organizationId: orgId },
     })
 
     return NextResponse.json(schedule, { status: 201 })

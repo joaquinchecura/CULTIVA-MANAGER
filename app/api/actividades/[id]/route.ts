@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { z } from 'zod'
+import { requireOrg } from '@/lib/get-org'
 
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
@@ -17,7 +18,19 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { id } = await params
+
+    const existing = await prisma.activity.findFirst({
+      where: { id, organizationId: orgId },
+      select: { id: true },
+    })
+    if (!existing) {
+      return NextResponse.json({ error: 'Actividad no encontrada' }, { status: 404 })
+    }
+
     const body = await req.json()
     const data = updateSchema.parse(body)
 
@@ -42,7 +55,19 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { id } = await params
+
+    const existing = await prisma.activity.findFirst({
+      where: { id, organizationId: orgId },
+      select: { id: true },
+    })
+    if (!existing) {
+      return NextResponse.json({ error: 'Actividad no encontrada' }, { status: 404 })
+    }
+
     const body = await req.json()
 
     const activity = await prisma.activity.update({
@@ -60,7 +85,19 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { id } = await params
+
+    const existing = await prisma.activity.findFirst({
+      where: { id, organizationId: orgId },
+      select: { id: true },
+    })
+    if (!existing) {
+      return NextResponse.json({ error: 'Actividad no encontrada' }, { status: 404 })
+    }
+
     await prisma.activity.delete({ where: { id } })
     return NextResponse.json({ success: true })
   } catch (error) {

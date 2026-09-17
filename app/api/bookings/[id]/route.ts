@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { requireOrg } from '@/lib/get-org'
 
 const updateSchema = z.object({
   status: z.enum(['CONFIRMED', 'COMPLETED', 'NO_SHOW', 'CANCELLED']),
@@ -11,12 +12,15 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { id } = await params
     const body = await request.json()
     const { status } = updateSchema.parse(body)
 
-    const existing = await prisma.booking.findUnique({
-      where: { id },
+    const existing = await prisma.booking.findFirst({
+      where: { id, organizationId: orgId },
       include: { schedule: true },
     })
     if (!existing) {
@@ -28,8 +32,6 @@ export async function PATCH(
       data: { status },
     })
 
-    // Descontar sesión de la membresía PT si es una sesión personal (maxCapacity 1)
-    // que recién ahora pasa a COMPLETED (evita descontar dos veces)
     if (
       existing.schedule.maxCapacity === 1 &&
       status === 'COMPLETED' &&
@@ -66,8 +68,16 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { id } = await params
-    await prisma.booking.delete({ where: { id } })
+
+    const result = await prisma.booking.deleteMany({ where: { id, organizationId: orgId } })
+    if (result.count === 0) {
+      return NextResponse.json({ error: 'Reserva no encontrada' }, { status: 404 })
+    }
+
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting booking:', error)

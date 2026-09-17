@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { requireOrg } from '@/lib/get-org'
 
 const createBookingSchema = z.object({
   memberId: z.string(),
@@ -9,20 +10,18 @@ const createBookingSchema = z.object({
 
 export async function GET(request: Request) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { searchParams } = new URL(request.url)
     const memberId = searchParams.get('memberId')
     const scheduleId = searchParams.get('scheduleId')
 
     if (memberId) {
-      // Reservas de un cliente
       const bookings = await prisma.booking.findMany({
-        where: { memberId },
+        where: { memberId, organizationId: orgId },
         include: {
-          schedule: {
-            include: {
-              activity: true,
-            },
-          },
+          schedule: { include: { activity: true } },
         },
         orderBy: { bookingDate: 'desc' },
       })
@@ -30,17 +29,10 @@ export async function GET(request: Request) {
     }
 
     if (scheduleId) {
-      // Reservas de una clase específica
       const bookings = await prisma.booking.findMany({
-        where: { scheduleId, status: 'CONFIRMED' },
+        where: { scheduleId, status: 'CONFIRMED', organizationId: orgId },
         include: {
-          member: {
-            select: {
-              firstName: true,
-              lastName: true,
-              id: true,
-            },
-          },
+          member: { select: { firstName: true, lastName: true, id: true } },
         },
       })
       return NextResponse.json(bookings)
@@ -55,16 +47,17 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const body = await request.json()
     const validatedData = createBookingSchema.parse(body)
 
-    // Verificar que la clase existe y tiene cupo
-    const schedule = await prisma.schedule.findUnique({
-      where: { id: validatedData.scheduleId },
+    // Verificar que la clase existe, es de esta organización, y tiene cupo
+    const schedule = await prisma.schedule.findFirst({
+      where: { id: validatedData.scheduleId, organizationId: orgId },
       include: {
-        bookings: {
-          where: { status: 'CONFIRMED' },
-        },
+        bookings: { where: { status: 'CONFIRMED' } },
         activity: true,
       },
     })
@@ -79,6 +72,15 @@ export async function POST(request: Request) {
 
     if (schedule.bookings.length >= schedule.maxCapacity) {
       return NextResponse.json({ error: 'Class is full' }, { status: 400 })
+    }
+
+    // Verificar que el cliente sea de esta organización
+    const member = await prisma.member.findFirst({
+      where: { id: validatedData.memberId, organizationId: orgId },
+      select: { id: true },
+    })
+    if (!member) {
+      return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 })
     }
 
     // Verificar que el cliente no tiene otra reserva en el mismo horario
@@ -112,13 +114,10 @@ export async function POST(request: Request) {
         memberId: validatedData.memberId,
         scheduleId: validatedData.scheduleId,
         status: 'CONFIRMED',
+        organizationId: orgId,
       },
       include: {
-        schedule: {
-          include: {
-            activity: true,
-          },
-        },
+        schedule: { include: { activity: true } },
       },
     })
 
@@ -134,6 +133,9 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
@@ -141,10 +143,14 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Booking ID required' }, { status: 400 })
     }
 
-    await prisma.booking.update({
-      where: { id },
+    const result = await prisma.booking.updateMany({
+      where: { id, organizationId: orgId },
       data: { status: 'CANCELLED' },
     })
+
+    if (result.count === 0) {
+      return NextResponse.json({ error: 'Reserva no encontrada' }, { status: 404 })
+    }
 
     return NextResponse.json({ message: 'Booking cancelled' })
   } catch (error) {

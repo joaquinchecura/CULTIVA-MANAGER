@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { requireOrg } from "@/lib/get-org";
 
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const { orgId, error } = await requireOrg();
+  if (error) return error;
 
   const { id } = await params;
   const { memberId } = await req.json();
@@ -17,8 +17,8 @@ export async function POST(
   }
 
   try {
-    const routine = await prisma.routine.findUnique({
-      where: { id },
+    const routine = await prisma.routine.findFirst({
+      where: { id, organizationId: orgId },
       include: { days: { include: { exercises: true } } },
     });
 
@@ -26,12 +26,20 @@ export async function POST(
       return NextResponse.json({ error: "Rutina no encontrada" }, { status: 404 });
     }
 
-await prisma.routine.updateMany({
-  where: { memberId, isActive: true },
-  data: { isActive: false },
-})
+    // Verificar que el cliente destino sea de esta organización
+    const member = await prisma.member.findFirst({
+      where: { id: memberId, organizationId: orgId },
+      select: { id: true },
+    });
+    if (!member) {
+      return NextResponse.json({ error: "Cliente no encontrado" }, { status: 404 });
+    }
 
-    // Crear nueva rutina asignada al nuevo cliente
+    await prisma.routine.updateMany({
+      where: { memberId, isActive: true, organizationId: orgId },
+      data: { isActive: false },
+    });
+
     const assigned = await prisma.routine.create({
       data: {
         memberId,
@@ -40,6 +48,7 @@ await prisma.routine.updateMany({
         goal: routine.goal,
         frequencyPerWeek: routine.frequencyPerWeek,
         isActive: true,
+        organizationId: orgId,
         days: {
           create: routine.days.map((day) => ({
             dayName: day.dayName,
@@ -47,6 +56,7 @@ await prisma.routine.updateMany({
             sessionNumber: day.sessionNumber ?? 1,
             weekNumber: day.weekNumber ?? 1,
             dayOfWeek: day.dayOfWeek ?? null,
+            organizationId: orgId,
             exercises: {
               create: day.exercises.map((ex) => ({
                 exerciseId: ex.exerciseId,

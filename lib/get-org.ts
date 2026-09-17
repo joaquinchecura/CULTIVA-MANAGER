@@ -29,3 +29,16 @@ export async function requirePlatformAdmin() {
 
   return { userId, error: null };
 }
+
+export async function getSessionContext() {
+  const { userId, orgId, sessionClaims } = await auth();
+
+  if (!userId) {
+    return { error: NextResponse.json({ error: "No autorizado" }, { status: 401 }) };
+  }
+
+  const metadata = sessionClaims?.publicMetadata as { platformAdmin?: boolean } | undefined;
+  const isPlatformAdmin = metadata?.platformAdmin === true;
+
+  return { userId, orgId: orgId ?? null, isPlatformAdmin, error: null };
+}

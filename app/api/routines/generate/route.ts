@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { generateRoutinePreview, SplitDay, ExperienceLevel } from "@/lib/routine-generator";
 import { RoutineGoal } from "@prisma/client";
+import { requireOrg } from "@/lib/get-org";
 
 export async function POST(req: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const { orgId, error } = await requireOrg();
+  if (error) return error;
 
   const body = await req.json();
   const {
@@ -32,7 +32,12 @@ export async function POST(req: NextRequest) {
   } = body;
 
   const [exercises, rules] = await Promise.all([
-    prisma.exercise.findMany({ where: { isPublic: true } }),
+    prisma.exercise.findMany({
+      where: {
+        isPublic: true,
+        OR: [{ organizationId: orgId }, { organizationId: null }],
+      },
+    }),
     prisma.routineRule.findMany(),
   ]);
 

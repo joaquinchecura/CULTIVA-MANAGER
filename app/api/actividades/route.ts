@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { requireOrg } from '@/lib/get-org'
 
 const createActivitySchema = z.object({
   name: z.string().min(1),
@@ -12,11 +13,17 @@ const createActivitySchema = z.object({
 
 export async function GET(request: Request) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type')
 
+    const where: any = { organizationId: orgId }
+    if (type) where.type = type as 'GROUP' | 'PERSONAL'
+
     const activities = await prisma.activity.findMany({
-      where: type ? { type: type as 'GROUP' | 'PERSONAL' } : undefined,
+      where,
       include: {
         _count: { select: { schedules: true } },
       },
@@ -32,6 +39,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const body = await request.json()
     const validatedData = createActivitySchema.parse(body)
 
@@ -40,6 +50,7 @@ export async function POST(request: Request) {
         ...validatedData,
         maxCapacity: validatedData.type === 'PERSONAL' ? 1 : validatedData.maxCapacity,
         isActive: true,
+        organizationId: orgId,
       },
     })
 

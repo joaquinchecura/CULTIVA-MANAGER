@@ -5,26 +5,31 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
 
-    const { 
-      firstName, 
-      lastName, 
-      dni, 
-      email, 
-      phone, 
-      birthDate, 
-      address, 
-      city, 
+    const {
+      firstName,
+      lastName,
+      dni,
+      email,
+      phone,
+      birthDate,
+      address,
+      city,
       emergencyContactName,
       emergencyContactPhone,
-      clerkUserId 
+      clerkUserId,
+      organizationId,
     } = body
 
-    // Validar campos requeridos
-    if (!firstName || !lastName || !dni || !email || !phone || !birthDate || !clerkUserId) {
+    if (!firstName || !lastName || !dni || !email || !phone || !birthDate || !clerkUserId || !organizationId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Verificar si ya existe un member con ese DNI o email
+    // Verificar que la organización exista (evita que alguien mande un id inventado)
+    const org = await prisma.organization.findUnique({ where: { id: organizationId } })
+    if (!org) {
+      return NextResponse.json({ error: 'Organización inválida' }, { status: 400 })
+    }
+
     const existing = await prisma.member.findFirst({
       where: {
         OR: [{ dni }, { email }, { clerkUserId }],
@@ -35,7 +40,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'DNI, email or account already exists' }, { status: 400 })
     }
 
-    // Crear el member en la base de datos con status PENDING
     const member = await prisma.member.create({
       data: {
         firstName,
@@ -49,8 +53,9 @@ export async function POST(request: Request) {
         emergencyContactName: emergencyContactName || null,
         emergencyContactPhone: emergencyContactPhone || null,
         clerkUserId,
-        status: 'PENDING', // ← Importante: empieza como PENDING
+        status: 'PENDING',
         createdBy: 'self-registration',
+        organizationId,
       },
     })
 

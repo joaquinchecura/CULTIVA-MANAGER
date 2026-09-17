@@ -1,16 +1,20 @@
 // app/api/clientes/[id]/route.ts
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireOrg } from '@/lib/get-org'
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { id } = await params
 
-    const member = await prisma.member.findUnique({
-      where: { id },
+    const member = await prisma.member.findFirst({
+      where: { id, organizationId: orgId },
       include: {
         memberships: {
           include: { plan: true },
@@ -36,7 +40,21 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { id } = await params
+
+    // Verificamos que el cliente exista Y sea de esta organización antes de tocar nada
+    const existing = await prisma.member.findFirst({
+      where: { id, organizationId: orgId },
+      select: { id: true },
+    })
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 })
+    }
+
     const body = await request.json()
 
     const {
@@ -61,7 +79,7 @@ export async function PUT(
       membershipEndDate,
     } = body
 
-    // Actualizar datos del member
+    // Actualizar datos del member (ya confirmado que es de esta org)
     const updatedMember = await prisma.member.update({
       where: { id },
       data: {
@@ -84,7 +102,7 @@ export async function PUT(
 
     // Si hay que asignar/modificar membresía
     if (assignMembership && planId && membershipStartDate && membershipEndDate) {
-      // Desactivar membresías anteriores
+      // Desactivar membresías anteriores (solo las de este member, que ya sabemos es de esta org)
       await prisma.membership.updateMany({
         where: { memberId: id },
         data: { status: 'EXPIRED' },
@@ -98,6 +116,7 @@ export async function PUT(
           startDate: new Date(membershipStartDate),
           endDate: new Date(membershipEndDate),
           status: 'ACTIVE',
+          organizationId: orgId,
         },
       })
     }

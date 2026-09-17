@@ -1,18 +1,22 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { clerkClient } from '@clerk/clerk-sdk-node'
+import { requireOrg } from '@/lib/get-org'
 
 export async function POST(request: Request) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { memberId } = await request.json()
 
     if (!memberId) {
       return NextResponse.json({ error: 'memberId required' }, { status: 400 })
     }
 
-    // Buscar el member
-    const member = await prisma.member.findUnique({
-      where: { id: memberId },
+    // Buscar el member, verificando que sea de esta organización
+    const member = await prisma.member.findFirst({
+      where: { id: memberId, organizationId: orgId },
     })
 
     if (!member) {

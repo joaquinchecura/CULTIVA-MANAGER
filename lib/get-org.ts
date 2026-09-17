@@ -12,3 +12,18 @@ export async function requireOrg() {
   }
   return { userId, orgId, error: null };
 }
+
+export async function requirePlatformAdmin() {
+  const { userId, sessionClaims } = await auth();
+
+  if (!userId) {
+    return { error: NextResponse.json({ error: "No autorizado" }, { status: 401 }) };
+  }
+
+  const isPlatformAdmin = sessionClaims?.publicMetadata?.platformAdmin === true;
+  if (!isPlatformAdmin) {
+    return { error: NextResponse.json({ error: "Acceso restringido" }, { status: 403 }) };
+  }
+
+  return { userId, error: null };
+}

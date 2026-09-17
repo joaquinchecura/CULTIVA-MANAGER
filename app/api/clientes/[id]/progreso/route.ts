@@ -1,12 +1,25 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireOrg } from '@/lib/get-org'
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { id } = await params
+
+    // Verificar que el member sea de esta organización antes de traer sus datos
+    const member = await prisma.member.findFirst({
+      where: { id, organizationId: orgId },
+      select: { id: true },
+    })
+    if (!member) {
+      return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 })
+    }
 
     const records = await prisma.bodyComposition.findMany({
       where: { memberId: id },
@@ -26,11 +39,14 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { id } = await params
     const data = await request.json()
 
-    // Verificar que el member existe
-    const member = await prisma.member.findUnique({ where: { id } })
+    // Verificar que el member existe Y es de esta organización
+    const member = await prisma.member.findFirst({ where: { id, organizationId: orgId } })
     if (!member) {
       return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 })
     }
@@ -62,6 +78,7 @@ export async function POST(
         targetWeight: data.targetWeight || null,
         notes: data.notes || null,
         recordedBy: 'trainer',
+        organizationId: orgId,
       },
     })
 

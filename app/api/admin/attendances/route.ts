@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { auth } from '@clerk/nextjs/server'
+import { requireOrg } from '@/lib/get-org'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  const { userId } = await auth()
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { orgId, error } = await requireOrg()
+  if (error) return error
 
   const attendances = await prisma.attendance.findMany({
+    where: { organizationId: orgId },
     orderBy: { entryTime: 'desc' },
     take: 500, // Últimas 500 asistencias
     include: {

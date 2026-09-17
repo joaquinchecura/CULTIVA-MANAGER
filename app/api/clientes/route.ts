@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { requireOrg } from '@/lib/get-org'
 
 const createMemberSchema = z.object({
   firstName: z.string().min(1),
@@ -19,7 +20,11 @@ const createMemberSchema = z.object({
 
 export async function GET() {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const members = await prisma.member.findMany({
+      where: { organizationId: orgId },
       include: {
         memberships: {
           include: { plan: true },
@@ -38,6 +43,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const body = await request.json()
     const validatedData = createMemberSchema.parse(body)
 
@@ -46,6 +54,7 @@ export async function POST(request: Request) {
         ...validatedData,
         status: 'ACTIVE',
         createdBy: 'admin',
+        organizationId: orgId,
       },
     })
 
@@ -61,6 +70,9 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
@@ -68,9 +80,13 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'ID required' }, { status: 400 })
     }
 
-    await prisma.member.delete({
-      where: { id },
+    const result = await prisma.member.deleteMany({
+      where: { id, organizationId: orgId },
     })
+
+    if (result.count === 0) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
 
     return NextResponse.json({ message: 'Member deleted' })
   } catch (error) {

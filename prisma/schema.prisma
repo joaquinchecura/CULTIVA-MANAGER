@@ -12,6 +12,12 @@ datasource db {
 // ENUMS
 // ============================================
 
+enum OrganizationStatus {
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+}
+
 enum MemberStatus {
   ACTIVE
   INACTIVE
@@ -141,6 +147,8 @@ model Organization {
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  status    OrganizationStatus @default(ACTIVE)
 
   gymConfigs       GymConfig[]
   members          Member[]

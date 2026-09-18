@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export async function requireOrg() {
   const { userId, orgId } = await auth();
@@ -10,6 +11,12 @@ export async function requireOrg() {
   if (!orgId) {
     return { error: NextResponse.json({ error: "No hay organización activa" }, { status: 400 }) };
   }
+
+  const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { status: true } });
+  if (!org || org.status !== "ACTIVE") {
+    return { error: NextResponse.json({ error: "Tu cuenta está suspendida. Contactá al administrador." }, { status: 402 }) };
+  }
+
   return { userId, orgId, error: null };
 }
 

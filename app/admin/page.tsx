@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { prisma } from '@/lib/prisma'
+import { requireOrgForPage } from '@/lib/get-org'
 import {
   Users,
   UserPlus,
@@ -18,7 +19,9 @@ import {
 import Link from 'next/link'
 
 export default async function AdminDashboard() {
-  // Datos reales de la base
+  const orgId = await requireOrgForPage()
+
+  // Datos reales de la base, ya filtrados por organización
   const [
     totalClientes,
     clientesNuevosMes,
@@ -32,17 +35,19 @@ export default async function AdminDashboard() {
     membresiasPorVencer,
     membresiasVencidas,
   ] = await Promise.all([
-    prisma.member.count(),
+    prisma.member.count({ where: { organizationId: orgId } }),
     prisma.member.count({
       where: {
+        organizationId: orgId,
         createdAt: {
           gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
         },
       },
     }),
-    prisma.member.count({ where: { status: 'PENDING' } }),
+    prisma.member.count({ where: { organizationId: orgId, status: 'PENDING' } }),
     prisma.payment.aggregate({
       where: {
+        organizationId: orgId,
         createdAt: {
           gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
         },
@@ -52,6 +57,7 @@ export default async function AdminDashboard() {
     }),
     prisma.payment.aggregate({
       where: {
+        organizationId: orgId,
         createdAt: {
           gte: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1),
           lt: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
@@ -62,11 +68,13 @@ export default async function AdminDashboard() {
     }),
     prisma.attendance.count({
       where: {
+        organizationId: orgId,
         entryTime: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
       },
     }),
     prisma.attendance.count({
       where: {
+        organizationId: orgId,
         entryTime: {
           gte: new Date(new Date().setDate(new Date().getDate() - 1)),
           lt: new Date(new Date().setHours(0, 0, 0, 0)),
@@ -75,12 +83,14 @@ export default async function AdminDashboard() {
     }),
     prisma.schedule.count({
       where: {
+        organizationId: orgId,
         date: new Date(new Date().setHours(0, 0, 0, 0)),
         isCancelled: false,
       },
     }),
     prisma.schedule.count({
       where: {
+        organizationId: orgId,
         date: {
           gte: new Date(new Date().setDate(new Date().getDate() - 7)),
         },
@@ -89,6 +99,7 @@ export default async function AdminDashboard() {
     }),
     prisma.membership.count({
       where: {
+        organizationId: orgId,
         endDate: {
           lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
           gte: new Date(),
@@ -98,6 +109,7 @@ export default async function AdminDashboard() {
     }),
     prisma.membership.count({
       where: {
+        organizationId: orgId,
         endDate: { lt: new Date() },
         status: 'ACTIVE',
       },
@@ -114,8 +126,6 @@ export default async function AdminDashboard() {
     ? ((asistenciasHoy - asistenciasAyer) / asistenciasAyer * 100).toFixed(1)
     : '0'
 
-  // Cards principales (métricas clave)
-  // Orden: Total Clientes, Asistencias Hoy, Pendientes, Recaudación Mes (movida al final)
   const metricCards = [
     {
       href: '/admin/clientes',
@@ -165,7 +175,6 @@ export default async function AdminDashboard() {
     },
   ]
 
-  // Cards secundarias (alertas)
   const alertCards = [
     {
       href: '/admin/planes',
@@ -189,7 +198,6 @@ export default async function AdminDashboard() {
     },
   ]
 
-  // Acciones rápidas — ahora con fondo de color propio en las 4 (estilo pastel, consistente con las métricas de arriba)
   const quickActions = [
     { href: '/admin/clientes/nuevo', label: 'Nuevo Cliente', icon: UserPlus, className: 'bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-100' },
     { href: '/admin/rutinas/nueva', label: 'Nueva Rutina', icon: Activity, className: 'bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-100' },
@@ -241,14 +249,13 @@ export default async function AdminDashboard() {
         ))}
       </div>
 
-      {/* Alertas + Acciones rápidas: 1 columna de alertas (2 cards apiladas) + 2 columnas de acciones (2x2) = 3 columnas de 2 cards */}
+      {/* Alertas + Acciones rápidas */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider lg:col-span-1">Alertas</h3>
         <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider lg:col-span-2">Acciones Rápidas</h3>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 -mt-3">
-        {/* Alertas: apiladas verticalmente */}
         <div className="space-y-3">
           {alertCards.map((card) => (
             <Link
@@ -272,7 +279,6 @@ export default async function AdminDashboard() {
           ))}
         </div>
 
-        {/* Acciones rápidas: 2x2 ocupando las 2 columnas restantes */}
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
           {quickActions.map((action) => (
             <Link
@@ -300,14 +306,15 @@ export default async function AdminDashboard() {
             Ver scanner →
           </Link>
         </div>
-        <UltimasAsistencias />
+        <UltimasAsistencias orgId={orgId} />
       </div>
     </div>
   )
 }
 
-async function UltimasAsistencias() {
+async function UltimasAsistencias({ orgId }: { orgId: string }) {
   const attendances = await prisma.attendance.findMany({
+    where: { organizationId: orgId },
     orderBy: { entryTime: 'desc' },
     take: 5,
     include: { member: true },
@@ -335,7 +342,6 @@ async function UltimasAsistencias() {
         const device = formatDevice(a)
         return (
           <div key={a.id} className="px-5 py-3 flex items-center gap-4 hover:bg-slate-50 transition-colors">
-            {/* Avatar */}
             {a.member.photoUrl ? (
               <img
                 src={a.member.photoUrl}
@@ -348,13 +354,11 @@ async function UltimasAsistencias() {
               </div>
             )}
 
-            {/* Nombre + DNI */}
             <div className="w-48 shrink-0">
               <p className="text-sm font-medium text-slate-900 truncate">{a.member.firstName} {a.member.lastName}</p>
               <p className="text-xs text-slate-500">DNI: {a.member.dni}</p>
             </div>
 
-            {/* Dispositivo — ocupa el espacio central que antes quedaba vacío */}
             <div className="flex-1 flex items-center gap-1.5 text-xs text-slate-500 min-w-0">
               {device ? (
                 <>
@@ -366,7 +370,6 @@ async function UltimasAsistencias() {
               )}
             </div>
 
-            {/* Fecha + estado */}
             <div className="text-right shrink-0">
               <p className="text-xs text-slate-500">
                 {new Date(a.entryTime).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })}

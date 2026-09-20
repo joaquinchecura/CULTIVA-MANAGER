@@ -54,11 +54,11 @@ export async function GET() {
     for (const [name, rows] of Object.entries(tables)) {
       zip.file(`${name}.csv`, toCSV(rows))
     }
+    const arrayBuffer = await zip.generateAsync({ type: 'arraybuffer' })
+    const blob = new Blob([arrayBuffer], { type: 'application/zip' })
+    const filename = `backup-...`
 
-    const buffer = await zip.generateAsync({ type: 'uint8array' })
-    const filename = `backup-plataforma-${new Date().toISOString().split('T')[0]}.zip`
-
-    return new NextResponse(buffer, {
+    return new NextResponse(blob, {
       headers: {
         'Content-Type': 'application/zip',
         'Content-Disposition': `attachment; filename="${filename}"`,

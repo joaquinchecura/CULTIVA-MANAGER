@@ -55,7 +55,7 @@ export async function GET() {
       zip.file(`${name}.csv`, toCSV(rows))
     }
 
-    const buffer = await zip.generateAsync({ type: 'nodebuffer' })
+    const buffer = await zip.generateAsync({ type: 'uint8array' })
     const filename = `backup-plataforma-${new Date().toISOString().split('T')[0]}.zip`
 
     return new NextResponse(buffer, {

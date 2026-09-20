@@ -1,14 +1,16 @@
 export const dynamic = 'force-dynamic'
 
 import { prisma } from '@/lib/prisma'
+import { requireOrgForPage } from '@/lib/get-org'
 import { ArrowLeft, Calendar, Clock, Smartphone, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function ClienteAsistenciasPage({ params }: { params: Promise<{ id: string }> }) {
+  const orgId = await requireOrgForPage()
   const { id } = await params
 
-  const member = await prisma.member.findUnique({
-    where: { id },
+  const member = await prisma.member.findFirst({
+    where: { id, organizationId: orgId },
     include: {
       attendances: {
         orderBy: { entryTime: 'desc' },

@@ -1,15 +1,17 @@
 export const dynamic = 'force-dynamic'
 
 import { prisma } from '@/lib/prisma'
+import { requireOrgForPage } from '@/lib/get-org'
 import { ArrowLeft, CreditCard, DollarSign, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import NuevoPago from './NuevoPago'
 
 export default async function ClientePagosPage({ params }: { params: Promise<{ id: string }> }) {
+  const orgId = await requireOrgForPage()
   const { id } = await params
 
-  const member = await prisma.member.findUnique({
-    where: { id },
+  const member = await prisma.member.findFirst({
+    where: { id, organizationId: orgId },
     include: {
       payments: {
         orderBy: { createdAt: 'desc' },
@@ -37,7 +39,6 @@ export default async function ClientePagosPage({ params }: { params: Promise<{ i
         </div>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-white border border-slate-200 rounded-xl p-4">
           <p className="text-2xl font-bold text-slate-900">${totalPagado.toLocaleString('es-AR')}</p>
@@ -49,10 +50,8 @@ export default async function ClientePagosPage({ params }: { params: Promise<{ i
         </div>
       </div>
 
-      {/* Formulario nuevo pago */}
       <NuevoPago memberId={member.id} />
 
-      {/* Historial */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100">
           <h3 className="font-semibold text-slate-900">Historial de pagos</h3>

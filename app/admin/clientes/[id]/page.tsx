@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { prisma } from '@/lib/prisma'
+import { requireOrgForPage } from '@/lib/get-org'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -39,11 +40,12 @@ export default async function ClienteDetallePage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  const orgId = await requireOrgForPage()
   const { id } = await params
 
   const [member, routineHistory, templates] = await Promise.all([
-    prisma.member.findUnique({
-      where: { id },
+    prisma.member.findFirst({
+      where: { id, organizationId: orgId },
       include: {
         memberships: {
           include: { plan: true },
@@ -62,7 +64,6 @@ export default async function ClienteDetallePage({
   const activeMembership = member.memberships.find(m => m.status === 'ACTIVE')
   const st = statusConfig[member.status] || statusConfig.INACTIVE
 
-  // Calcular progreso de la rutina activa
   function routineProgress(routine: typeof activeRoutine) {
     if (!routine) return { total: 0, completed: 0, pct: 0 }
     const total = routine.days.length
@@ -84,7 +85,6 @@ export default async function ClienteDetallePage({
             </Button>
           </Link>
 
-          {/* Avatar chico para reconocimiento rápido en el header */}
           {member.photoUrl ? (
             <img
               src={member.photoUrl}
@@ -115,7 +115,6 @@ export default async function ClienteDetallePage({
           </div>
         </div>
 
-        {/* Acciones rápidas */}
         <div className="flex gap-2 flex-wrap justify-end">
           {[
             { href: `/admin/clientes/${id}/asistencias`, label: 'Asistencias', icon: UserCheck, color: 'bg-indigo-600 hover:bg-indigo-700' },
@@ -135,10 +134,8 @@ export default async function ClienteDetallePage({
       {/* Grid principal */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
-        {/* Columna izquierda: foto + datos */}
         <div className="lg:col-span-1 space-y-5">
 
-          {/* Foto de perfil — tarjeta destacada */}
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             {member.photoUrl ? (
               <img
@@ -156,7 +153,6 @@ export default async function ClienteDetallePage({
             )}
           </div>
 
-          {/* Datos personales */}
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <h3 className="text-sm font-semibold text-slate-900 mb-4 uppercase tracking-wider">
               Datos personales
@@ -176,7 +172,6 @@ export default async function ClienteDetallePage({
             </div>
           </div>
 
-          {/* Contacto de emergencia */}
           {(member.emergencyContactName || member.medicalNotes) && (
             <div className="bg-white border border-slate-200 rounded-xl p-5">
               <h3 className="text-sm font-semibold text-slate-900 mb-4 uppercase tracking-wider">
@@ -199,7 +194,6 @@ export default async function ClienteDetallePage({
             </div>
           )}
 
-          {/* Membresías */}
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <h3 className="text-sm font-semibold text-slate-900 mb-4 uppercase tracking-wider">
               Membresías
@@ -230,10 +224,8 @@ export default async function ClienteDetallePage({
           </div>
         </div>
 
-        {/* Columna derecha: rutinas */}
         <div className="lg:col-span-2 space-y-5">
 
-          {/* Rutina activa */}
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider flex items-center gap-2">
@@ -246,7 +238,6 @@ export default async function ClienteDetallePage({
                     <Plus size={13} /> Nueva rutina
                   </Button>
                 </Link>
-                {/* Asignar desde template */}
                 {templates.length > 0 && (
                   <AssignTemplateButton memberId={id} templates={templates} />
                 )}
@@ -279,7 +270,6 @@ export default async function ClienteDetallePage({
                   </div>
                 </div>
 
-                {/* Barra de progreso */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs text-slate-500">
                     <span>{progress.completed} de {progress.total} sesiones completadas</span>
@@ -306,7 +296,6 @@ export default async function ClienteDetallePage({
             )}
           </div>
 
-          {/* Historial de rutinas */}
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider flex items-center gap-2">

@@ -2,6 +2,7 @@
 export const dynamic = "force-dynamic"
 
 import { prisma } from "@/lib/prisma"
+import { requireOrgForPage } from "@/lib/get-org"
 import { getRoutineHistoryForMember } from "@/app/actions/routines"
 import { notFound } from "next/navigation"
 import Link from "next/link"
@@ -38,11 +39,12 @@ export default async function ClienteRutinasHistorialPage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  const orgId = await requireOrgForPage()
   const { id } = await params
 
   const [member, routines] = await Promise.all([
-    prisma.member.findUnique({
-      where: { id },
+    prisma.member.findFirst({
+      where: { id, organizationId: orgId },
       select: { id: true, firstName: true, lastName: true, dni: true },
     }),
     getRoutineHistoryForMember(id),
@@ -50,7 +52,6 @@ export default async function ClienteRutinasHistorialPage({
 
   if (!member) return notFound()
 
-  // Progreso por rutina + rango de fechas real (primer/último día completado)
   function analyze(routine: (typeof routines)[number]) {
     const total = routine.days.length
     const completedDays = routine.days.filter(d => d.sessionLogs.some(l => l.completedAt))
@@ -69,7 +70,6 @@ export default async function ClienteRutinasHistorialPage({
 
   const enriched = routines.map(r => ({ routine: r, stats: analyze(r) }))
 
-  // Agrupar por año (según fecha de inicio real)
   const byYear = enriched.reduce((acc, item) => {
     const year = new Date(item.stats.startDate).getFullYear()
     if (!acc[year]) acc[year] = []
@@ -79,7 +79,6 @@ export default async function ClienteRutinasHistorialPage({
 
   const years = Object.keys(byYear).map(Number).sort((a, b) => b - a)
 
-  // Stats globales
   const totalRoutines = routines.length
   const totalCompleted = enriched.filter(e => e.stats.pct === 100).length
   const totalSessions = enriched.reduce((sum, e) => sum + e.stats.total, 0)
@@ -88,7 +87,6 @@ export default async function ClienteRutinasHistorialPage({
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
 
-      {/* Header */}
       <div className="flex items-center gap-3">
         <Link href={`/admin/clientes/${id}`}>
           <Button variant="ghost" size="icon" className="h-9 w-9">
@@ -103,7 +101,6 @@ export default async function ClienteRutinasHistorialPage({
         </div>
       </div>
 
-      {/* Stats globales */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white border border-slate-200 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-1">
@@ -207,7 +204,6 @@ export default async function ClienteRutinasHistorialPage({
                         </div>
                       </div>
 
-                      {/* Barra de progreso */}
                       <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all ${

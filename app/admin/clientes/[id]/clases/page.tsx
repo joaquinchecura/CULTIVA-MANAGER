@@ -1,15 +1,17 @@
 export const dynamic = 'force-dynamic'
 
 import { prisma } from '@/lib/prisma'
+import { requireOrgForPage } from '@/lib/get-org'
 import { ArrowLeft, Calendar, Clock, Dumbbell, Plus } from 'lucide-react'
 import Link from 'next/link'
 import AsignarClasePersonal from './AsignarClasePersonal'
 
 export default async function ClienteClasesPage({ params }: { params: Promise<{ id: string }> }) {
+  const orgId = await requireOrgForPage()
   const { id } = await params
 
-  const member = await prisma.member.findUnique({
-    where: { id },
+  const member = await prisma.member.findFirst({
+    where: { id, organizationId: orgId },
     include: {
       bookings: {
         where: { status: 'CONFIRMED' },
@@ -23,7 +25,9 @@ export default async function ClienteClasesPage({ params }: { params: Promise<{ 
     return <div className="p-6">Cliente no encontrado</div>
   }
 
-  const activities = await prisma.activity.findMany({ where: { isActive: true } })
+  const activities = await prisma.activity.findMany({
+    where: { isActive: true, organizationId: orgId },
+  })
 
   return (
     <div className="space-y-6">
@@ -37,7 +41,6 @@ export default async function ClienteClasesPage({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      {/* Clases asignadas */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
           <h3 className="font-semibold text-slate-900 flex items-center gap-2">
@@ -66,8 +69,8 @@ export default async function ClienteClasesPage({ params }: { params: Promise<{ 
                   {b.schedule.room && <p className="text-xs text-slate-400">Sala: {b.schedule.room}</p>}
                 </div>
                 <span className={`text-xs px-2 py-1 rounded-full ${
-                  b.schedule.maxCapacity === 1 
-                    ? 'bg-purple-100 text-purple-700' 
+                  b.schedule.maxCapacity === 1
+                    ? 'bg-purple-100 text-purple-700'
                     : 'bg-green-100 text-green-700'
                 }`}>
                   {b.schedule.maxCapacity === 1 ? 'Personalizada' : 'Grupal'}
@@ -78,7 +81,6 @@ export default async function ClienteClasesPage({ params }: { params: Promise<{ 
         )}
       </div>
 
-      {/* Formulario para asignar clase personalizada */}
       <AsignarClasePersonal memberId={member.id} activities={activities} />
     </div>
   )

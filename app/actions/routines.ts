@@ -1,9 +1,10 @@
-// app/actions/routines.ts — reemplazá las funciones existentes por estas
+// app/actions/routines.ts
 
 'use server'
 
 import { prisma } from '@/lib/prisma'
 import { auth } from '@clerk/nextjs/server'
+import { requireOrgForAction } from '@/lib/get-org'
 import { revalidatePath } from 'next/cache'
 
 // ============================================
@@ -21,13 +22,13 @@ export interface RoutineExerciseInput {
 }
 
 export interface WeekTemplateSession {
-  dayOfWeek: number        // 1-7, posición en la semana
+  dayOfWeek: number
   exercises: RoutineExerciseInput[]
 }
 
 export interface CreateRoutineInput {
-  memberId?: string | null    // ← ahora opcional
-  isTemplate?: boolean        // ← nuevo
+  memberId?: string | null
+  isTemplate?: boolean
   name: string
   description?: string | null
   goal?: string | null
@@ -55,10 +56,11 @@ function buildSessionName(sessionNumber: number) {
 // CREATE — genera todas las sesiones expandidas
 // ============================================
 
-async function archiveActiveRoutines(memberId: string, excludeId?: string) {
+async function archiveActiveRoutines(memberId: string, orgId: string, excludeId?: string) {
   await prisma.routine.updateMany({
     where: {
       memberId,
+      organizationId: orgId,
       isActive: true,
       ...(excludeId ? { id: { not: excludeId } } : {}),
     },
@@ -67,10 +69,16 @@ async function archiveActiveRoutines(memberId: string, excludeId?: string) {
 }
 
 export async function createRoutine(data: CreateRoutineInput) {
-  await getCurrentTrainer()
+  const orgId = await requireOrgForAction()
 
+  // Si es para un cliente puntual (no template), verificar que sea de esta organización
   if (!data.isTemplate && data.memberId) {
-    await archiveActiveRoutines(data.memberId)
+    const member = await prisma.member.findFirst({
+      where: { id: data.memberId, organizationId: orgId },
+      select: { id: true },
+    })
+    if (!member) throw new Error('Cliente no encontrado')
+    await archiveActiveRoutines(data.memberId, orgId)
   }
 
   const days: any[] = []
@@ -100,10 +108,12 @@ export async function createRoutine(data: CreateRoutineInput) {
       frequencyPerWeek: data.frequencyPerWeek,
       totalWeeks: data.totalWeeks,
       isActive: true,
+      organizationId: orgId,
       days: {
         create: days.map((day) => ({
           sessionNumber: day.sessionNumber, weekNumber: day.weekNumber,
           dayOfWeek: day.dayOfWeek, dayName: day.dayName, order: day.order,
+          organizationId: orgId,
           exercises: {
             create: day.exercises.map((ex: any) => ({
               exerciseId: ex.exerciseId, sets: ex.sets, reps: ex.reps,
@@ -126,9 +136,15 @@ export async function createRoutine(data: CreateRoutineInput) {
 // ============================================
 
 export async function updateRoutine(id: string, data: CreateRoutineInput) {
-  await getCurrentTrainer()
+  const orgId = await requireOrgForAction()
 
-  // Reconstruir la estructura completa deseada (igual que createRoutine)
+  // Verificar que la rutina sea de esta organización antes de tocar nada
+  const existing = await prisma.routine.findFirst({
+    where: { id, organizationId: orgId },
+    select: { id: true },
+  })
+  if (!existing) throw new Error('Rutina no encontrada')
+
   const newDays: {
     sessionNumber: number
     weekNumber: number
@@ -157,7 +173,6 @@ export async function updateRoutine(id: string, data: CreateRoutineInput) {
     }
   }
 
-  // Días que ya existen en la base para esta rutina
   const existingDays = await prisma.routineDay.findMany({
     where: { routineId: id },
     select: { id: true, sessionNumber: true },
@@ -165,8 +180,6 @@ export async function updateRoutine(id: string, data: CreateRoutineInput) {
   const existingBySession = new Map(existingDays.map(d => [d.sessionNumber, d.id]))
   const newSessionNumbers = new Set(newDays.map(d => d.sessionNumber))
 
-  // 1. Actualizar en el lugar los días que ya existen (conserva SessionLog/progreso)
-  //    y crear los que sean nuevos (ej. si se agregaron semanas)
   for (const day of newDays) {
     const existingId = existingBySession.get(day.sessionNumber)
 
@@ -180,8 +193,6 @@ export async function updateRoutine(id: string, data: CreateRoutineInput) {
           order: day.order,
         },
       })
-      // Los ejercicios sí se pueden reemplazar libremente: ProgressLog
-      // no depende de RoutineExercise, así que no se pierde nada
       await prisma.routineExercise.deleteMany({ where: { dayId: existingId } })
       await prisma.routineExercise.createMany({
         data: day.exercises.map((ex, idx) => ({
@@ -204,6 +215,7 @@ export async function updateRoutine(id: string, data: CreateRoutineInput) {
           dayOfWeek: day.dayOfWeek,
           dayName: day.dayName,
           order: day.order,
+          organizationId: orgId,
           exercises: {
             create: day.exercises.map((ex, idx) => ({
               exerciseId: ex.exerciseId,
@@ -220,10 +232,6 @@ export async function updateRoutine(id: string, data: CreateRoutineInput) {
     }
   }
 
-  // 2. Días que sobran (ej. se redujo la cantidad de semanas): se intentan borrar.
-  //    Si el cliente ya tiene sesiones/progreso ahí, no se puede sin perder historial
-  //    — se dejan como están (quedan fuera del rango de semanas actual, invisibles
-  //    para el cliente porque su vista solo itera hasta totalWeeks).
   const staleDayIds = existingDays
     .filter(d => !newSessionNumbers.has(d.sessionNumber))
     .map(d => d.id)
@@ -236,7 +244,6 @@ export async function updateRoutine(id: string, data: CreateRoutineInput) {
     }
   }
 
-  // 3. Datos generales de la rutina
   const routine = await prisma.routine.update({
     where: { id },
     data: {
@@ -260,8 +267,10 @@ export async function updateRoutine(id: string, data: CreateRoutineInput) {
 // ============================================
 
 export async function getRoutines(search?: string) {
+  const orgId = await requireOrgForAction()
   return prisma.routine.findMany({
     where: {
+      organizationId: orgId,
       isTemplate: false,
       ...(search ? {
         OR: [
@@ -280,8 +289,9 @@ export async function getRoutines(search?: string) {
 }
 
 export async function getRoutineById(id: string) {
-  return prisma.routine.findUnique({
-    where: { id },
+  const orgId = await requireOrgForAction()
+  return prisma.routine.findFirst({
+    where: { id, organizationId: orgId },
     include: {
       member: {
         select: { id: true, firstName: true, lastName: true, photoUrl: true, email: true },
@@ -304,14 +314,19 @@ export async function getRoutineById(id: string) {
 // ============================================
 
 export async function deleteRoutine(id: string) {
-  await getCurrentTrainer()
-  await prisma.routine.delete({ where: { id } })
+  const orgId = await requireOrgForAction()
+  const result = await prisma.routine.deleteMany({ where: { id, organizationId: orgId } })
+  if (result.count === 0) throw new Error('Rutina no encontrada')
   revalidatePath('/admin/rutinas')
 }
 
 export async function toggleRoutineActive(id: string, isActive: boolean) {
-  await getCurrentTrainer()
-  await prisma.routine.update({ where: { id }, data: { isActive } })
+  const orgId = await requireOrgForAction()
+  const result = await prisma.routine.updateMany({
+    where: { id, organizationId: orgId },
+    data: { isActive },
+  })
+  if (result.count === 0) throw new Error('Rutina no encontrada')
   revalidatePath('/admin/rutinas')
 }
 
@@ -320,11 +335,19 @@ export async function toggleRoutineActive(id: string, isActive: boolean) {
 // ============================================
 
 export async function getExercises(search?: string, type?: string, muscleGroup?: string) {
-  const where: any = {}
+  const orgId = await requireOrgForAction()
+
+  const where: any = {
+    OR: [{ organizationId: orgId }, { organizationId: null }],
+  }
   if (search) {
-    where.OR = [
-      { name: { contains: search, mode: 'insensitive' } },
-      { clientDescription: { contains: search, mode: 'insensitive' } },
+    where.AND = [
+      {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { clientDescription: { contains: search, mode: 'insensitive' } },
+        ],
+      },
     ]
   }
   if (type) where.type = type
@@ -349,7 +372,7 @@ export async function createExercise(data: {
   equipment?: string
   tags?: string[]
 }) {
-  await getCurrentTrainer()
+  const orgId = await requireOrgForAction()
   const exercise = await prisma.exercise.create({
     data: {
       name: data.name,
@@ -359,6 +382,7 @@ export async function createExercise(data: {
       equipment: data.equipment,
       tags: data.tags || [],
       isPublic: true,
+      organizationId: orgId,
     },
   })
   revalidatePath('/exercises')
@@ -366,7 +390,7 @@ export async function createExercise(data: {
 }
 
 // ============================================
-// SESSION TRACKING (cliente)
+// SESSION TRACKING (cliente) — sin cambios, ya seguro por clerkUserId
 // ============================================
 
 export async function getMyRoutines() {
@@ -405,7 +429,6 @@ export async function startSession(routineId: string, routineDayId: string) {
   const member = await prisma.member.findFirst({ where: { clerkUserId: userId } })
   if (!member) throw new Error('Miembro no encontrado')
 
-  // Verificar si ya hay una sesión en curso para este día
   const existing = await prisma.sessionLog.findFirst({
     where: {
       routineDayId,
@@ -441,7 +464,6 @@ export async function getSessionProgress(routineDayId: string) {
   const member = await prisma.member.findFirst({ where: { clerkUserId: userId } })
   if (!member) throw new Error('Miembro no encontrado')
 
-  // Traer el último sessionLog para este routineDay
   const sessionLog = await prisma.sessionLog.findFirst({
     where: { routineDayId, memberId: member.id },
     orderBy: { startedAt: 'desc' },
@@ -515,24 +537,35 @@ export async function getProgressHistory(days = 30) {
   })
 }
 
+// ============================================
+// TEMPLATES
+// ============================================
+
 export async function getTemplates() {
+  const orgId = await requireOrgForAction()
   return prisma.routine.findMany({
-    where: { isTemplate: true },
+    where: { isTemplate: true, organizationId: orgId },
     include: { days: { include: { exercises: true } } },
     orderBy: { createdAt: 'desc' },
   })
 }
 
 export async function assignTemplateToMember(templateId: string, memberId: string) {
-  await getCurrentTrainer()
+  const orgId = await requireOrgForAction()
 
-  const template = await prisma.routine.findUnique({
-    where: { id: templateId },
+  const template = await prisma.routine.findFirst({
+    where: { id: templateId, organizationId: orgId },
     include: { days: { orderBy: { sessionNumber: 'asc' }, include: { exercises: true } } },
   })
   if (!template) throw new Error('Template no encontrado')
 
-  await archiveActiveRoutines(memberId)
+  const member = await prisma.member.findFirst({
+    where: { id: memberId, organizationId: orgId },
+    select: { id: true },
+  })
+  if (!member) throw new Error('Cliente no encontrado')
+
+  await archiveActiveRoutines(memberId, orgId)
 
   const routine = await prisma.routine.create({
     data: {
@@ -544,10 +577,12 @@ export async function assignTemplateToMember(templateId: string, memberId: strin
       frequencyPerWeek: template.frequencyPerWeek,
       totalWeeks: template.totalWeeks,
       isActive: true,
+      organizationId: orgId,
       days: {
         create: template.days.map((day) => ({
           sessionNumber: day.sessionNumber, weekNumber: day.weekNumber,
           dayOfWeek: day.dayOfWeek, dayName: day.dayName, order: day.order,
+          organizationId: orgId,
           exercises: {
             create: day.exercises.map((ex) => ({
               exerciseId: ex.exerciseId, sets: ex.sets, reps: ex.reps,
@@ -566,15 +601,17 @@ export async function assignTemplateToMember(templateId: string, memberId: strin
 }
 
 export async function getActiveRoutineForMember(memberId: string) {
+  const orgId = await requireOrgForAction()
   return prisma.routine.findFirst({
-    where: { memberId, isActive: true, isTemplate: false },
+    where: { memberId, organizationId: orgId, isActive: true, isTemplate: false },
     include: { days: { include: { exercises: true } } },
   })
 }
 
 export async function getRoutineHistoryForMember(memberId: string) {
+  const orgId = await requireOrgForAction()
   return prisma.routine.findMany({
-    where: { memberId, isTemplate: false },
+    where: { memberId, organizationId: orgId, isTemplate: false },
     include: {
       days: {
         include: {

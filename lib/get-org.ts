@@ -14,6 +14,17 @@ export async function requireOrgForPage() {
   return orgId;
 }
 
+export async function requireOrgForAction() {
+  const { userId, orgId } = await auth();
+  if (!userId) throw new Error("No autorizado");
+  if (!orgId) throw new Error("No hay organización activa");
+
+  const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { status: true } });
+  if (!org || org.status !== "ACTIVE") throw new Error("Tu cuenta está suspendida. Contactá al administrador.");
+
+  return orgId;
+}
+
 export async function requireOrg() {
   const { userId, orgId } = await auth();
 

@@ -1,18 +1,20 @@
 export const dynamic = 'force-dynamic'
 
 import { prisma } from '@/lib/prisma'
+import { requireOrgForPage } from '@/lib/get-org'
 import Link from 'next/link'
 import { TrendingUp, UserCircle2, Dumbbell, DollarSign, Users } from 'lucide-react'
 
 export default async function EstadisticasPage() {
+  const orgId = await requireOrgForPage()
   const now = new Date()
 
   const [classesDictadas, ptSesiones] = await Promise.all([
     prisma.schedule.count({
-      where: { isCancelled: false, date: { lt: now }, maxCapacity: { gt: 1 } },
+      where: { organizationId: orgId, isCancelled: false, date: { lt: now }, maxCapacity: { gt: 1 } },
     }),
     prisma.schedule.count({
-      where: { isCancelled: false, date: { lt: now }, maxCapacity: 1 },
+      where: { organizationId: orgId, isCancelled: false, date: { lt: now }, maxCapacity: 1 },
     }),
   ])
 

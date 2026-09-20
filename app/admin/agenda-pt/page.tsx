@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { prisma } from '@/lib/prisma'
+import { requireOrgForPage } from '@/lib/get-org'
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, addMonths, format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import Link from 'next/link'
@@ -16,6 +17,7 @@ export default async function AgendaPTPage({
 }: {
   searchParams: Promise<{ week?: string; month?: string; view?: string }>
 }) {
+  const orgId = await requireOrgForPage()
   const params = await searchParams
   const isMonthView = params.view === 'month'
 
@@ -25,7 +27,7 @@ export default async function AgendaPTPage({
     const end = endOfMonth(baseDate)
 
     const schedules = await prisma.schedule.findMany({
-      where: { maxCapacity: 1, date: { gte: start, lte: end } },
+      where: { organizationId: orgId, maxCapacity: 1, date: { gte: start, lte: end } },
       include: {
         activity: true,
         bookings: {
@@ -84,7 +86,7 @@ export default async function AgendaPTPage({
   const end = endOfWeek(baseDate, { weekStartsOn: 1 })
 
   const schedules = await prisma.schedule.findMany({
-    where: { maxCapacity: 1, date: { gte: start, lte: end } },
+    where: { organizationId: orgId, maxCapacity: 1, date: { gte: start, lte: end } },
     include: {
       activity: true,
       bookings: {
@@ -175,7 +177,7 @@ export default async function AgendaPTPage({
   )
 }
 
-// ── Subcomponentes compartidos ──────────────────────────────────────────
+// ── Subcomponentes compartidos (sin cambios) ──────────────────────────────
 
 function Header() {
   return (

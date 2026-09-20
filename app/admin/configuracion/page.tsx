@@ -30,22 +30,39 @@ export default async function ConfiguracionPage() {
       {/* Link de registro para clientes */}
       <ShareRegistrationLink />
 
-      {/* Backup — solo visible para el admin de plataforma, no para cada profesional */}
+      {/* Backup propio — visible para cualquier profesional */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+            <DatabaseBackup size={20} className="text-blue-600" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-slate-900">Descargar mis datos</h3>
+            <p className="text-sm text-slate-500 mt-0.5">
+              Descargá un archivo con tus clientes, membresías, pagos, rutinas y asistencias, listo para abrir en Excel.
+              Recomendado hacerlo periódicamente.
+            </p>
+          </div>
+        </div>
+        <BackupButton endpoint="/api/backup" label="Descargar mis datos" />
+      </div>
+
+      {/* Backup total de plataforma — solo visible para el admin de plataforma */}
       {isPlatformAdmin && (
         <div className="bg-white border border-slate-200 rounded-xl p-6">
           <div className="flex items-start gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-              <DatabaseBackup size={20} className="text-blue-600" />
+            <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center shrink-0">
+              <DatabaseBackup size={20} className="text-violet-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900">Backup de la base de datos</h3>
+              <h3 className="font-semibold text-slate-900">Backup de toda la plataforma</h3>
               <p className="text-sm text-slate-500 mt-0.5">
-                Descarga un archivo JSON con todos los clientes, membresías, pagos, rutinas y ejercicios de toda la plataforma.
+                Descarga un archivo con todos los profesionales, clientes, membresías, pagos, rutinas y ejercicios de toda la plataforma.
                 Recomendado hacerlo periódicamente, sobre todo antes de cambios grandes en el sistema.
               </p>
             </div>
           </div>
-          <BackupButton />
+          <BackupButton endpoint="/api/admin/backup" label="Backup completo (admin)" />
         </div>
       )}
 

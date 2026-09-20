@@ -1,39 +1,38 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { requirePlatformAdmin } from '@/lib/get-org'
+import { requireOrg } from '@/lib/get-org'
 import { toCSV } from '@/lib/csv'
 import JSZip from 'jszip'
 
 export async function GET() {
-  const { error } = await requirePlatformAdmin()
+  const { orgId, error } = await requireOrg()
   if (error) return error
 
   try {
+    const where = { organizationId: orgId }
+
     const [
-      organizations, members, memberships, plans, payments,
+      members, memberships, plans, payments,
       routines, routineDays, routineExercises,
-      exercises, sessionLogs, progressLogs,
+      sessionLogs, progressLogs,
       attendances, activities, schedules, bookings,
     ] = await Promise.all([
-      prisma.organization.findMany(),
-      prisma.member.findMany(),
-      prisma.membership.findMany(),
-      prisma.plan.findMany(),
-      prisma.payment.findMany(),
-      prisma.routine.findMany(),
-      prisma.routineDay.findMany(),
-      prisma.routineExercise.findMany(),
-      prisma.exercise.findMany(),
-      prisma.sessionLog.findMany(),
-      prisma.progressLog.findMany(),
-      prisma.attendance.findMany(),
-      prisma.activity.findMany(),
-      prisma.schedule.findMany(),
-      prisma.booking.findMany(),
+      prisma.member.findMany({ where }),
+      prisma.membership.findMany({ where }),
+      prisma.plan.findMany({ where }),
+      prisma.payment.findMany({ where }),
+      prisma.routine.findMany({ where }),
+      prisma.routineDay.findMany({ where }),
+      prisma.routineExercise.findMany({ where }),
+      prisma.sessionLog.findMany({ where }),
+      prisma.progressLog.findMany({ where }),
+      prisma.attendance.findMany({ where }),
+      prisma.activity.findMany({ where }),
+      prisma.schedule.findMany({ where }),
+      prisma.booking.findMany({ where }),
     ])
 
     const tables: Record<string, any[]> = {
-      organizaciones: organizations,
       clientes: members,
       membresias: memberships,
       planes: plans,
@@ -41,7 +40,6 @@ export async function GET() {
       rutinas: routines,
       rutina_dias: routineDays,
       rutina_ejercicios: routineExercises,
-      ejercicios: exercises,
       sesiones: sessionLogs,
       progreso: progressLogs,
       asistencias: attendances,
@@ -56,7 +54,7 @@ export async function GET() {
     }
 
     const buffer = await zip.generateAsync({ type: 'nodebuffer' })
-    const filename = `backup-plataforma-${new Date().toISOString().split('T')[0]}.zip`
+    const filename = `backup-${new Date().toISOString().split('T')[0]}.zip`
 
     return new NextResponse(buffer, {
       headers: {

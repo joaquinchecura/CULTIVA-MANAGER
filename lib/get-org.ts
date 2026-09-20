@@ -2,6 +2,18 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+import { redirect } from "next/navigation";
+
+export async function requireOrgForPage() {
+  const { userId, orgId } = await auth();
+  if (!userId || !orgId) redirect("/login");
+
+  const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { status: true } });
+  if (!org || org.status !== "ACTIVE") redirect("/login");
+
+  return orgId;
+}
+
 export async function requireOrg() {
   const { userId, orgId } = await auth();
 

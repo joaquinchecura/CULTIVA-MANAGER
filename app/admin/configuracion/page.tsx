@@ -2,11 +2,20 @@
 export const dynamic = 'force-dynamic'
 
 import { prisma } from '@/lib/prisma'
-import BackupButton from '@/components/admin/BackupButton' 
+import { auth } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
+import BackupButton from '@/components/admin/BackupButton'
+import { ShareRegistrationLink } from '@/components/ShareRegistrationLink'
 import { Settings, DatabaseBackup, Building2 } from 'lucide-react'
 
 export default async function ConfiguracionPage() {
-  const config = await prisma.gymConfig.findFirst()
+  const { orgId, sessionClaims } = await auth()
+  if (!orgId) redirect('/login')
+
+  const metadata = sessionClaims?.publicMetadata as { platformAdmin?: boolean } | undefined
+  const isPlatformAdmin = metadata?.platformAdmin === true
+
+  const config = await prisma.gymConfig.findFirst({ where: { organizationId: orgId } })
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
@@ -18,22 +27,27 @@ export default async function ConfiguracionPage() {
         <p className="text-slate-500 mt-1">Datos del gimnasio y respaldo de la base de datos</p>
       </div>
 
-      {/* Backup */}
-      <div className="bg-white border border-slate-200 rounded-xl p-6">
-        <div className="flex items-start gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-            <DatabaseBackup size={20} className="text-blue-600" />
+      {/* Link de registro para clientes */}
+      <ShareRegistrationLink />
+
+      {/* Backup — solo visible para el admin de plataforma, no para cada profesional */}
+      {isPlatformAdmin && (
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+              <DatabaseBackup size={20} className="text-blue-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-900">Backup de la base de datos</h3>
+              <p className="text-sm text-slate-500 mt-0.5">
+                Descarga un archivo JSON con todos los clientes, membresías, pagos, rutinas y ejercicios de toda la plataforma.
+                Recomendado hacerlo periódicamente, sobre todo antes de cambios grandes en el sistema.
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-semibold text-slate-900">Backup de la base de datos</h3>
-            <p className="text-sm text-slate-500 mt-0.5">
-              Descarga un archivo JSON con todos los clientes, membresías, pagos, rutinas y ejercicios.
-              Recomendado hacerlo periódicamente, sobre todo antes de cambios grandes en el sistema.
-            </p>
-          </div>
+          <BackupButton />
         </div>
-        <BackupButton />
-      </div>
+      )}
 
       {/* Datos del gimnasio */}
       <div className="bg-white border border-slate-200 rounded-xl p-6">

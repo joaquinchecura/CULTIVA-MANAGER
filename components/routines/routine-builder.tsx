@@ -37,7 +37,8 @@ interface TemplateExercise {
 }
 
 interface TemplateSession {
-  dayOfWeek: number  // 1-based position in the week
+  dayOfWeek: number
+  label: string
   exercises: TemplateExercise[]
 }
 
@@ -98,6 +99,7 @@ export function RoutineBuilder({ members, initialData, defaultMemberId }: Routin
       if (firstWeek.length > 0) {
         return firstWeek.map((day: any) => ({
           dayOfWeek: day.dayOfWeek,
+          label: day.dayName?.includes(' — ') ? day.dayName.split(' — ')[1] : '',
           exercises: day.exercises.map((ex: any, idx: number) => ({
             exerciseId: ex.exerciseId,
             exercise: mapPrismaExercise(ex.exercise),
@@ -113,6 +115,7 @@ export function RoutineBuilder({ members, initialData, defaultMemberId }: Routin
     }
     return Array.from({ length: freq }, (_, i) => ({
       dayOfWeek: i + 1,
+      label: '',
       exercises: [],
     }))
   }
@@ -147,11 +150,20 @@ export function RoutineBuilder({ members, initialData, defaultMemberId }: Routin
           ...prev,
           ...Array.from({ length: newFreq - prev.length }, (_, i) => ({
             dayOfWeek: prev.length + i + 1,
+            label: '',
             exercises: [],
           })),
         ]
       }
       return prev.slice(0, newFreq)
+    })
+  }
+
+  function updateSessionLabel(sIdx: number, label: string) {
+    setTemplate(prev => {
+      const next = [...prev]
+      next[sIdx] = { ...next[sIdx], label }
+      return next
     })
   }
 
@@ -279,6 +291,7 @@ async function handleSave() {
       totalWeeks,
       weekTemplate: template.map(s => ({
         dayOfWeek: s.dayOfWeek,
+        label: s.label || undefined,
         exercises: s.exercises.map((ex, idx) => ({
           exerciseId: ex.exerciseId,
           sets: ex.sets,
@@ -489,14 +502,20 @@ async function handleSave() {
                   <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center text-sm font-bold shrink-0">
                     {sIdx + 1}
                   </div>
-                  <div>
-                    <CardTitle className="text-sm">Sesión {sIdx + 1}</CardTitle>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      Corresponde a las sesiones {Array.from({ length: totalWeeks }, (_, w) =>
-                        getSessionNumber(w + 1, sIdx + 1, freq)
-                      ).join(", ")} del plan completo
-                    </p>
-                  </div>
+                  <div className="flex-1">
+  <CardTitle className="text-sm">Sesión {sIdx + 1}</CardTitle>
+  <p className="text-xs text-slate-400 mt-0.5">
+    Corresponde a las sesiones {Array.from({ length: totalWeeks }, (_, w) =>
+      getSessionNumber(w + 1, sIdx + 1, freq)
+    ).join(", ")} del plan completo
+  </p>
+</div>
+<Input
+  value={session.label}
+  onChange={e => updateSessionLabel(sIdx, e.target.value)}
+  placeholder="Ej: Push, Pull, Legs..."
+  className="h-8 text-sm w-40 shrink-0"
+/>
                   <Badge variant="secondary" className="ml-auto text-xs">
                     {session.exercises.length} ejercicios
                   </Badge>

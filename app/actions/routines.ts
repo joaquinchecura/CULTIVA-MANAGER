@@ -23,6 +23,7 @@ export interface RoutineExerciseInput {
 
 export interface WeekTemplateSession {
   dayOfWeek: number
+  label?: string
   exercises: RoutineExerciseInput[]
 }
 
@@ -48,8 +49,8 @@ async function getCurrentTrainer() {
   return userId
 }
 
-function buildSessionName(sessionNumber: number) {
-  return `Sesión ${sessionNumber}`
+function buildSessionName(sessionNumber: number, label?: string) {
+  return label ? `Sesión ${sessionNumber} — ${label}` : `Sesión ${sessionNumber}`
 }
 
 // ============================================
@@ -88,7 +89,7 @@ export async function createRoutine(data: CreateRoutineInput) {
       const overrides = data.weightOverrides[sessionNumber] || {}
       days.push({
         sessionNumber, weekNumber: week, dayOfWeek: session.dayOfWeek,
-        dayName: buildSessionName(sessionNumber), order: sessionNumber - 1,
+        dayName: buildSessionName(sessionNumber, session.label), order: sessionNumber - 1,
         exercises: session.exercises.map((ex, idx) => ({
           ...ex,
           targetWeight: overrides[idx] !== undefined ? overrides[idx] : ex.targetWeight,
@@ -162,7 +163,7 @@ export async function updateRoutine(id: string, data: CreateRoutineInput) {
         sessionNumber,
         weekNumber: week,
         dayOfWeek: session.dayOfWeek,
-        dayName: buildSessionName(sessionNumber),
+        dayName: buildSessionName(sessionNumber, session.label),
         order: sessionNumber - 1,
         exercises: session.exercises.map((ex, idx) => ({
           ...ex,

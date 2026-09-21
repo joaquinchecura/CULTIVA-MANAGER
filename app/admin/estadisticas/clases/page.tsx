@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { prisma } from '@/lib/prisma'
+import { requireOrgForPage } from '@/lib/get-org'
 import Link from 'next/link'
 import {
   ArrowLeft, TrendingUp, Users, CheckCircle2, XCircle,
@@ -13,11 +14,13 @@ export default async function EstadisticasClasesPage({
 }: {
   searchParams: Promise<{ activityId?: string }>
 }) {
+  const orgId = await requireOrgForPage()
   const params = await searchParams
   const now = new Date()
 
   const schedules = await prisma.schedule.findMany({
     where: {
+      organizationId: orgId,
       isCancelled: false,
       date: { lt: now },
       activity: { type: 'GROUP' }
@@ -65,16 +68,18 @@ export default async function EstadisticasClasesPage({
     ? Math.round((totalCompleted / (totalCompleted + totalNoShow)) * 100)
     : 0
 
-  // Drill-down: clientes de una actividad específica
   let clientBreakdown: { name: string; completed: number; noShow: number; rate: number }[] = []
   let selectedActivityName = ''
 
   if (params.activityId) {
-    const activity = await prisma.activity.findUnique({ where: { id: params.activityId } })
+    const activity = await prisma.activity.findFirst({
+      where: { id: params.activityId, organizationId: orgId },
+    })
     selectedActivityName = activity?.name || ''
 
     const activityBookings = await prisma.booking.findMany({
       where: {
+        organizationId: orgId,
         schedule: {
           activityId: params.activityId,
           isCancelled: false,
@@ -114,7 +119,6 @@ export default async function EstadisticasClasesPage({
         </div>
       </div>
 
-      {/* KPIs generales */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white border border-slate-200 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-1">
@@ -146,7 +150,6 @@ export default async function EstadisticasClasesPage({
         </div>
       </div>
 
-      {/* Por actividad — cada fila lleva al drill-down */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100">
           <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">
@@ -195,7 +198,6 @@ export default async function EstadisticasClasesPage({
         )}
       </div>
 
-      {/* Drill-down: clientes de la actividad seleccionada */}
       {params.activityId && (
         <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">

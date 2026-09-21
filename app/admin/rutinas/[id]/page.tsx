@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/prisma";
+import { requireOrgForPage } from "@/lib/get-org";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
@@ -24,16 +25,17 @@ export default async function RutinaDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const orgId = await requireOrgForPage();
   const { id } = await params;
 
-  const routine = await prisma.routine.findUnique({
-    where: { id },
+  const routine = await prisma.routine.findFirst({
+    where: { id, organizationId: orgId },
     include: {
       member: {
         select: { id: true, firstName: true, lastName: true, email: true },
       },
       days: {
-        orderBy: { sessionNumber: "asc" },  // ← era order: "asc"
+        orderBy: { sessionNumber: "asc" },
         include: {
           exercises: {
             orderBy: { order: "asc" },
@@ -53,7 +55,6 @@ export default async function RutinaDetailPage({
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Header */}
       <div className="flex items-center gap-3">
         <Link href="/admin/rutinas">
           <Button variant="ghost" size="sm" className="gap-1">
@@ -112,7 +113,6 @@ export default async function RutinaDetailPage({
         </div>
       </div>
 
-      {/* Días */}
       <div className="space-y-4">
         {routine.days.map((day) => (
           <div key={day.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden">

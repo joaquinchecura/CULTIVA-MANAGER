@@ -1,16 +1,18 @@
 export const dynamic = 'force-dynamic'
 
 import { prisma } from '@/lib/prisma'
+import { requireOrgForPage } from '@/lib/get-org'
 import { ArrowLeft, TrendingUp, Scale, Ruler, Activity, Target } from 'lucide-react'
 import Link from 'next/link'
 import NuevoRegistroProgreso from './NuevoRegistroProgreso'
 import ProgresoCharts from './ProgresoCharts'
 
 export default async function ClienteProgresoPage({ params }: { params: Promise<{ id: string }> }) {
+  const orgId = await requireOrgForPage()
   const { id } = await params
 
-  const member = await prisma.member.findUnique({
-    where: { id },
+  const member = await prisma.member.findFirst({
+    where: { id, organizationId: orgId },
     include: {
       bodyCompositions: {
         orderBy: { createdAt: 'desc' },
@@ -30,7 +32,6 @@ export default async function ClienteProgresoPage({ params }: { params: Promise<
     ? Number(lastRecord.weight) - Number(previousRecord.weight)
     : null
 
-  // Serializar para charts
   const chartRecords = [...member.bodyCompositions].reverse().map(r => ({
     createdAt: r.createdAt.toISOString(),
     weight: Number(r.weight),
@@ -51,7 +52,6 @@ export default async function ClienteProgresoPage({ params }: { params: Promise<
         </div>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white border border-slate-200 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
@@ -109,15 +109,12 @@ export default async function ClienteProgresoPage({ params }: { params: Promise<
         </div>
       </div>
 
-      {/* Gráficos */}
       {member.bodyCompositions.length > 1 && (
         <ProgresoCharts records={chartRecords} />
       )}
 
-      {/* Formulario */}
       <NuevoRegistroProgreso memberId={member.id} />
 
-      {/* Historial */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100">
           <h3 className="font-semibold text-slate-900 flex items-center gap-2">

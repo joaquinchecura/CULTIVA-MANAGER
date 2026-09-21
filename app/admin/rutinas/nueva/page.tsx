@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireOrgForPage } from "@/lib/get-org";
 import { RoutineBuilder } from "@/components/routines/routine-builder";
 
 export default async function NuevaRutinaPage({
@@ -6,9 +7,10 @@ export default async function NuevaRutinaPage({
 }: {
   searchParams: Promise<{ memberId?: string }>
 }) {
+  const orgId = await requireOrgForPage()
   const params = await searchParams
   const members = await prisma.member.findMany({
-    where: { status: 'ACTIVE' },
+    where: { status: 'ACTIVE', organizationId: orgId },
     select: { id: true, firstName: true, lastName: true },
     orderBy: { lastName: 'asc' },
   })
@@ -21,7 +23,7 @@ export default async function NuevaRutinaPage({
       </div>
       <RoutineBuilder
         members={members}
-        defaultMemberId={params.memberId}  // ← pre-selecciona el cliente
+        defaultMemberId={params.memberId}
       />
     </div>
   )

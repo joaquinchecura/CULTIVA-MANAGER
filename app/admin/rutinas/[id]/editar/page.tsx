@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireOrgForPage } from "@/lib/get-org";
 import { RoutineBuilder } from "@/components/routines/routine-builder";
 import { notFound } from "next/navigation";
 import { mapPrismaExercise } from "@/types/exercise";
@@ -8,10 +9,11 @@ export default async function EditarRutinaPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const orgId = await requireOrgForPage();
   const { id } = await params;
 
-  const routine = await prisma.routine.findUnique({
-    where: { id },
+  const routine = await prisma.routine.findFirst({
+    where: { id, organizationId: orgId },
     include: {
       days: {
         orderBy: { order: "asc" },
@@ -28,12 +30,11 @@ export default async function EditarRutinaPage({
   if (!routine) return notFound();
 
   const members = await prisma.member.findMany({
-    where: { status: "ACTIVE" },
+    where: { status: "ACTIVE", organizationId: orgId },
     select: { id: true, firstName: true, lastName: true },
     orderBy: { lastName: "asc" },
   });
 
-  // ✅ MAPEAMOS los datos de Prisma para que exercise use undefined en vez de null
   const mappedRoutine = {
     ...routine,
     days: routine.days.map((day) => ({

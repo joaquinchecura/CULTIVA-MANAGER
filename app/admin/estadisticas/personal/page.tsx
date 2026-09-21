@@ -1,13 +1,16 @@
 export const dynamic = 'force-dynamic'
 
 import { prisma } from '@/lib/prisma'
+import { requireOrgForPage } from '@/lib/get-org'
 import Link from 'next/link'
 import { ArrowLeft, TrendingUp, Users, CheckCircle2, UserX, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export default async function EstadisticasPersonalPage() {
+  const orgId = await requireOrgForPage()
+
   const bookings = await prisma.booking.findMany({
-    where: { schedule: { activity: { type: 'PERSONAL' } } },
+    where: { organizationId: orgId, schedule: { activity: { type: 'PERSONAL' } } },
     include: { member: true, schedule: true },
   })
 

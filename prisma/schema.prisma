@@ -111,6 +111,11 @@ enum ActivityType {
   PERSONAL
 }
 
+enum DurationMode {
+  PER_EXERCISE
+  TOTAL_BLOCK
+}
+
 // ============================================
 // 1. CONFIGURACIÓN DEL GIMNASIO
 // ============================================
@@ -537,6 +542,7 @@ model RoutineRule {
   durationSec  Int?         // usado en vez de reps para STRETCHING, WARMUP, COOLDOWN, MOBILITY
   restSeconds  Int
   updatedAt    DateTime     @updatedAt
+  durationMode DurationMode @default(PER_EXERCISE)
 
   @@unique([goal, exerciseType])
   @@map("routine_rules")

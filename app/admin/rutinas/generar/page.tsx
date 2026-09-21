@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import {
   SPLIT_PRESETS,
   resolveSplitDays,
+  buildDefaultBlocks,
   type SplitDay,
+  type SessionBlockConfig,
   type GeneratedDay,
   type ExperienceLevel,
 } from "@/lib/routine-generator";
@@ -58,14 +60,19 @@ const AVOID_MUSCLE_OPTIONS = [
   "Muñecas",
 ];
 
+const BLOCK_TYPE_LABELS: Record<string, string> = {
+  WARMUP: "Entrada en calor",
+  CORE: "Zona media",
+  MAIN: "Bloque principal",
+  COOLDOWN: "Vuelta a la calma",
+};
+
 export default function GenerarRutinaPage() {
   const router = useRouter();
 
-  // --- Datos base ---
   const [members, setMembers] = useState<Member[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(true);
 
-  // --- Config del formulario ---
   const [memberId, setMemberId] = useState<string>("");
   const [routineName, setRoutineName] = useState("");
   const [goal, setGoal] = useState<RoutineGoal>("HYPERTROPHY");
@@ -73,7 +80,7 @@ export default function GenerarRutinaPage() {
   const [totalWeeks, setTotalWeeks] = useState(4);
   const [sameEachWeek, setSameEachWeek] = useState(true);
   const [splitPreset, setSplitPreset] = useState<string>("FULL_BODY");
-  const [customSplitDays, setCustomSplitDays] = useState<SplitDay[]>([]);
+  const [customSplitDaysRaw, setCustomSplitDaysRaw] = useState<{ name: string; muscleGroups: string[] }[]>([]);
   const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
   const [useEquipmentFilter, setUseEquipmentFilter] = useState(false);
 
@@ -81,7 +88,9 @@ export default function GenerarRutinaPage() {
   const [avoidMuscleGroups, setAvoidMuscleGroups] = useState<string[]>([]);
   const [prioritizeCompound, setPrioritizeCompound] = useState(true);
 
-  // --- Estado de generación ---
+  // overrides de count por bloque, clave: `${dayIndex}-${blockId}`
+  const [blockCountOverrides, setBlockCountOverrides] = useState<Record<string, number>>({});
+
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState<GeneratedDay[] | null>(null);
@@ -96,22 +105,32 @@ export default function GenerarRutinaPage() {
       .finally(() => setLoadingMembers(false));
   }, []);
 
-  // Split efectivo: preset resuelto o el manual editado por el coach
-  const splitDays: SplitDay[] = useMemo(() => {
+  const baseSplitDays: SplitDay[] = useMemo(() => {
     if (splitPreset === "CUSTOM") {
-      return customSplitDays;
+      return customSplitDaysRaw.map((d) => ({ name: d.name, blocks: buildDefaultBlocks(goal, d.muscleGroups) }));
     }
     try {
-      return resolveSplitDays(splitPreset, frequencyPerWeek);
+      return resolveSplitDays(splitPreset, frequencyPerWeek, goal);
     } catch {
       return [];
     }
-  }, [splitPreset, frequencyPerWeek, customSplitDays]);
+  }, [splitPreset, frequencyPerWeek, goal, customSplitDaysRaw]);
 
-  // Si cambia la frecuencia y estamos en CUSTOM, ajustamos el array de días
+  // Aplica los overrides de count manteniendo la estructura base (se recalcula si cambia preset/goal/frecuencia,
+  // pero los counts que el profesional ya tocó para ese día+bloque se respetan)
+  const splitDays: SplitDay[] = useMemo(() => {
+    return baseSplitDays.map((day, dayIndex) => ({
+      ...day,
+      blocks: day.blocks.map((block) => {
+        const key = `${dayIndex}-${block.id}`;
+        return blockCountOverrides[key] != null ? { ...block, count: blockCountOverrides[key] } : block;
+      }),
+    }));
+  }, [baseSplitDays, blockCountOverrides]);
+
   useEffect(() => {
     if (splitPreset !== "CUSTOM") return;
-    setCustomSplitDays((prev) => {
+    setCustomSplitDaysRaw((prev) => {
       const next = [...prev];
       while (next.length < frequencyPerWeek) {
         next.push({ name: `Día ${next.length + 1}`, muscleGroups: [] });
@@ -120,22 +139,23 @@ export default function GenerarRutinaPage() {
     });
   }, [frequencyPerWeek, splitPreset]);
 
-  function updateCustomDay(index: number, field: keyof SplitDay, value: string) {
-    setCustomSplitDays((prev) => {
+  function updateCustomDay(index: number, field: "name" | "muscleGroups", value: string) {
+    setCustomSplitDaysRaw((prev) => {
       const next = [...prev];
       if (field === "name") {
         next[index] = { ...next[index], name: value };
       } else {
         next[index] = {
           ...next[index],
-          muscleGroups: value
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean),
+          muscleGroups: value.split(",").map((s) => s.trim()).filter(Boolean),
         };
       }
       return next;
     });
+  }
+
+  function updateBlockCount(dayIndex: number, blockId: string, count: number) {
+    setBlockCountOverrides((prev) => ({ ...prev, [`${dayIndex}-${blockId}`]: Math.max(1, count) }));
   }
 
   async function handleGenerate() {
@@ -155,15 +175,9 @@ export default function GenerarRutinaPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          goal,
-          frequencyPerWeek,
-          totalWeeks,
-          sameEachWeek,
-          splitDays,
+          goal, frequencyPerWeek, totalWeeks, sameEachWeek, splitDays,
           availableEquipment: useEquipmentFilter ? selectedEquipment : null,
-          experienceLevel,
-          avoidMuscleGroups,
-          prioritizeCompound,
+          experienceLevel, avoidMuscleGroups, prioritizeCompound,
         }),
       });
       const data = await res.json();
@@ -340,7 +354,7 @@ export default function GenerarRutinaPage() {
 
         {/* SPLIT */}
         <div>
-          <label className="block text-sm font-medium mb-2">Split</label>
+         <label className="block text-sm font-medium mb-2">Split</label>
           <div className="flex flex-wrap gap-2 mb-3">
             {Object.entries(SPLIT_PRESETS).map(([key, preset]) => (
               <button
@@ -369,31 +383,54 @@ export default function GenerarRutinaPage() {
             </button>
           </div>
 
-          {splitPreset === "CUSTOM" ? (
-            <div className="space-y-2">
-              {customSplitDays.map((day, i) => (
-                <div key={i} className="flex gap-2">
-                  <input
-                    className="border rounded-lg px-2 py-1.5 text-sm w-32"
-                    placeholder="Nombre del día"
-                    value={day.name}
-                    onChange={(e) => updateCustomDay(i, "name", e.target.value)}
-                  />
-                  <input
-                    className="border rounded-lg px-2 py-1.5 text-sm flex-1"
-                    placeholder="Grupos musculares separados por coma (ej: Pecho, Hombros, Tríceps)"
-                    value={day.muscleGroups.join(", ")}
-                    onChange={(e) => updateCustomDay(i, "muscleGroups", e.target.value)}
-                  />
-                </div>
-              ))}
+          {splitPreset === "CUSTOM" && (
+          <div className="space-y-2 mb-3">
+            {customSplitDaysRaw.map((day, i) => (
+              <div key={i} className="flex gap-2">
+                <input
+                  className="border rounded-lg px-2 py-1.5 text-sm w-32"
+                  placeholder="Nombre del día"
+                  value={day.name}
+                  onChange={(e) => updateCustomDay(i, "name", e.target.value)}
+                />
+                <input
+                  className="border rounded-lg px-2 py-1.5 text-sm flex-1"
+                  placeholder="Grupos musculares separados por coma"
+                  value={day.muscleGroups.join(", ")}
+                  onChange={(e) => updateCustomDay(i, "muscleGroups", e.target.value)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* EDITOR DE BLOQUES POR DÍA */}
+        <div className="space-y-3">
+          {splitDays.map((day, dayIndex) => (
+            <div key={dayIndex} className="border rounded-lg p-3 bg-gray-50">
+              <div className="text-sm font-semibold mb-2">{day.name}</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {day.blocks.map((block) => (
+                  <div key={block.id} className="flex items-center justify-between bg-white border rounded-lg px-3 py-2">
+                    <div className="text-xs">
+                      <div className="font-medium">{block.label || BLOCK_TYPE_LABELS[block.type]}</div>
+                      <div className="text-gray-400">{BLOCK_TYPE_LABELS[block.type]}{block.mode === "STATIONS" ? " · estaciones" : ""}</div>
+                    </div>
+                    <input
+                      type="number"
+                      min={1}
+                      max={12}
+                      className="w-14 border rounded px-1.5 py-1 text-center text-sm"
+                      value={block.count}
+                      onChange={(e) => updateBlockCount(dayIndex, block.id, Number(e.target.value) || 1)}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-          ) : (
-            <div className="text-sm text-gray-600">
-              {splitDays.map((d) => d.name).join(" → ")}
-            </div>
-          )}
+          ))}
         </div>
+      </div>
 
 {/* NIVEL Y PREFERENCIAS */}
 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

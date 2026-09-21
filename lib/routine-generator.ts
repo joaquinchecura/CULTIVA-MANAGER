@@ -1,6 +1,8 @@
 import { RoutineGoal, ExerciseType, Exercise, RoutineRule } from "@prisma/client";
 
 export type ExperienceLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+export type BlockType = "WARMUP" | "CORE" | "MAIN" | "COOLDOWN";
+export type BlockMode = "SEQUENTIAL" | "STATIONS";
 
 const ADVANCED_TAGS = ["avanzado", "olimpico", "halterofilia"];
 
@@ -8,23 +10,23 @@ function isCompound(ex: Exercise): boolean {
   return ex.tags.includes("compound");
 }
 
-export interface SplitDay {
-  name: string;
-  muscleGroups: string[];
+export interface SessionBlockConfig {
+  id: string;
+  type: BlockType;
+  label?: string;
+  mode: BlockMode;
+  muscleGroups?: string[];
+  exerciseTypes: ExerciseType[];
+  tagsRequired?: string[];
+  tagsPreferred?: string[];
+  count: number;
+  pinnedExerciseIds?: string[];
+  excludeExerciseIds?: string[];
 }
 
-export interface GeneratorInput {
-  goal: RoutineGoal;
-  frequencyPerWeek: number;
-  totalWeeks: number;
-  sameEachWeek: boolean;
-  splitDays: SplitDay[];
-  availableEquipment: string[] | null;
-  exercises: Exercise[];
-  rules: RoutineRule[];
-  experienceLevel?: ExperienceLevel;       // default: INTERMEDIATE
-  avoidMuscleGroups?: string[];            // default: []
-  prioritizeCompound?: boolean;            // default: true
+export interface SplitDay {
+  name: string;
+  blocks: SessionBlockConfig[];
 }
 
 export interface GeneratedExercise {
@@ -36,6 +38,8 @@ export interface GeneratedExercise {
   reps: string;
   rest: string;
   order: number;
+  blockId: string;
+  blockType: BlockType;
 }
 
 export interface GeneratedDay {
@@ -51,30 +55,22 @@ export interface GeneratedRoutinePreview {
   days: GeneratedDay[];
 }
 
-interface GoalConfig {
-  mainCount: number;
-  mainTypes: ExerciseType[];
-  warmup: boolean;
-  cooldown: boolean;
-  extra: { type: ExerciseType; count: number }[];
+export interface GeneratorInput {
+  goal: RoutineGoal;
+  frequencyPerWeek: number;
+  totalWeeks: number;
+  sameEachWeek: boolean;
+  splitDays: SplitDay[];
+  availableEquipment: string[] | null;
+  exercises: Exercise[];
+  rules: RoutineRule[];
+  experienceLevel?: ExperienceLevel;
+  avoidMuscleGroups?: string[];
+  prioritizeCompound?: boolean;
 }
 
-const GOAL_CONFIG: Record<RoutineGoal, GoalConfig> = {
-  HYPERTROPHY:     { mainCount: 6, mainTypes: ["STRENGTH"],               warmup: true,  cooldown: true,  extra: [] },
-  STRENGTH:        { mainCount: 5, mainTypes: ["STRENGTH"],               warmup: true,  cooldown: false, extra: [] },
-  ENDURANCE:       { mainCount: 4, mainTypes: ["STRENGTH", "FUNCTIONAL"], warmup: true,  cooldown: true,  extra: [{ type: "CARDIO", count: 2 }] },
-  WEIGHT_LOSS:     { mainCount: 4, mainTypes: ["STRENGTH", "FUNCTIONAL"], warmup: true,  cooldown: true,  extra: [{ type: "CARDIO", count: 2 }] },
-  MAINTENANCE:     { mainCount: 5, mainTypes: ["STRENGTH"],               warmup: true,  cooldown: true,  extra: [] },
-  REHABILITATION:  { mainCount: 5, mainTypes: ["REHABILITATION", "MOBILITY"], warmup: false, cooldown: false, extra: [] },
-};
-
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
+function ruleFor(rules: RoutineRule[], goal: RoutineGoal, type: ExerciseType) {
+  return rules.find((r) => r.goal === goal && r.exerciseType === type);
 }
 
 function formatReps(rule: RoutineRule | undefined): string {
@@ -89,24 +85,34 @@ function formatRest(rule: RoutineRule | undefined): string {
   return rule.restSeconds > 0 ? `${rule.restSeconds}s` : "-";
 }
 
-function ruleFor(rules: RoutineRule[], goal: RoutineGoal, type: ExerciseType) {
-  return rules.find((r) => r.goal === goal && r.exerciseType === type);
+// Reparte un presupuesto total (ej: 300s de warmup) entre N ejercicios,
+// evitando tramos ridículamente cortos (< minPerExerciseSec) si piden demasiada cantidad.
+function splitBlockDuration(totalSec: number, count: number, minPerExerciseSec = 20, roundTo = 5): number[] {
+  const requested = Math.max(1, count);
+  const maxCountByMin = Math.max(1, Math.floor(totalSec / minPerExerciseSec));
+  const effectiveCount = Math.min(requested, maxCountByMin);
+  const perExercise = Math.max(roundTo, Math.round(totalSec / effectiveCount / roundTo) * roundTo);
+  return Array(effectiveCount).fill(perExercise);
 }
 
 function filterPool(
   exercises: Exercise[],
-  muscleGroups: string[],
-  types: ExerciseType[],
+  block: SessionBlockConfig,
   equipment: string[] | null,
   avoidMuscleGroups: string[],
   experienceLevel: ExperienceLevel
 ): Exercise[] {
+  const muscleGroups = block.muscleGroups ?? [];
+  const excludeIds = new Set(block.excludeExerciseIds ?? []);
+
   return exercises.filter((ex) => {
     if (!ex.isPublic) return false;
-    if (!types.includes(ex.type)) return false;
+    if (excludeIds.has(ex.id)) return false;
+    if (!block.exerciseTypes.includes(ex.type)) return false;
     if (muscleGroups.length && !(ex.muscleGroup && muscleGroups.includes(ex.muscleGroup))) return false;
     if (equipment && ex.equipment && !equipment.includes(ex.equipment)) return false;
     if (avoidMuscleGroups.length && ex.muscleGroup && avoidMuscleGroups.includes(ex.muscleGroup)) return false;
+    if (block.tagsRequired?.length && !block.tagsRequired.every((t) => ex.tags.includes(t))) return false;
 
     if (experienceLevel === "BEGINNER") {
       if (ex.type === "TECHNIQUE") return false;
@@ -114,55 +120,114 @@ function filterPool(
     } else if (experienceLevel === "INTERMEDIATE") {
       if (ex.tags.some((t) => ADVANCED_TAGS.includes(t))) return false;
     }
-    // ADVANCED: sin restricciones adicionales
-
     return true;
   });
 }
 
-// Ordena el pool priorizando ejercicios compuestos (si corresponde) antes de agrupar por músculo
-function orderPool(pool: Exercise[], prioritizeCompound: boolean): Exercise[] {
-  if (!prioritizeCompound) return shuffle(pool);
-  const compound = shuffle(pool.filter(isCompound));
-  const rest = shuffle(pool.filter((e) => !isCompound(e)));
-  return [...compound, ...rest];
+// Score determinístico (tags preferidos + compuestos) con una pizca de variación,
+// para que el orden no sea puro azar pero tampoco siempre idéntico.
+function scoreExercise(ex: Exercise, block: SessionBlockConfig, prioritizeCompound: boolean): number {
+  let score = 0;
+  if (block.tagsPreferred?.some((t) => ex.tags.includes(t))) score += 10;
+  if (prioritizeCompound && block.mode === "SEQUENTIAL" && isCompound(ex)) score += 5;
+  score += Math.random() * 2;
+  return score;
 }
 
-function pickExercises(
+function pickForBlock(
   exercises: Exercise[],
-  muscleGroups: string[],
-  types: ExerciseType[],
+  block: SessionBlockConfig,
   equipment: string[] | null,
   avoidMuscleGroups: string[],
   experienceLevel: ExperienceLevel,
   prioritizeCompound: boolean,
-  count: number,
   exclude: Set<string>
 ): Exercise[] {
-  const filtered = filterPool(exercises, muscleGroups, types, equipment, avoidMuscleGroups, experienceLevel);
-  const pool = orderPool(filtered, prioritizeCompound);
+  const pinned = (block.pinnedExerciseIds ?? [])
+    .map((id) => exercises.find((e) => e.id === id))
+    .filter((e): e is Exercise => !!e && !exclude.has(e.id));
+
+  if (pinned.length >= block.count) return pinned.slice(0, block.count);
+
+  const filtered = filterPool(exercises, block, equipment, avoidMuscleGroups, experienceLevel).filter(
+    (e) => !exclude.has(e.id) && !pinned.some((p) => p.id === e.id)
+  );
 
   const byMuscle = new Map<string, Exercise[]>();
-  for (const ex of pool) {
+  for (const ex of filtered) {
     const key = ex.muscleGroup || "otro";
     if (!byMuscle.has(key)) byMuscle.set(key, []);
     byMuscle.get(key)!.push(ex);
   }
+  for (const list of byMuscle.values()) {
+    list.sort((a, b) => scoreExercise(b, block, prioritizeCompound) - scoreExercise(a, block, prioritizeCompound));
+  }
 
+  const remaining = block.count - pinned.length;
+  const groups = block.muscleGroups?.length ? block.muscleGroups : Array.from(byMuscle.keys());
   const picked: Exercise[] = [];
-  const groups = muscleGroups.length ? muscleGroups : Array.from(byMuscle.keys());
   let round = 0;
-  while (picked.length < count && round < 10) {
+  while (picked.length < remaining && round < 10) {
+    let addedThisRound = false;
     for (const g of groups) {
-      if (picked.length >= count) break;
-      // candidates ya vienen en orden de prioridad (compuestos primero) gracias a orderPool
-      const candidates = (byMuscle.get(g) || []).filter((e) => !exclude.has(e.id) && !picked.some((p) => p.id === e.id));
-      if (candidates.length) picked.push(candidates[0]);
+      if (picked.length >= remaining) break;
+      const list = byMuscle.get(g);
+      if (list && list.length) {
+        picked.push(list.shift()!);
+        addedThisRound = true;
+      }
     }
     round++;
-    if (round === 1 && picked.length === 0) break;
+    if (!addedThisRound) break;
   }
-  return picked.slice(0, count);
+
+  return [...pinned, ...picked];
+}
+
+function buildBlockExercises(
+  block: SessionBlockConfig,
+  goal: RoutineGoal,
+  exercises: Exercise[],
+  rules: RoutineRule[],
+  equipment: string[] | null,
+  avoidMuscleGroups: string[],
+  experienceLevel: ExperienceLevel,
+  prioritizeCompound: boolean,
+  exclude: Set<string>,
+  orderRef: { order: number }
+): GeneratedExercise[] {
+  const chosen = pickForBlock(exercises, block, equipment, avoidMuscleGroups, experienceLevel, prioritizeCompound, exclude);
+  const result: GeneratedExercise[] = [];
+
+  const byType = new Map<ExerciseType, Exercise[]>();
+  for (const ex of chosen) {
+    if (!byType.has(ex.type)) byType.set(ex.type, []);
+    byType.get(ex.type)!.push(ex);
+  }
+
+  for (const [type, exList] of byType) {
+    const rule = ruleFor(rules, goal, type);
+    if (rule?.durationMode === "TOTAL_BLOCK" && rule.durationSec != null) {
+      const durations = splitBlockDuration(rule.durationSec, exList.length);
+      exList.forEach((ex, i) => {
+        result.push({
+          exerciseId: ex.id, name: ex.name, type: ex.type, muscleGroup: ex.muscleGroup,
+          sets: 1, reps: `${durations[i]}s`, rest: block.mode === "STATIONS" ? "15s" : "-",
+          order: orderRef.order++, blockId: block.id, blockType: block.type,
+        });
+      });
+    } else {
+      exList.forEach((ex) => {
+        result.push({
+          exerciseId: ex.id, name: ex.name, type: ex.type, muscleGroup: ex.muscleGroup,
+          sets: rule?.sets ?? 3, reps: formatReps(rule), rest: formatRest(rule),
+          order: orderRef.order++, blockId: block.id, blockType: block.type,
+        });
+      });
+    }
+  }
+
+  return result;
 }
 
 function buildDayExercises(
@@ -174,50 +239,16 @@ function buildDayExercises(
   avoidMuscleGroups: string[],
   experienceLevel: ExperienceLevel,
   prioritizeCompound: boolean,
-  exclude: Set<string>
+  exclude: Set<string> // solo se aplica al bloque MAIN (rotación semanal)
 ): GeneratedExercise[] {
-  const config = GOAL_CONFIG[goal];
+  const orderRef = { order: 1 };
   const result: GeneratedExercise[] = [];
-  let order = 1;
-
-  const pushExercise = (ex: Exercise) => {
-    const rule = ruleFor(rules, goal, ex.type);
-    result.push({
-      exerciseId: ex.id,
-      name: ex.name,
-      type: ex.type,
-      muscleGroup: ex.muscleGroup,
-      sets: rule?.sets ?? 3,
-      reps: formatReps(rule),
-      rest: formatRest(rule),
-      order: order++,
-    });
-  };
-
-  if (config.warmup) {
-    const wu = pickExercises(exercises, [], ["WARMUP"], equipment, [], experienceLevel, false, 1, new Set());
-    wu.forEach(pushExercise);
-  }
-
-  const main = pickExercises(
-    exercises, splitDay.muscleGroups, config.mainTypes, equipment,
-    avoidMuscleGroups, experienceLevel, prioritizeCompound, config.mainCount, exclude
-  );
-  main.forEach(pushExercise);
-
-  for (const extra of config.extra) {
-    const ex = pickExercises(
-      exercises, splitDay.muscleGroups, [extra.type], equipment,
-      avoidMuscleGroups, experienceLevel, prioritizeCompound, extra.count, exclude
+  for (const block of splitDay.blocks) {
+    const blockExclude = block.type === "MAIN" ? exclude : new Set<string>();
+    result.push(
+      ...buildBlockExercises(block, goal, exercises, rules, equipment, avoidMuscleGroups, experienceLevel, prioritizeCompound, blockExclude, orderRef)
     );
-    ex.forEach(pushExercise);
   }
-
-  if (config.cooldown) {
-    const cd = pickExercises(exercises, [], ["STRETCHING", "COOLDOWN"], equipment, [], experienceLevel, false, 2, new Set());
-    cd.forEach(pushExercise);
-  }
-
   return result;
 }
 
@@ -257,7 +288,9 @@ export function generateRoutinePreview(input: GeneratorInput): GeneratedRoutineP
           goal, splitDay, exercises, rules, availableEquipment,
           avoidMuscleGroups, experienceLevel, prioritizeCompound, previousWeekIds[dayOfWeek - 1]
         );
-        previousWeekIds[dayOfWeek - 1] = new Set(dayExercises.map((e) => e.exerciseId));
+        previousWeekIds[dayOfWeek - 1] = new Set(
+          dayExercises.filter((e) => e.blockType === "MAIN").map((e) => e.exerciseId)
+        );
       }
 
       days.push({
@@ -274,7 +307,71 @@ export function generateRoutinePreview(input: GeneratorInput): GeneratedRoutineP
   return { days };
 }
 
-export const SPLIT_PRESETS: Record<string, { label: string; days: SplitDay[] }> = {
+// --- Presets de bloques por objetivo ---
+
+interface GoalBlockDefaults {
+  mainCount: number;
+  mainTypes: ExerciseType[];
+  mainMode: BlockMode;
+  warmupCount: number;
+  coreCount: number;
+  cooldownCount: number;
+  extra: { type: ExerciseType; count: number; mode: BlockMode }[];
+}
+
+const GOAL_BLOCK_DEFAULTS: Record<RoutineGoal, GoalBlockDefaults> = {
+  HYPERTROPHY:    { mainCount: 6, mainTypes: ["STRENGTH"],                     mainMode: "SEQUENTIAL", warmupCount: 3, coreCount: 1, cooldownCount: 1, extra: [] },
+  STRENGTH:       { mainCount: 5, mainTypes: ["STRENGTH"],                     mainMode: "SEQUENTIAL", warmupCount: 3, coreCount: 1, cooldownCount: 0, extra: [] },
+  ENDURANCE:      { mainCount: 4, mainTypes: ["STRENGTH", "FUNCTIONAL"],       mainMode: "SEQUENTIAL", warmupCount: 3, coreCount: 1, cooldownCount: 1, extra: [{ type: "CARDIO", count: 2, mode: "STATIONS" }] },
+  WEIGHT_LOSS:    { mainCount: 4, mainTypes: ["STRENGTH", "FUNCTIONAL"],       mainMode: "STATIONS",   warmupCount: 3, coreCount: 1, cooldownCount: 1, extra: [{ type: "CARDIO", count: 2, mode: "STATIONS" }] },
+  MAINTENANCE:    { mainCount: 5, mainTypes: ["STRENGTH"],                     mainMode: "SEQUENTIAL", warmupCount: 3, coreCount: 1, cooldownCount: 1, extra: [] },
+  REHABILITATION: { mainCount: 5, mainTypes: ["REHABILITATION", "MOBILITY"],   mainMode: "SEQUENTIAL", warmupCount: 2, coreCount: 0, cooldownCount: 0, extra: [] },
+};
+
+export function buildDefaultBlocks(goal: RoutineGoal, muscleGroups: string[]): SessionBlockConfig[] {
+  const d = GOAL_BLOCK_DEFAULTS[goal];
+  const blocks: SessionBlockConfig[] = [];
+
+  if (d.warmupCount > 0) {
+    blocks.push({
+      id: "warmup", type: "WARMUP", label: "Entrada en calor", mode: "SEQUENTIAL",
+      muscleGroups, exerciseTypes: ["WARMUP"], count: d.warmupCount,
+    });
+  }
+  if (d.coreCount > 0) {
+    blocks.push({
+      id: "core", type: "CORE", label: "Zona media", mode: "SEQUENTIAL",
+      muscleGroups: ["Core", "Abdominales", "Zona media"], exerciseTypes: ["STRENGTH", "FUNCTIONAL"],
+      count: d.coreCount, tagsPreferred: ["core"],
+    });
+  }
+  blocks.push({
+    id: "main", type: "MAIN", label: "Bloque principal", mode: d.mainMode,
+    muscleGroups, exerciseTypes: d.mainTypes, count: d.mainCount,
+  });
+  d.extra.forEach((ex, i) => {
+    blocks.push({
+      id: `extra-${i}`, type: "MAIN", label: ex.type === "CARDIO" ? "Bloque cardio" : "Bloque extra",
+      mode: ex.mode, muscleGroups, exerciseTypes: [ex.type], count: ex.count,
+    });
+  });
+  if (d.cooldownCount > 0) {
+    blocks.push({
+      id: "cooldown", type: "COOLDOWN", label: "Vuelta a la calma (cardio suave)", mode: "SEQUENTIAL",
+      muscleGroups: [], exerciseTypes: ["COOLDOWN"], count: d.cooldownCount,
+    });
+  }
+  // Elongación: por default, 1 ejercicio por grupo muscular entrenado ese día (tope 4)
+  const stretchCount = muscleGroups.length ? Math.min(muscleGroups.length, 4) : 2;
+  blocks.push({
+    id: "stretch", type: "COOLDOWN", label: "Elongación", mode: "SEQUENTIAL",
+    muscleGroups, exerciseTypes: ["STRETCHING", "MOBILITY"], count: stretchCount,
+  });
+
+  return blocks;
+}
+
+export const SPLIT_PRESETS: Record<string, { label: string; days: { name: string; muscleGroups: string[] }[] }> = {
   FULL_BODY: {
     label: "Full Body",
     days: [{ name: "Full Body", muscleGroups: ["Pecho", "Espalda", "Cuádriceps", "Hombros", "Core", "Glúteos"] }],
@@ -296,12 +393,13 @@ export const SPLIT_PRESETS: Record<string, { label: string; days: SplitDay[] }> 
   },
 };
 
-export function resolveSplitDays(presetKey: string, frequencyPerWeek: number): SplitDay[] {
+export function resolveSplitDays(presetKey: string, frequencyPerWeek: number, goal: RoutineGoal): SplitDay[] {
   const preset = SPLIT_PRESETS[presetKey];
   if (!preset) throw new Error(`Preset desconocido: ${presetKey}`);
   const result: SplitDay[] = [];
   for (let i = 0; i < frequencyPerWeek; i++) {
-    result.push(preset.days[i % preset.days.length]);
+    const d = preset.days[i % preset.days.length];
+    result.push({ name: d.name, blocks: buildDefaultBlocks(goal, d.muscleGroups) });
   }
   return result;
 }

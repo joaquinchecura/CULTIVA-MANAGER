@@ -27,7 +27,6 @@ export async function POST(req: NextRequest) {
     days: GeneratedDay[];
   } = body;
 
-  // Verificar que el cliente sea de esta organización
   const member = await prisma.member.findFirst({
     where: { id: memberId, organizationId: orgId },
     select: { id: true },
@@ -47,28 +46,47 @@ export async function POST(req: NextRequest) {
       isTemplate: false,
       isActive: true,
       organizationId: orgId,
-      days: {
-        create: days.map((day) => ({
-          sessionNumber: day.sessionNumber,
-          weekNumber: day.weekNumber,
-          dayOfWeek: day.dayOfWeek,
-          dayName: day.dayName,
-          order: day.order,
-          organizationId: orgId,
-          exercises: {
-            create: day.exercises.map((ex) => ({
-              exerciseId: ex.exerciseId,
-              sets: ex.sets,
-              reps: ex.reps,
-              rest: ex.rest,
-              order: ex.order,
-            })),
-          },
-        })),
-      },
     },
+  });
+
+  for (const day of days) {
+    const routineDay = await prisma.routineDay.create({
+      data: {
+        routineId: routine.id,
+        sessionNumber: day.sessionNumber,
+        weekNumber: day.weekNumber,
+        dayOfWeek: day.dayOfWeek,
+        dayName: day.dayName,
+        goal: day.goal,
+        order: day.order,
+        organizationId: orgId,
+      },
+    });
+
+    const exerciseRows = day.blocks.flatMap((block) =>
+      block.exercises.map((ex) => ({
+        dayId: routineDay.id,
+        exerciseId: ex.exerciseId,
+        sets: ex.sets,
+        reps: ex.reps,
+        rest: ex.rest,
+        order: ex.order,
+        blockId: block.blockId,
+        blockLabel: block.label,
+        blockType: block.type,
+        organizationId: orgId,
+      }))
+    );
+
+    if (exerciseRows.length) {
+      await prisma.routineExercise.createMany({ data: exerciseRows });
+    }
+  }
+
+  const fullRoutine = await prisma.routine.findUnique({
+    where: { id: routine.id },
     include: { days: { include: { exercises: true } } },
   });
 
-  return NextResponse.json(routine, { status: 201 });
+  return NextResponse.json(fullRoutine, { status: 201 });
 }

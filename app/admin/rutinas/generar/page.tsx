@@ -7,8 +7,8 @@ import {
   resolveSplitDays,
   buildDefaultBlocks,
   type SplitDay,
-  type SessionBlockConfig,
   type GeneratedDay,
+  type GeneratedExercise,
   type ExperienceLevel,
 } from "@/lib/routine-generator";
 import { RoutineGoal } from "@prisma/client";
@@ -29,18 +29,8 @@ const GOAL_LABELS: Record<RoutineGoal, string> = {
 };
 
 const EQUIPMENT_OPTIONS = [
-  "Barra",
-  "Mancuernas",
-  "Mancuerna",
-  "Polea",
-  "Máquina",
-  "Kettlebell",
-  "Banda",
-  "TRX",
-  "Peso corporal",
-  "Cajón pliométrico",
-  "Fitball",
-  "Bosu",
+  "Barra", "Mancuernas", "Mancuerna", "Polea", "Máquina", "Kettlebell",
+  "Banda", "TRX", "Peso corporal", "Cajón pliométrico", "Fitball", "Bosu",
 ];
 
 const EXPERIENCE_LABELS: Record<ExperienceLevel, string> = {
@@ -50,14 +40,8 @@ const EXPERIENCE_LABELS: Record<ExperienceLevel, string> = {
 };
 
 const AVOID_MUSCLE_OPTIONS = [
-  "Columna Lumbar",
-  "Columna torácica",
-  "Cuello",
-  "Hombros",
-  "Rodillas",
-  "Tobillos",
-  "Cadera",
-  "Muñecas",
+  "Columna Lumbar", "Columna torácica", "Cuello", "Hombros",
+  "Rodillas", "Tobillos", "Cadera", "Muñecas",
 ];
 
 const BLOCK_TYPE_LABELS: Record<string, string> = {
@@ -76,6 +60,7 @@ export default function GenerarRutinaPage() {
   const [memberId, setMemberId] = useState<string>("");
   const [routineName, setRoutineName] = useState("");
   const [goal, setGoal] = useState<RoutineGoal>("HYPERTROPHY");
+  const [description, setDescription] = useState("");
   const [frequencyPerWeek, setFrequencyPerWeek] = useState(3);
   const [totalWeeks, setTotalWeeks] = useState(4);
   const [sameEachWeek, setSameEachWeek] = useState(true);
@@ -88,7 +73,9 @@ export default function GenerarRutinaPage() {
   const [avoidMuscleGroups, setAvoidMuscleGroups] = useState<string[]>([]);
   const [prioritizeCompound, setPrioritizeCompound] = useState(true);
 
-  // overrides de count por bloque, clave: `${dayIndex}-${blockId}`
+  // overrides por día — clave: índice del día
+  const [dayGoalOverrides, setDayGoalOverrides] = useState<Record<number, RoutineGoal>>({});
+  // overrides de count por bloque — clave: `${dayIndex}-${blockId}`
   const [blockCountOverrides, setBlockCountOverrides] = useState<Record<string, number>>({});
 
   const [generating, setGenerating] = useState(false);
@@ -96,8 +83,6 @@ export default function GenerarRutinaPage() {
   const [preview, setPreview] = useState<GeneratedDay[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedWeek, setSelectedWeek] = useState(1);
-
-  const [description, setDescription] = useState("");
 
   useEffect(() => {
     fetch("/api/members")
@@ -107,9 +92,15 @@ export default function GenerarRutinaPage() {
       .finally(() => setLoadingMembers(false));
   }, []);
 
+  // Split base: preset resuelto (con goal por defecto) o el manual del coach
   const baseSplitDays: SplitDay[] = useMemo(() => {
     if (splitPreset === "CUSTOM") {
-      return customSplitDaysRaw.map((d) => ({ name: d.name, blocks: buildDefaultBlocks(goal, d.muscleGroups) }));
+      return customSplitDaysRaw.map((d) => ({
+        name: d.name,
+        goal,
+        muscleGroups: d.muscleGroups,
+        blocks: buildDefaultBlocks(goal, d.muscleGroups),
+      }));
     }
     try {
       return resolveSplitDays(splitPreset, frequencyPerWeek, goal);
@@ -118,18 +109,27 @@ export default function GenerarRutinaPage() {
     }
   }, [splitPreset, frequencyPerWeek, goal, customSplitDaysRaw]);
 
-  // Aplica los overrides de count manteniendo la estructura base (se recalcula si cambia preset/goal/frecuencia,
-  // pero los counts que el profesional ya tocó para ese día+bloque se respetan)
+  // Aplica primero el override de objetivo por día (regenerando bloques con ese goal)
+  // y después el override de count por bloque, sobre la estructura ya resuelta.
   const splitDays: SplitDay[] = useMemo(() => {
-    return baseSplitDays.map((day, dayIndex) => ({
-      ...day,
-      blocks: day.blocks.map((block) => {
-        const key = `${dayIndex}-${block.id}`;
-        return blockCountOverrides[key] != null ? { ...block, count: blockCountOverrides[key] } : block;
-      }),
-    }));
-  }, [baseSplitDays, blockCountOverrides]);
+    return baseSplitDays.map((day, dayIndex) => {
+      const effectiveGoal = dayGoalOverrides[dayIndex] ?? day.goal;
+      const dayWithGoal: SplitDay =
+        effectiveGoal === day.goal
+          ? day
+          : { ...day, goal: effectiveGoal, blocks: buildDefaultBlocks(effectiveGoal, day.muscleGroups) };
 
+      return {
+        ...dayWithGoal,
+        blocks: dayWithGoal.blocks.map((block) => {
+          const key = `${dayIndex}-${block.id}`;
+          return blockCountOverrides[key] != null ? { ...block, count: blockCountOverrides[key] } : block;
+        }),
+      };
+    });
+  }, [baseSplitDays, blockCountOverrides, dayGoalOverrides]);
+
+  // Si cambia la frecuencia y estamos en CUSTOM, ajustamos el array de días
   useEffect(() => {
     if (splitPreset !== "CUSTOM") return;
     setCustomSplitDaysRaw((prev) => {
@@ -141,14 +141,12 @@ export default function GenerarRutinaPage() {
     });
   }, [frequencyPerWeek, splitPreset]);
 
-// el "goal" global pasa a ser solo el default con el que arrancan los días nuevos
-function updateDayGoal(dayIndex: number, newGoal: RoutineGoal) {
-  setCustomBlocksOverride((prev) => {
-    const current = splitDays[dayIndex];
-    const updated: SplitDay = { ...current, goal: newGoal, blocks: buildDefaultBlocks(newGoal, current.muscleGroups) };
-    return { ...prev, [dayIndex]: updated };
-  });
-}
+  // Estructura del split cambió de raíz (preset o frecuencia) — los overrides ya no
+  // corresponden necesariamente a los mismos días, así que los reseteamos.
+  useEffect(() => {
+    setDayGoalOverrides({});
+    setBlockCountOverrides({});
+  }, [splitPreset, frequencyPerWeek]);
 
   function updateCustomDay(index: number, field: "name" | "muscleGroups", value: string) {
     setCustomSplitDaysRaw((prev) => {
@@ -165,8 +163,12 @@ function updateDayGoal(dayIndex: number, newGoal: RoutineGoal) {
     });
   }
 
+  function updateDayGoal(dayIndex: number, newGoal: RoutineGoal) {
+    setDayGoalOverrides((prev) => ({ ...prev, [dayIndex]: newGoal }));
+  }
+
   function updateBlockCount(dayIndex: number, blockId: string, count: number) {
-    setBlockCountOverrides((prev) => ({ ...prev, [`${dayIndex}-${blockId}`]: Math.max(1, count) }));
+    setBlockCountOverrides((prev) => ({ ...prev, [`${dayIndex}-${blockId}`]: Math.max(0, count) }));
   }
 
   async function handleGenerate() {
@@ -202,12 +204,16 @@ function updateDayGoal(dayIndex: number, newGoal: RoutineGoal) {
     }
   }
 
-  function removeExercise(dayIndex: number, exerciseIndex: number) {
+  function removeExercise(dayIndex: number, blockIndex: number, exerciseIndex: number) {
     setPreview((prev) => {
       if (!prev) return prev;
       const next = [...prev];
       const day = { ...next[dayIndex] };
-      day.exercises = day.exercises.filter((_, i) => i !== exerciseIndex);
+      const blocks = [...day.blocks];
+      const block = { ...blocks[blockIndex] };
+      block.exercises = block.exercises.filter((_: GeneratedExercise, i: number) => i !== exerciseIndex);
+      blocks[blockIndex] = block;
+      day.blocks = blocks;
       next[dayIndex] = day;
       return next;
     });
@@ -215,6 +221,7 @@ function updateDayGoal(dayIndex: number, newGoal: RoutineGoal) {
 
   function updateExerciseField(
     dayIndex: number,
+    blockIndex: number,
     exerciseIndex: number,
     field: "sets" | "reps" | "rest",
     value: string
@@ -223,12 +230,16 @@ function updateDayGoal(dayIndex: number, newGoal: RoutineGoal) {
       if (!prev) return prev;
       const next = [...prev];
       const day = { ...next[dayIndex] };
-      const exercises = [...day.exercises];
+      const blocks = [...day.blocks];
+      const block = { ...blocks[blockIndex] };
+      const exercises = [...block.exercises];
       exercises[exerciseIndex] = {
         ...exercises[exerciseIndex],
         [field]: field === "sets" ? Number(value) || 0 : value,
       };
-      day.exercises = exercises;
+      block.exercises = exercises;
+      blocks[blockIndex] = block;
+      day.blocks = blocks;
       next[dayIndex] = day;
       return next;
     });
@@ -245,6 +256,7 @@ function updateDayGoal(dayIndex: number, newGoal: RoutineGoal) {
         body: JSON.stringify({
           memberId,
           name: routineName || `Rutina ${GOAL_LABELS[goal]}`,
+          description,
           goal,
           frequencyPerWeek,
           totalWeeks,
@@ -261,8 +273,6 @@ function updateDayGoal(dayIndex: number, newGoal: RoutineGoal) {
     }
   }
 
-  // Solo los días de la semana seleccionada, con su índice real dentro de `preview`
-  // (los handlers de edición necesitan ese índice real, no la posición dentro del filtro)
   const currentWeekEntries = preview
     ? preview
         .map((day, index) => ({ day, index }))
@@ -310,7 +320,7 @@ function updateDayGoal(dayIndex: number, newGoal: RoutineGoal) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Objetivo</label>
+            <label className="block text-sm font-medium mb-1">Objetivo general</label>
             <select
               className="w-full border rounded-lg px-3 py-2"
               value={goal}
@@ -322,19 +332,10 @@ function updateDayGoal(dayIndex: number, newGoal: RoutineGoal) {
                 </option>
               ))}
             </select>
+            <p className="text-xs text-gray-400 mt-1">
+              Se usa como default para cada día — podés cambiarlo por día más abajo.
+            </p>
           </div>
-
-          <div className="sm:col-span-2">
-  <label className="block text-sm font-medium mb-1">Descripción / notas</label>
-  <textarea
-    className="w-full border rounded-lg px-3 py-2 text-sm"
-    rows={2}
-    placeholder="Notas para esta rutina (ej: dolor lumbar reciente, prioriza técnica antes de cargar peso)"
-    value={description}
-    onChange={(e) => setDescription(e.target.value)}
-  />
-</div>
-
 
           <div>
             <label className="block text-sm font-medium mb-1">
@@ -347,6 +348,17 @@ function updateDayGoal(dayIndex: number, newGoal: RoutineGoal) {
               value={frequencyPerWeek}
               onChange={(e) => setFrequencyPerWeek(Number(e.target.value))}
               className="w-full"
+            />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium mb-1">Descripción / notas</label>
+            <textarea
+              className="w-full border rounded-lg px-3 py-2 text-sm"
+              rows={2}
+              placeholder="Notas para esta rutina (ej: dolor lumbar reciente, prioriza técnica antes de cargar peso)"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
             />
           </div>
 
@@ -377,7 +389,7 @@ function updateDayGoal(dayIndex: number, newGoal: RoutineGoal) {
 
         {/* SPLIT */}
         <div>
-         <label className="block text-sm font-medium mb-2">Split</label>
+          <label className="block text-sm font-medium mb-2">Split</label>
           <div className="flex flex-wrap gap-2 mb-3">
             {Object.entries(SPLIT_PRESETS).map(([key, preset]) => (
               <button
@@ -407,120 +419,121 @@ function updateDayGoal(dayIndex: number, newGoal: RoutineGoal) {
           </div>
 
           {splitPreset === "CUSTOM" && (
-          <div className="space-y-2 mb-3">
-            {customSplitDaysRaw.map((day, i) => (
-              <div key={i} className="flex gap-2">
-                <input
-                  className="border rounded-lg px-2 py-1.5 text-sm w-32"
-                  placeholder="Nombre del día"
-                  value={day.name}
-                  onChange={(e) => updateCustomDay(i, "name", e.target.value)}
-                />
-                <input
-                  className="border rounded-lg px-2 py-1.5 text-sm flex-1"
-                  placeholder="Grupos musculares separados por coma"
-                  value={day.muscleGroups.join(", ")}
-                  onChange={(e) => updateCustomDay(i, "muscleGroups", e.target.value)}
-                />
+            <div className="space-y-2 mb-3">
+              {customSplitDaysRaw.map((day, i) => (
+                <div key={i} className="flex gap-2">
+                  <input
+                    className="border rounded-lg px-2 py-1.5 text-sm w-32"
+                    placeholder="Nombre del día"
+                    value={day.name}
+                    onChange={(e) => updateCustomDay(i, "name", e.target.value)}
+                  />
+                  <input
+                    className="border rounded-lg px-2 py-1.5 text-sm flex-1"
+                    placeholder="Grupos musculares separados por coma (dejar vacío en días de cardio/rehab)"
+                    value={day.muscleGroups.join(", ")}
+                    onChange={(e) => updateCustomDay(i, "muscleGroups", e.target.value)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* EDITOR DE OBJETIVO + BLOQUES POR DÍA */}
+          <div className="space-y-3">
+            {splitDays.map((day, dayIndex) => (
+              <div key={dayIndex} className="border rounded-lg p-3 bg-gray-50">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm font-semibold">{day.name}</div>
+                  <select
+                    className="text-xs border rounded px-2 py-1"
+                    value={day.goal}
+                    onChange={(e) => updateDayGoal(dayIndex, e.target.value as RoutineGoal)}
+                  >
+                    {Object.entries(GOAL_LABELS).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {day.blocks.map((block) => (
+                    <div key={block.id} className="flex items-center justify-between bg-white border rounded-lg px-3 py-2">
+                      <div className="text-xs">
+                        <div className="font-medium">{block.label || BLOCK_TYPE_LABELS[block.type]}</div>
+                        <div className="text-gray-400">{BLOCK_TYPE_LABELS[block.type]}{block.mode === "STATIONS" ? " · estaciones" : ""}</div>
+                      </div>
+                      <input
+                        type="number"
+                        min={0}
+                        max={12}
+                        className="w-14 border rounded px-1.5 py-1 text-center text-sm"
+                        value={block.count}
+                        onChange={(e) => updateBlockCount(dayIndex, block.id, Number(e.target.value) || 0)}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
-        )}
-
-        {/* EDITOR DE BLOQUES POR DÍA */}
-        <div className="space-y-3">
-          {splitDays.map((day, dayIndex) => (
-            <div key={dayIndex} className="border rounded-lg p-3 bg-gray-50">
-              <div className="text-sm font-semibold mb-2">{day.name}</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {day.blocks.map((block) => (
-                  <div key={block.id} className="flex items-center justify-between bg-white border rounded-lg px-3 py-2">
-                    <div className="text-xs">
-                      <div className="font-medium">{block.label || BLOCK_TYPE_LABELS[block.type]}</div>
-                      <div className="text-gray-400">{BLOCK_TYPE_LABELS[block.type]}{block.mode === "STATIONS" ? " · estaciones" : ""}</div>
-                    </div>
-                    <input
-                      type="number"
-                      min={1}
-                      max={12}
-                      className="w-14 border rounded px-1.5 py-1 text-center text-sm"
-                      value={block.count}
-                      onChange={(e) => updateBlockCount(dayIndex, block.id, Number(e.target.value) || 1)}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
         </div>
-      </div>
 
-      <select
-  className="text-xs border rounded px-2 py-1 mb-2"
-  value={day.goal}
-  onChange={(e) => updateDayGoal(dayIndex, e.target.value as RoutineGoal)}
->
-  {Object.entries(GOAL_LABELS).map(([value, label]) => (
-    <option key={value} value={value}>{label}</option>
-  ))}
-</select>
+        {/* NIVEL Y PREFERENCIAS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Nivel de experiencia</label>
+            <select
+              className="w-full border rounded-lg px-3 py-2"
+              value={experienceLevel}
+              onChange={(e) => setExperienceLevel(e.target.value as ExperienceLevel)}
+            >
+              {Object.entries(EXPERIENCE_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-{/* NIVEL Y PREFERENCIAS */}
-<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-  <div>
-    <label className="block text-sm font-medium mb-1">Nivel de experiencia</label>
-    <select
-      className="w-full border rounded-lg px-3 py-2"
-      value={experienceLevel}
-      onChange={(e) => setExperienceLevel(e.target.value as ExperienceLevel)}
-    >
-      {Object.entries(EXPERIENCE_LABELS).map(([value, label]) => (
-        <option key={value} value={value}>
-          {label}
-        </option>
-      ))}
-    </select>
-  </div>
+          <div className="flex items-center gap-2 pt-6">
+            <input
+              type="checkbox"
+              id="prioritizeCompound"
+              checked={prioritizeCompound}
+              onChange={(e) => setPrioritizeCompound(e.target.checked)}
+            />
+            <label htmlFor="prioritizeCompound" className="text-sm">
+              Priorizar ejercicios compuestos
+            </label>
+          </div>
+        </div>
 
-  <div className="flex items-center gap-2 pt-6">
-    <input
-      type="checkbox"
-      id="prioritizeCompound"
-      checked={prioritizeCompound}
-      onChange={(e) => setPrioritizeCompound(e.target.checked)}
-    />
-    <label htmlFor="prioritizeCompound" className="text-sm">
-      Priorizar ejercicios compuestos
-    </label>
-  </div>
-</div>
-
-<div>
-  <label className="block text-sm font-medium mb-2">Evitar zonas (lesiones, contraindicaciones)</label>
-  <div className="flex flex-wrap gap-2">
-    {AVOID_MUSCLE_OPTIONS.map((muscle) => {
-      const active = avoidMuscleGroups.includes(muscle);
-      return (
-        <button
-          key={muscle}
-          type="button"
-          onClick={() =>
-            setAvoidMuscleGroups((prev) =>
-              active ? prev.filter((m) => m !== muscle) : [...prev, muscle]
-            )
-          }
-          className={`px-3 py-1 rounded-full text-xs border ${
-            active
-              ? "bg-red-600 text-white border-red-600"
-              : "bg-white text-gray-700 border-gray-300"
-          }`}
-        >
-          {muscle}
-        </button>
-      );
-    })}
-  </div>
-</div>
+        <div>
+          <label className="block text-sm font-medium mb-2">Evitar zonas (lesiones, contraindicaciones)</label>
+          <div className="flex flex-wrap gap-2">
+            {AVOID_MUSCLE_OPTIONS.map((muscle) => {
+              const active = avoidMuscleGroups.includes(muscle);
+              return (
+                <button
+                  key={muscle}
+                  type="button"
+                  onClick={() =>
+                    setAvoidMuscleGroups((prev) =>
+                      active ? prev.filter((m) => m !== muscle) : [...prev, muscle]
+                    )
+                  }
+                  className={`px-3 py-1 rounded-full text-xs border ${
+                    active
+                      ? "bg-red-600 text-white border-red-600"
+                      : "bg-white text-gray-700 border-gray-300"
+                  }`}
+                >
+                  {muscle}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         {/* EQUIPAMIENTO */}
         <div>
@@ -609,43 +622,58 @@ function updateDayGoal(dayIndex: number, newGoal: RoutineGoal) {
               <h3 className="font-semibold mb-3">
                 {day.dayName}
                 {!sameEachWeek && ` — Semana ${day.weekNumber}`}
+                <span className="text-xs font-normal text-gray-400 ml-2">{GOAL_LABELS[day.goal]}</span>
               </h3>
-              <div className="space-y-2">
-                {day.exercises.map((ex, exIndex) => (
-                  <div
-                    key={exIndex}
-                    className="flex items-center gap-2 text-sm border-b pb-2 last:border-0"
-                  >
-                    <span className="flex-1">{ex.name}</span>
-                    <input
-                      type="number"
-                      className="w-14 border rounded px-1.5 py-1 text-center"
-                      value={ex.sets}
-                      onChange={(e) =>
-                        updateExerciseField(dayIndex, exIndex, "sets", e.target.value)
-                      }
-                    />
-                    <span className="text-gray-400">×</span>
-                    <input
-                      className="w-16 border rounded px-1.5 py-1 text-center"
-                      value={ex.reps}
-                      onChange={(e) =>
-                        updateExerciseField(dayIndex, exIndex, "reps", e.target.value)
-                      }
-                    />
-                    <input
-                      className="w-16 border rounded px-1.5 py-1 text-center"
-                      value={ex.rest}
-                      onChange={(e) =>
-                        updateExerciseField(dayIndex, exIndex, "rest", e.target.value)
-                      }
-                    />
-                    <button
-                      onClick={() => removeExercise(dayIndex, exIndex)}
-                      className="text-red-500 text-xs px-2"
-                    >
-                      Quitar
-                    </button>
+
+              <div className="space-y-4">
+                {day.blocks.map((block, blockIndex) => (
+                  <div key={block.blockId}>
+                    <div className="text-xs font-semibold text-gray-500 uppercase mb-1.5">
+                      {block.label}
+                    </div>
+                    {block.exercises.length === 0 ? (
+                      <p className="text-xs text-gray-300 italic pb-2">— sin ejercicios en este bloque —</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {block.exercises.map((ex, exIndex) => (
+                          <div
+                            key={exIndex}
+                            className="flex items-center gap-2 text-sm border-b pb-2 last:border-0"
+                          >
+                            <span className="flex-1">{ex.name}</span>
+                            <input
+                              type="number"
+                              className="w-14 border rounded px-1.5 py-1 text-center"
+                              value={ex.sets}
+                              onChange={(e) =>
+                                updateExerciseField(dayIndex, blockIndex, exIndex, "sets", e.target.value)
+                              }
+                            />
+                            <span className="text-gray-400">×</span>
+                            <input
+                              className="w-16 border rounded px-1.5 py-1 text-center"
+                              value={ex.reps}
+                              onChange={(e) =>
+                                updateExerciseField(dayIndex, blockIndex, exIndex, "reps", e.target.value)
+                              }
+                            />
+                            <input
+                              className="w-16 border rounded px-1.5 py-1 text-center"
+                              value={ex.rest}
+                              onChange={(e) =>
+                                updateExerciseField(dayIndex, blockIndex, exIndex, "rest", e.target.value)
+                              }
+                            />
+                            <button
+                              onClick={() => removeExercise(dayIndex, blockIndex, exIndex)}
+                              className="text-red-500 text-xs px-2"
+                            >
+                              Quitar
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

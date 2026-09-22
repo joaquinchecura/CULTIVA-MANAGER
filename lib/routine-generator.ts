@@ -76,6 +76,7 @@ export interface GeneratedDay {
   dayOfWeek: number;
   dayName: string;
   order: number;
+  goal: RoutineGoal;   // NUEVO
   blocks: GeneratedBlockResult[];
 }
 
@@ -311,7 +312,7 @@ export function generateRoutinePreview(input: GeneratorInput): GeneratedRoutineP
 
   const fixedWeekBlocks: GeneratedBlockResult[][] | null = sameEachWeek
     ? splitDays.map((sd) =>
-        buildDayExercises(goal, sd, exercises, rules, availableEquipment, avoidMuscleGroups, experienceLevel, prioritizeCompound, new Set())
+        buildDayExercises(sd, exercises, rules, availableEquipment, avoidMuscleGroups, experienceLevel, prioritizeCompound, new Set())
       )
     : null;
 
@@ -326,7 +327,7 @@ export function generateRoutinePreview(input: GeneratorInput): GeneratedRoutineP
         dayBlocks = fixedWeekBlocks[dayOfWeek - 1];
       } else {
         dayBlocks = buildDayExercises(
-          goal, splitDay, exercises, rules, availableEquipment,
+          splitDay, exercises, rules, availableEquipment,
           avoidMuscleGroups, experienceLevel, prioritizeCompound, previousWeekMainIds[dayOfWeek - 1]
         );
         const mainIds = dayBlocks.filter((b) => b.type === "MAIN").flatMap((b) => b.exercises.map((e) => e.exerciseId));
@@ -339,6 +340,7 @@ export function generateRoutinePreview(input: GeneratorInput): GeneratedRoutineP
         dayOfWeek,
         dayName: splitDay.name,
         order: dayOfWeek,
+        goal: splitDay.goal, // NUEVO
         blocks: dayBlocks,
       });
     }

@@ -520,11 +520,14 @@ model RoutineExercise {
   exercise      Exercise   @relation(fields: [exerciseId], references: [id])
   sets          Int
   reps          String
-  targetWeight  Float?     // ← nuevo: peso prescripto de referencia
+  targetWeight  Float?
   rest          String?
   order         Int
   notes         String?
-  
+  blockId       String?    // NUEVO — "warmup", "core", "main", "main-station-1"...
+  blockLabel    String?    // NUEVO — "Entrada en calor", "Bloque 1 (estación)"...
+  blockType     String?    // NUEVO — WARMUP | CORE | MAIN | COOLDOWN (String, no enum, para no acoplar schemas)
+
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id])
 

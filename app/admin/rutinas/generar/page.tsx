@@ -97,6 +97,8 @@ export default function GenerarRutinaPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedWeek, setSelectedWeek] = useState(1);
 
+  const [description, setDescription] = useState("");
+
   useEffect(() => {
     fetch("/api/members")
       .then((res) => res.json())
@@ -138,6 +140,15 @@ export default function GenerarRutinaPage() {
       return next.slice(0, frequencyPerWeek);
     });
   }, [frequencyPerWeek, splitPreset]);
+
+// el "goal" global pasa a ser solo el default con el que arrancan los días nuevos
+function updateDayGoal(dayIndex: number, newGoal: RoutineGoal) {
+  setCustomBlocksOverride((prev) => {
+    const current = splitDays[dayIndex];
+    const updated: SplitDay = { ...current, goal: newGoal, blocks: buildDefaultBlocks(newGoal, current.muscleGroups) };
+    return { ...prev, [dayIndex]: updated };
+  });
+}
 
   function updateCustomDay(index: number, field: "name" | "muscleGroups", value: string) {
     setCustomSplitDaysRaw((prev) => {
@@ -313,6 +324,18 @@ export default function GenerarRutinaPage() {
             </select>
           </div>
 
+          <div className="sm:col-span-2">
+  <label className="block text-sm font-medium mb-1">Descripción / notas</label>
+  <textarea
+    className="w-full border rounded-lg px-3 py-2 text-sm"
+    rows={2}
+    placeholder="Notas para esta rutina (ej: dolor lumbar reciente, prioriza técnica antes de cargar peso)"
+    value={description}
+    onChange={(e) => setDescription(e.target.value)}
+  />
+</div>
+
+
           <div>
             <label className="block text-sm font-medium mb-1">
               Frecuencia semanal: {frequencyPerWeek} días
@@ -431,6 +454,16 @@ export default function GenerarRutinaPage() {
           ))}
         </div>
       </div>
+
+      <select
+  className="text-xs border rounded px-2 py-1 mb-2"
+  value={day.goal}
+  onChange={(e) => updateDayGoal(dayIndex, e.target.value as RoutineGoal)}
+>
+  {Object.entries(GOAL_LABELS).map(([value, label]) => (
+    <option key={value} value={value}>{label}</option>
+  ))}
+</select>
 
 {/* NIVEL Y PREFERENCIAS */}
 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

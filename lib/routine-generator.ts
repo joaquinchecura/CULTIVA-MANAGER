@@ -10,22 +10,41 @@ function isCompound(ex: Exercise): boolean {
   return ex.tags.includes("compound");
 }
 
+// --- Mapeo objetivo → tipos de ejercicio elegibles (punto 8) ---
+
+export const GOAL_EXERCISE_TYPES: Record<RoutineGoal, ExerciseType[]> = {
+  HYPERTROPHY: ["STRENGTH"],
+  STRENGTH: ["STRENGTH"],
+  ENDURANCE: ["FUNCTIONAL", "CARDIO", "PLYOMETRIC"],
+  WEIGHT_LOSS: ["STRENGTH", "FUNCTIONAL", "CARDIO"],
+  MAINTENANCE: ["STRENGTH", "FUNCTIONAL", "CARDIO"],
+  REHABILITATION: ["REHABILITATION", "MOBILITY", "BALANCE"],
+};
+
+export const GENERIC_BLOCK_TYPES: Record<"WARMUP" | "COOLDOWN" | "STRETCH", ExerciseType[]> = {
+  WARMUP: ["WARMUP", "MOBILITY"],
+  COOLDOWN: ["COOLDOWN", "MOBILITY"],
+  STRETCH: ["STRETCHING"],
+};
+
 export interface SessionBlockConfig {
   id: string;
   type: BlockType;
   label?: string;
   mode: BlockMode;
   muscleGroups?: string[];
-  exerciseTypes: ExerciseType[];
+  exerciseTypes: ExerciseType[]; // editable por el profesional — subconjunto de GOAL_EXERCISE_TYPES[goal] en bloques MAIN
   tagsRequired?: string[];
   tagsPreferred?: string[];
-  count: number;
+  count: number; // 0 = bloque desactivado, no se consulta
   pinnedExerciseIds?: string[];
   excludeExerciseIds?: string[];
 }
 
 export interface SplitDay {
   name: string;
+  goal: RoutineGoal;        // NUEVO — cada día tiene su propio objetivo
+  muscleGroups: string[];
   blocks: SessionBlockConfig[];
 }
 
@@ -42,13 +61,22 @@ export interface GeneratedExercise {
   blockType: BlockType;
 }
 
+// Cada bloque siempre aparece en el resultado, aunque count=0 y exercises=[] (punto 4/6)
+export interface GeneratedBlockResult {
+  blockId: string;
+  label: string;
+  type: BlockType;
+  mode: BlockMode;
+  exercises: GeneratedExercise[];
+}
+
 export interface GeneratedDay {
   sessionNumber: number;
   weekNumber: number;
   dayOfWeek: number;
   dayName: string;
   order: number;
-  exercises: GeneratedExercise[];
+  blocks: GeneratedBlockResult[];
 }
 
 export interface GeneratedRoutinePreview {
@@ -86,7 +114,7 @@ function formatRest(rule: RoutineRule | undefined): string {
 }
 
 // Reparte un presupuesto total (ej: 300s de warmup) entre N ejercicios,
-// evitando tramos ridículamente cortos (< minPerExerciseSec) si piden demasiada cantidad.
+// evitando tramos ridículamente cortos si piden demasiada cantidad.
 function splitBlockDuration(totalSec: number, count: number, minPerExerciseSec = 20, roundTo = 5): number[] {
   const requested = Math.max(1, count);
   const maxCountByMin = Math.max(1, Math.floor(totalSec / minPerExerciseSec));
@@ -124,8 +152,6 @@ function filterPool(
   });
 }
 
-// Score determinístico (tags preferidos + compuestos) con una pizca de variación,
-// para que el orden no sea puro azar pero tampoco siempre idéntico.
 function scoreExercise(ex: Exercise, block: SessionBlockConfig, prioritizeCompound: boolean): number {
   let score = 0;
   if (block.tagsPreferred?.some((t) => ex.tags.includes(t))) score += 10;
@@ -143,6 +169,8 @@ function pickForBlock(
   prioritizeCompound: boolean,
   exclude: Set<string>
 ): Exercise[] {
+  if (block.count === 0) return [];
+
   const pinned = (block.pinnedExerciseIds ?? [])
     .map((id) => exercises.find((e) => e.id === id))
     .filter((e): e is Exercise => !!e && !exclude.has(e.id));
@@ -195,9 +223,15 @@ function buildBlockExercises(
   prioritizeCompound: boolean,
   exclude: Set<string>,
   orderRef: { order: number }
-): GeneratedExercise[] {
+): GeneratedBlockResult {
+  const label = block.label ?? block.type;
+
+  if (block.count === 0) {
+    return { blockId: block.id, label, type: block.type, mode: block.mode, exercises: [] };
+  }
+
   const chosen = pickForBlock(exercises, block, equipment, avoidMuscleGroups, experienceLevel, prioritizeCompound, exclude);
-  const result: GeneratedExercise[] = [];
+  const exercisesOut: GeneratedExercise[] = [];
 
   const byType = new Map<ExerciseType, Exercise[]>();
   for (const ex of chosen) {
@@ -210,7 +244,7 @@ function buildBlockExercises(
     if (rule?.durationMode === "TOTAL_BLOCK" && rule.durationSec != null) {
       const durations = splitBlockDuration(rule.durationSec, exList.length);
       exList.forEach((ex, i) => {
-        result.push({
+        exercisesOut.push({
           exerciseId: ex.id, name: ex.name, type: ex.type, muscleGroup: ex.muscleGroup,
           sets: 1, reps: `${durations[i]}s`, rest: block.mode === "STATIONS" ? "15s" : "-",
           order: orderRef.order++, blockId: block.id, blockType: block.type,
@@ -218,7 +252,7 @@ function buildBlockExercises(
       });
     } else {
       exList.forEach((ex) => {
-        result.push({
+        exercisesOut.push({
           exerciseId: ex.id, name: ex.name, type: ex.type, muscleGroup: ex.muscleGroup,
           sets: rule?.sets ?? 3, reps: formatReps(rule), rest: formatRest(rule),
           order: orderRef.order++, blockId: block.id, blockType: block.type,
@@ -227,29 +261,36 @@ function buildBlockExercises(
     }
   }
 
-  return result;
+  return { blockId: block.id, label, type: block.type, mode: block.mode, exercises: exercisesOut };
 }
 
+// Recorre los bloques de un día en orden; acumula lo ya usado ese día (usedInDay) para que
+// dos bloques MAIN (ej: estación 1 y estación 2 de un funcional) nunca repitan el mismo ejercicio (punto 7).
 function buildDayExercises(
-  goal: RoutineGoal,
-  splitDay: SplitDay,
+  splitDay: SplitDay, // ya no recibe "goal" aparte, sale de splitDay.goal
   exercises: Exercise[],
   rules: RoutineRule[],
   equipment: string[] | null,
   avoidMuscleGroups: string[],
   experienceLevel: ExperienceLevel,
   prioritizeCompound: boolean,
-  exclude: Set<string> // solo se aplica al bloque MAIN (rotación semanal)
-): GeneratedExercise[] {
+  weeklyExclude: Set<string>
+): GeneratedBlockResult[] {
+  const goal = splitDay.goal; // <-- acá el cambio clave
   const orderRef = { order: 1 };
-  const result: GeneratedExercise[] = [];
+  const usedInDay = new Set<string>();
+  const results: GeneratedBlockResult[] = [];
+
   for (const block of splitDay.blocks) {
-    const blockExclude = block.type === "MAIN" ? exclude : new Set<string>();
-    result.push(
-      ...buildBlockExercises(block, goal, exercises, rules, equipment, avoidMuscleGroups, experienceLevel, prioritizeCompound, blockExclude, orderRef)
+    const exclude = block.type === "MAIN" ? new Set([...weeklyExclude, ...usedInDay]) : new Set(usedInDay);
+    const blockResult = buildBlockExercises(
+      block, goal, exercises, rules, equipment, avoidMuscleGroups, experienceLevel, prioritizeCompound, exclude, orderRef
     );
+    blockResult.exercises.forEach((e) => usedInDay.add(e.exerciseId));
+    results.push(blockResult);
   }
-  return result;
+
+  return results;
 }
 
 export function generateRoutinePreview(input: GeneratorInput): GeneratedRoutinePreview {
@@ -268,29 +309,28 @@ export function generateRoutinePreview(input: GeneratorInput): GeneratedRoutineP
   const days: GeneratedDay[] = [];
   let sessionNumber = 1;
 
-  const fixedWeekExercises: GeneratedExercise[][] | null = sameEachWeek
+  const fixedWeekBlocks: GeneratedBlockResult[][] | null = sameEachWeek
     ? splitDays.map((sd) =>
         buildDayExercises(goal, sd, exercises, rules, availableEquipment, avoidMuscleGroups, experienceLevel, prioritizeCompound, new Set())
       )
     : null;
 
-  let previousWeekIds: Set<string>[] = splitDays.map(() => new Set());
+  let previousWeekMainIds: Set<string>[] = splitDays.map(() => new Set());
 
   for (let week = 1; week <= totalWeeks; week++) {
     for (let dayOfWeek = 1; dayOfWeek <= frequencyPerWeek; dayOfWeek++) {
       const splitDay = splitDays[dayOfWeek - 1];
 
-      let dayExercises: GeneratedExercise[];
-      if (fixedWeekExercises) {
-        dayExercises = fixedWeekExercises[dayOfWeek - 1];
+      let dayBlocks: GeneratedBlockResult[];
+      if (fixedWeekBlocks) {
+        dayBlocks = fixedWeekBlocks[dayOfWeek - 1];
       } else {
-        dayExercises = buildDayExercises(
+        dayBlocks = buildDayExercises(
           goal, splitDay, exercises, rules, availableEquipment,
-          avoidMuscleGroups, experienceLevel, prioritizeCompound, previousWeekIds[dayOfWeek - 1]
+          avoidMuscleGroups, experienceLevel, prioritizeCompound, previousWeekMainIds[dayOfWeek - 1]
         );
-        previousWeekIds[dayOfWeek - 1] = new Set(
-          dayExercises.filter((e) => e.blockType === "MAIN").map((e) => e.exerciseId)
-        );
+        const mainIds = dayBlocks.filter((b) => b.type === "MAIN").flatMap((b) => b.exercises.map((e) => e.exerciseId));
+        previousWeekMainIds[dayOfWeek - 1] = new Set(mainIds);
       }
 
       days.push({
@@ -299,7 +339,7 @@ export function generateRoutinePreview(input: GeneratorInput): GeneratedRoutineP
         dayOfWeek,
         dayName: splitDay.name,
         order: dayOfWeek,
-        exercises: dayExercises,
+        blocks: dayBlocks,
       });
     }
   }
@@ -311,61 +351,53 @@ export function generateRoutinePreview(input: GeneratorInput): GeneratedRoutineP
 
 interface GoalBlockDefaults {
   mainCount: number;
-  mainTypes: ExerciseType[];
   mainMode: BlockMode;
   warmupCount: number;
   coreCount: number;
   cooldownCount: number;
-  extra: { type: ExerciseType; count: number; mode: BlockMode }[];
+  stretchCount: number | "auto"; // "auto" = 1 por grupo muscular del día, tope 4
 }
 
 const GOAL_BLOCK_DEFAULTS: Record<RoutineGoal, GoalBlockDefaults> = {
-  HYPERTROPHY:    { mainCount: 6, mainTypes: ["STRENGTH"],                     mainMode: "SEQUENTIAL", warmupCount: 3, coreCount: 1, cooldownCount: 1, extra: [] },
-  STRENGTH:       { mainCount: 5, mainTypes: ["STRENGTH"],                     mainMode: "SEQUENTIAL", warmupCount: 3, coreCount: 1, cooldownCount: 0, extra: [] },
-  ENDURANCE:      { mainCount: 4, mainTypes: ["STRENGTH", "FUNCTIONAL"],       mainMode: "SEQUENTIAL", warmupCount: 3, coreCount: 1, cooldownCount: 1, extra: [{ type: "CARDIO", count: 2, mode: "STATIONS" }] },
-  WEIGHT_LOSS:    { mainCount: 4, mainTypes: ["STRENGTH", "FUNCTIONAL"],       mainMode: "STATIONS",   warmupCount: 3, coreCount: 1, cooldownCount: 1, extra: [{ type: "CARDIO", count: 2, mode: "STATIONS" }] },
-  MAINTENANCE:    { mainCount: 5, mainTypes: ["STRENGTH"],                     mainMode: "SEQUENTIAL", warmupCount: 3, coreCount: 1, cooldownCount: 1, extra: [] },
-  REHABILITATION: { mainCount: 5, mainTypes: ["REHABILITATION", "MOBILITY"],   mainMode: "SEQUENTIAL", warmupCount: 2, coreCount: 0, cooldownCount: 0, extra: [] },
+  HYPERTROPHY:    { mainCount: 6, mainMode: "SEQUENTIAL", warmupCount: 3, coreCount: 1, cooldownCount: 1, stretchCount: "auto" },
+  STRENGTH:       { mainCount: 5, mainMode: "SEQUENTIAL", warmupCount: 3, coreCount: 1, cooldownCount: 0, stretchCount: 2 },
+  ENDURANCE:      { mainCount: 4, mainMode: "STATIONS",   warmupCount: 3, coreCount: 1, cooldownCount: 1, stretchCount: "auto" },
+  WEIGHT_LOSS:    { mainCount: 4, mainMode: "STATIONS",   warmupCount: 3, coreCount: 1, cooldownCount: 1, stretchCount: "auto" },
+  MAINTENANCE:    { mainCount: 5, mainMode: "SEQUENTIAL", warmupCount: 3, coreCount: 1, cooldownCount: 1, stretchCount: "auto" },
+  REHABILITATION: { mainCount: 5, mainMode: "SEQUENTIAL", warmupCount: 2, coreCount: 0, cooldownCount: 0, stretchCount: 0 },
 };
 
+// Por default el bloque principal arranca con TODOS los tipos elegibles del objetivo (punto 8);
+// el profesional destilda desde la UI los que no quiere usar ese día.
 export function buildDefaultBlocks(goal: RoutineGoal, muscleGroups: string[]): SessionBlockConfig[] {
   const d = GOAL_BLOCK_DEFAULTS[goal];
   const blocks: SessionBlockConfig[] = [];
 
-  if (d.warmupCount > 0) {
-    blocks.push({
-      id: "warmup", type: "WARMUP", label: "Entrada en calor", mode: "SEQUENTIAL",
-      muscleGroups, exerciseTypes: ["WARMUP"], count: d.warmupCount,
-    });
-  }
-  if (d.coreCount > 0) {
-    blocks.push({
-      id: "core", type: "CORE", label: "Zona media", mode: "SEQUENTIAL",
-      muscleGroups: ["Core", "Abdominales", "Zona media"], exerciseTypes: ["STRENGTH", "FUNCTIONAL"],
-      count: d.coreCount, tagsPreferred: ["core"],
-    });
-  }
+  blocks.push({
+    id: "warmup", type: "WARMUP", label: "Entrada en calor", mode: "SEQUENTIAL",
+    muscleGroups, exerciseTypes: [...GENERIC_BLOCK_TYPES.WARMUP], count: d.warmupCount,
+  });
+
+  blocks.push({
+    id: "core", type: "CORE", label: "Zona media", mode: "SEQUENTIAL",
+    muscleGroups: ["Core", "Abdominales", "Zona media"], exerciseTypes: ["STRENGTH", "FUNCTIONAL"],
+    count: d.coreCount, tagsPreferred: ["core"],
+  });
+
   blocks.push({
     id: "main", type: "MAIN", label: "Bloque principal", mode: d.mainMode,
-    muscleGroups, exerciseTypes: d.mainTypes, count: d.mainCount,
+    muscleGroups, exerciseTypes: [...GOAL_EXERCISE_TYPES[goal]], count: d.mainCount,
   });
-  d.extra.forEach((ex, i) => {
-    blocks.push({
-      id: `extra-${i}`, type: "MAIN", label: ex.type === "CARDIO" ? "Bloque cardio" : "Bloque extra",
-      mode: ex.mode, muscleGroups, exerciseTypes: [ex.type], count: ex.count,
-    });
+
+  blocks.push({
+    id: "cooldown", type: "COOLDOWN", label: "Vuelta a la calma", mode: "SEQUENTIAL",
+    muscleGroups: [], exerciseTypes: [...GENERIC_BLOCK_TYPES.COOLDOWN], count: d.cooldownCount,
   });
-  if (d.cooldownCount > 0) {
-    blocks.push({
-      id: "cooldown", type: "COOLDOWN", label: "Vuelta a la calma (cardio suave)", mode: "SEQUENTIAL",
-      muscleGroups: [], exerciseTypes: ["COOLDOWN"], count: d.cooldownCount,
-    });
-  }
-  // Elongación: por default, 1 ejercicio por grupo muscular entrenado ese día (tope 4)
-  const stretchCount = muscleGroups.length ? Math.min(muscleGroups.length, 4) : 2;
+
+  const stretchCount = d.stretchCount === "auto" ? Math.min(Math.max(muscleGroups.length, 1), 4) : d.stretchCount;
   blocks.push({
     id: "stretch", type: "COOLDOWN", label: "Elongación", mode: "SEQUENTIAL",
-    muscleGroups, exerciseTypes: ["STRETCHING", "MOBILITY"], count: stretchCount,
+    muscleGroups, exerciseTypes: [...GENERIC_BLOCK_TYPES.STRETCH], count: stretchCount,
   });
 
   return blocks;
@@ -393,13 +425,35 @@ export const SPLIT_PRESETS: Record<string, { label: string; days: { name: string
   },
 };
 
-export function resolveSplitDays(presetKey: string, frequencyPerWeek: number, goal: RoutineGoal): SplitDay[] {
+// resolveSplitDays: ahora recibe un goal por defecto para todos los días del preset,
+// pero cada día queda editable individualmente después en la UI
+export function resolveSplitDays(presetKey: string, frequencyPerWeek: number, defaultGoal: RoutineGoal): SplitDay[] {
   const preset = SPLIT_PRESETS[presetKey];
   if (!preset) throw new Error(`Preset desconocido: ${presetKey}`);
   const result: SplitDay[] = [];
   for (let i = 0; i < frequencyPerWeek; i++) {
     const d = preset.days[i % preset.days.length];
-    result.push({ name: d.name, blocks: buildDefaultBlocks(goal, d.muscleGroups) });
+    result.push({ name: d.name, goal: defaultGoal, muscleGroups: d.muscleGroups, blocks: buildDefaultBlocks(defaultGoal, d.muscleGroups) });
   }
   return result;
+}
+
+// Helper para agregar un bloque de estación adicional a un día ya armado (punto 7)
+export function addStationBlock(day: SplitDay, exerciseTypes: ExerciseType[] = ["FUNCTIONAL"], count = 4): SplitDay {
+  const stationNumber = day.blocks.filter((b) => b.type === "MAIN").length + 1;
+  const newBlock: SessionBlockConfig = {
+    id: `main-station-${Date.now()}`,
+    type: "MAIN",
+    label: `Bloque ${stationNumber} (estación)`,
+    mode: "STATIONS",
+    muscleGroups: day.muscleGroups,
+    exerciseTypes,
+    count,
+  };
+  // se inserta antes del cooldown para respetar warmup → core → main(s) → cooldown
+  const cooldownIndex = day.blocks.findIndex((b) => b.type === "COOLDOWN");
+  const blocks = [...day.blocks];
+  if (cooldownIndex === -1) blocks.push(newBlock);
+  else blocks.splice(cooldownIndex, 0, newBlock);
+  return { ...day, blocks };
 }

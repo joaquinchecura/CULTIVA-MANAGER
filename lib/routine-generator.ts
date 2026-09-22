@@ -1,13 +1,12 @@
 import { RoutineGoal, ExerciseType, Exercise, RoutineRule } from "@prisma/client";
+import { exerciseHasCategory, type TagCategory } from "./tag-taxonomy";
 
 export type ExperienceLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
 export type BlockType = "WARMUP" | "CORE" | "MAIN" | "COOLDOWN";
 export type BlockMode = "SEQUENTIAL" | "STATIONS";
 
-const ADVANCED_TAGS = ["avanzado", "olimpico", "halterofilia"];
-
 function isCompound(ex: Exercise): boolean {
-  return ex.tags.includes("compound");
+  return exerciseHasCategory(ex.tags, "compound");
 }
 
 // --- Mapeo objetivo → tipos de ejercicio elegibles (punto 8) ---
@@ -34,8 +33,8 @@ export interface SessionBlockConfig {
   mode: BlockMode;
   muscleGroups?: string[];
   exerciseTypes: ExerciseType[]; // editable por el profesional — subconjunto de GOAL_EXERCISE_TYPES[goal] en bloques MAIN
-  tagsRequired?: string[];
-  tagsPreferred?: string[];
+  tagsRequired?: TagCategory[];  // categorías de la taxonomía (no tags sueltos)
+  tagsPreferred?: TagCategory[];
   count: number; // 0 = bloque desactivado, no se consulta
   pinnedExerciseIds?: string[];
   excludeExerciseIds?: string[];
@@ -139,13 +138,13 @@ function filterPool(
     if (muscleGroups.length && !(ex.muscleGroup && muscleGroups.includes(ex.muscleGroup))) return false;
     if (equipment && ex.equipment && !equipment.includes(ex.equipment)) return false;
     if (avoidMuscleGroups.length && ex.muscleGroup && avoidMuscleGroups.includes(ex.muscleGroup)) return false;
-    if (block.tagsRequired?.length && !block.tagsRequired.every((t) => ex.tags.includes(t))) return false;
+    if (block.tagsRequired?.length && !block.tagsRequired.every((cat) => exerciseHasCategory(ex.tags, cat))) return false;
 
     if (experienceLevel === "BEGINNER") {
       if (ex.type === "TECHNIQUE") return false;
-      if (ex.tags.some((t) => ADVANCED_TAGS.includes(t))) return false;
+      if (exerciseHasCategory(ex.tags, "advanced")) return false;
     } else if (experienceLevel === "INTERMEDIATE") {
-      if (ex.tags.some((t) => ADVANCED_TAGS.includes(t))) return false;
+      if (exerciseHasCategory(ex.tags, "advanced")) return false;
     }
     return true;
   });
@@ -153,8 +152,9 @@ function filterPool(
 
 function scoreExercise(ex: Exercise, block: SessionBlockConfig, prioritizeCompound: boolean): number {
   let score = 0;
-  if (block.tagsPreferred?.some((t) => ex.tags.includes(t))) score += 10;
+  if (block.tagsPreferred?.some((cat) => exerciseHasCategory(ex.tags, cat))) score += 10;
   if (prioritizeCompound && block.mode === "SEQUENTIAL" && isCompound(ex)) score += 5;
+  if (block.mode === "STATIONS" && exerciseHasCategory(ex.tags, "stationFriendly")) score += 5;
   score += Math.random() * 2;
   return score;
 }
@@ -263,7 +263,8 @@ function buildBlockExercises(
   return { blockId: block.id, label, type: block.type, mode: block.mode, exercises: exercisesOut };
 }
 
-// buildDayExercises vuelve a recibir "goal" como parámetro global, no desde splitDay
+// Recorre los bloques de un día en orden; acumula lo ya usado ese día (usedInDay) para que
+// dos bloques MAIN (ej: estación 1 y estación 2 de un funcional) nunca repitan el mismo ejercicio.
 function buildDayExercises(
   goal: RoutineGoal,
   splitDay: SplitDay,
@@ -291,7 +292,6 @@ function buildDayExercises(
   return results;
 }
 
-// generateRoutinePreview: goal vuelve a usarse global, sin GeneratedDay.goal
 export function generateRoutinePreview(input: GeneratorInput): GeneratedRoutinePreview {
   const {
     goal, frequencyPerWeek, totalWeeks, sameEachWeek, splitDays, availableEquipment,
@@ -375,6 +375,7 @@ export function buildDefaultBlocks(goal: RoutineGoal, muscleGroups: string[]): S
   blocks.push({
     id: "warmup", type: "WARMUP", label: "Entrada en calor", mode: "SEQUENTIAL",
     muscleGroups, exerciseTypes: [...GENERIC_BLOCK_TYPES.WARMUP], count: d.warmupCount,
+    tagsPreferred: ["warmup"],
   });
 
   blocks.push({
@@ -391,12 +392,14 @@ export function buildDefaultBlocks(goal: RoutineGoal, muscleGroups: string[]): S
   blocks.push({
     id: "cooldown", type: "COOLDOWN", label: "Vuelta a la calma", mode: "SEQUENTIAL",
     muscleGroups: [], exerciseTypes: [...GENERIC_BLOCK_TYPES.COOLDOWN], count: d.cooldownCount,
+    tagsPreferred: ["cooldownStretch"],
   });
 
   const stretchCount = d.stretchCount === "auto" ? Math.min(Math.max(muscleGroups.length, 1), 4) : d.stretchCount;
   blocks.push({
     id: "stretch", type: "COOLDOWN", label: "Elongación", mode: "SEQUENTIAL",
     muscleGroups, exerciseTypes: [...GENERIC_BLOCK_TYPES.STRETCH], count: stretchCount,
+    tagsPreferred: ["cooldownStretch"],
   });
 
   return blocks;
@@ -424,7 +427,6 @@ export const SPLIT_PRESETS: Record<string, { label: string; days: { name: string
   },
 };
 
-// resolveSplitDays: SplitDay ya no lleva "goal" (goal solo se usa para armar los defaults de bloques)
 export function resolveSplitDays(presetKey: string, frequencyPerWeek: number, goal: RoutineGoal): SplitDay[] {
   const preset = SPLIT_PRESETS[presetKey];
   if (!preset) throw new Error(`Preset desconocido: ${presetKey}`);
@@ -448,7 +450,6 @@ export function addStationBlock(day: SplitDay, exerciseTypes: ExerciseType[] = [
     exerciseTypes,
     count,
   };
-  // se inserta antes del cooldown para respetar warmup → core → main(s) → cooldown
   const cooldownIndex = day.blocks.findIndex((b) => b.type === "COOLDOWN");
   const blocks = [...day.blocks];
   if (cooldownIndex === -1) blocks.push(newBlock);

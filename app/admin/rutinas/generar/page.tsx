@@ -85,11 +85,8 @@ export default function GenerarRutinaPage() {
   const [avoidMuscleGroups, setAvoidMuscleGroups] = useState<string[]>([]);
   const [prioritizeCompound, setPrioritizeCompound] = useState(true);
 
-  // overrides de count por bloque — clave: `${dayIndex}-${blockId}`
   const [blockCountOverrides, setBlockCountOverrides] = useState<Record<string, number>>({});
-  // overrides de exerciseTypes en bloques MAIN — clave: `${dayIndex}-${blockId}`
   const [blockTypeOverrides, setBlockTypeOverrides] = useState<Record<string, ExerciseType[]>>({});
-  // bloques de estación agregados manualmente por día — clave: dayIndex
   const [extraBlocksByDay, setExtraBlocksByDay] = useState<Record<number, SessionBlockConfig[]>>({});
 
   const [generating, setGenerating] = useState(false);
@@ -106,7 +103,6 @@ export default function GenerarRutinaPage() {
       .finally(() => setLoadingMembers(false));
   }, []);
 
-  // Split base: preset resuelto o el manual del coach — siempre con el mismo goal (global)
   const baseSplitDays: SplitDay[] = useMemo(() => {
     if (splitPreset === "CUSTOM") {
       return customSplitDaysRaw.map((d) => ({
@@ -122,8 +118,6 @@ export default function GenerarRutinaPage() {
     }
   }, [splitPreset, frequencyPerWeek, goal, customSplitDaysRaw]);
 
-  // Aplica overrides de count/exerciseTypes sobre los bloques base, y agrega los
-  // bloques de estación manuales (insertados antes del primer bloque de vuelta a la calma).
   const splitDays: SplitDay[] = useMemo(() => {
     return baseSplitDays.map((day, dayIndex) => {
       let blocks = day.blocks.map((block) => {
@@ -150,7 +144,6 @@ export default function GenerarRutinaPage() {
     });
   }, [baseSplitDays, blockCountOverrides, blockTypeOverrides, extraBlocksByDay]);
 
-  // Si cambia la frecuencia y estamos en CUSTOM, ajustamos el array de días
   useEffect(() => {
     if (splitPreset !== "CUSTOM") return;
     setCustomSplitDaysRaw((prev) => {
@@ -162,7 +155,6 @@ export default function GenerarRutinaPage() {
     });
   }, [frequencyPerWeek, splitPreset]);
 
-  // Cambio estructural (preset, frecuencia u objetivo) invalida los overrides/bloques manuales previos
   useEffect(() => {
     setBlockCountOverrides({});
     setBlockTypeOverrides({});
@@ -193,7 +185,7 @@ export default function GenerarRutinaPage() {
     setBlockTypeOverrides((prev) => {
       const current = prev[key] ?? block.exerciseTypes;
       const next = current.includes(type) ? current.filter((t) => t !== type) : [...current, type];
-      if (next.length === 0) return prev; // no dejar el bloque sin ningún tipo elegido
+      if (next.length === 0) return prev;
       return { ...prev, [key]: next };
     });
   }
@@ -343,6 +335,8 @@ export default function GenerarRutinaPage() {
 
       {/* CONFIGURACIÓN */}
       <section className="bg-white border rounded-xl p-5 space-y-5">
+
+        {/* DATOS BÁSICOS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Cliente</label>
@@ -439,9 +433,107 @@ export default function GenerarRutinaPage() {
           </div>
         </div>
 
-        {/* SPLIT */}
+        {/* NIVEL Y PREFERENCIAS — ahora antes del split */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t">
+          <div className="pt-4">
+            <label className="block text-sm font-medium mb-1">Nivel de experiencia</label>
+            <select
+              className="w-full border rounded-lg px-3 py-2"
+              value={experienceLevel}
+              onChange={(e) => setExperienceLevel(e.target.value as ExperienceLevel)}
+            >
+              {Object.entries(EXPERIENCE_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2 pt-10">
+            <input
+              type="checkbox"
+              id="prioritizeCompound"
+              checked={prioritizeCompound}
+              onChange={(e) => setPrioritizeCompound(e.target.checked)}
+            />
+            <label htmlFor="prioritizeCompound" className="text-sm">
+              Priorizar ejercicios compuestos
+            </label>
+          </div>
+        </div>
+
+        {/* EVITAR ZONAS */}
         <div>
-          <label className="block text-sm font-medium mb-2">Split</label>
+          <label className="block text-sm font-medium mb-2">Evitar zonas (lesiones, contraindicaciones)</label>
+          <div className="flex flex-wrap gap-2">
+            {AVOID_MUSCLE_OPTIONS.map((muscle) => {
+              const active = avoidMuscleGroups.includes(muscle);
+              return (
+                <button
+                  key={muscle}
+                  type="button"
+                  onClick={() =>
+                    setAvoidMuscleGroups((prev) =>
+                      active ? prev.filter((m) => m !== muscle) : [...prev, muscle]
+                    )
+                  }
+                  className={`px-3 py-1 rounded-full text-xs border ${
+                    active
+                      ? "bg-red-600 text-white border-red-600"
+                      : "bg-white text-gray-700 border-gray-300"
+                  }`}
+                >
+                  {muscle}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* EQUIPAMIENTO */}
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <input
+              type="checkbox"
+              id="useEquipment"
+              checked={useEquipmentFilter}
+              onChange={(e) => setUseEquipmentFilter(e.target.checked)}
+            />
+            <label htmlFor="useEquipment" className="text-sm font-medium">
+              Filtrar por equipamiento disponible
+            </label>
+          </div>
+          {useEquipmentFilter && (
+            <div className="flex flex-wrap gap-2">
+              {EQUIPMENT_OPTIONS.map((eq) => {
+                const active = selectedEquipment.includes(eq);
+                return (
+                  <button
+                    key={eq}
+                    type="button"
+                    onClick={() =>
+                      setSelectedEquipment((prev) =>
+                        active ? prev.filter((e) => e !== eq) : [...prev, eq]
+                      )
+                    }
+                    className={`px-3 py-1 rounded-full text-xs border ${
+                      active
+                        ? "bg-emerald-600 text-white border-emerald-600"
+                        : "bg-white text-gray-700 border-gray-300"
+                    }`}
+                  >
+                    {eq}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* SPLIT + BLOQUES POR DÍA — al final, justo antes del botón */}
+        <div className="pt-2 border-t">
+          <label className="block text-sm font-medium mb-2 pt-4">Split</label>
           <div className="flex flex-wrap gap-2 mb-3">
             {Object.entries(SPLIT_PRESETS).map(([key, preset]) => (
               <button
@@ -572,103 +664,6 @@ export default function GenerarRutinaPage() {
               );
             })}
           </div>
-        </div>
-
-        {/* NIVEL Y PREFERENCIAS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Nivel de experiencia</label>
-            <select
-              className="w-full border rounded-lg px-3 py-2"
-              value={experienceLevel}
-              onChange={(e) => setExperienceLevel(e.target.value as ExperienceLevel)}
-            >
-              {Object.entries(EXPERIENCE_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2 pt-6">
-            <input
-              type="checkbox"
-              id="prioritizeCompound"
-              checked={prioritizeCompound}
-              onChange={(e) => setPrioritizeCompound(e.target.checked)}
-            />
-            <label htmlFor="prioritizeCompound" className="text-sm">
-              Priorizar ejercicios compuestos
-            </label>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">Evitar zonas (lesiones, contraindicaciones)</label>
-          <div className="flex flex-wrap gap-2">
-            {AVOID_MUSCLE_OPTIONS.map((muscle) => {
-              const active = avoidMuscleGroups.includes(muscle);
-              return (
-                <button
-                  key={muscle}
-                  type="button"
-                  onClick={() =>
-                    setAvoidMuscleGroups((prev) =>
-                      active ? prev.filter((m) => m !== muscle) : [...prev, muscle]
-                    )
-                  }
-                  className={`px-3 py-1 rounded-full text-xs border ${
-                    active
-                      ? "bg-red-600 text-white border-red-600"
-                      : "bg-white text-gray-700 border-gray-300"
-                  }`}
-                >
-                  {muscle}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* EQUIPAMIENTO */}
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <input
-              type="checkbox"
-              id="useEquipment"
-              checked={useEquipmentFilter}
-              onChange={(e) => setUseEquipmentFilter(e.target.checked)}
-            />
-            <label htmlFor="useEquipment" className="text-sm font-medium">
-              Filtrar por equipamiento disponible
-            </label>
-          </div>
-          {useEquipmentFilter && (
-            <div className="flex flex-wrap gap-2">
-              {EQUIPMENT_OPTIONS.map((eq) => {
-                const active = selectedEquipment.includes(eq);
-                return (
-                  <button
-                    key={eq}
-                    type="button"
-                    onClick={() =>
-                      setSelectedEquipment((prev) =>
-                        active ? prev.filter((e) => e !== eq) : [...prev, eq]
-                      )
-                    }
-                    className={`px-3 py-1 rounded-full text-xs border ${
-                      active
-                        ? "bg-emerald-600 text-white border-emerald-600"
-                        : "bg-white text-gray-700 border-gray-300"
-                    }`}
-                  >
-                    {eq}
-                  </button>
-                );
-              })}
-            </div>
-          )}
         </div>
 
         <button

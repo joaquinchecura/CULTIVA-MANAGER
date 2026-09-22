@@ -1,12 +1,12 @@
 import { RoutineGoal, ExerciseType, Exercise, RoutineRule } from "@prisma/client";
-import { exerciseHasCategory, type TagCategory } from "./tag-taxonomy";
+import { exerciseHasCategory, exerciseMatchesCategory, type TagCategory } from "./tag-taxonomy";
 
 export type ExperienceLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
 export type BlockType = "WARMUP" | "CORE" | "MAIN" | "COOLDOWN";
 export type BlockMode = "SEQUENTIAL" | "STATIONS";
 
 function isCompound(ex: Exercise): boolean {
-  return exerciseHasCategory(ex.tags, "compound");
+  return exerciseMatchesCategory(ex, "compound"); // antes: exerciseHasCategory(ex.tags, "compound")
 }
 
 // --- Mapeo objetivo → tipos de ejercicio elegibles (punto 8) ---
@@ -140,12 +140,13 @@ function filterPool(
     if (avoidMuscleGroups.length && ex.muscleGroup && avoidMuscleGroups.includes(ex.muscleGroup)) return false;
     if (block.tagsRequired?.length && !block.tagsRequired.every((cat) => exerciseHasCategory(ex.tags, cat))) return false;
 
-    if (experienceLevel === "BEGINNER") {
-      if (ex.type === "TECHNIQUE") return false;
-      if (exerciseHasCategory(ex.tags, "advanced")) return false;
-    } else if (experienceLevel === "INTERMEDIATE") {
-      if (exerciseHasCategory(ex.tags, "advanced")) return false;
-    }
+   // dentro de filterPool:
+   if (experienceLevel === "BEGINNER") {
+    if (ex.type === "TECHNIQUE") return false;
+    if (exerciseMatchesCategory(ex, "advanced")) return false; // antes: exerciseHasCategory(ex.tags, "advanced")
+  } else if (experienceLevel === "INTERMEDIATE") {
+    if (exerciseMatchesCategory(ex, "advanced")) return false;
+  }
     return true;
   });
 }

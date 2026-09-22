@@ -53,3 +53,27 @@ export function normalizeTag(tag: string): string {
     const keywords = TAG_CATEGORIES[category];
     return normalizedTags.some((t) => keywords.some((k) => t === k || t.includes(k)));
   }
+
+  // Heurística de respaldo por nombre, para categorías donde el tagueo real es escaso
+// (compound: 14/797 ejercicios taggeados; advanced: ~50/797 combinando variantes).
+// Se usa como OR con exerciseHasCategory — nunca reemplaza el tag, solo suma cobertura.
+  export const NAME_HEURISTICS: Partial<Record<TagCategory, string[]>> = {
+    compound: [
+      "sentadilla", "squat", "peso_muerto", "deadlift", "press", "remo", "row",
+      "dominada", "pull_up", "zancada", "lunge", "estocada", "empuje", "thruster",
+      "arranque", "snatch", "cargada", "clean", "jerk", "fondos", "dip", "sumo",
+    ],
+    advanced: [
+      "arranque", "snatch", "cargada", "clean", "jerk", "muscle_up", "pistol",
+      "turkish_get_up", "olimpico",
+    ],
+  };
+  
+  // Chequea tags primero; si no matchea nada, cae a la heurística de nombre para esa categoría.
+  export function exerciseMatchesCategory(ex: { name: string; tags: string[] }, category: TagCategory): boolean {
+    if (exerciseHasCategory(ex.tags, category)) return true;
+    const heuristics = NAME_HEURISTICS[category];
+    if (!heuristics) return false;
+    const normalizedName = normalizeTag(ex.name);
+    return heuristics.some((h) => normalizedName.includes(h));
+  }

@@ -6,12 +6,14 @@ import {
   SPLIT_PRESETS,
   resolveSplitDays,
   buildDefaultBlocks,
+  GOAL_EXERCISE_TYPES,
   type SplitDay,
+  type SessionBlockConfig,
   type GeneratedDay,
   type GeneratedExercise,
   type ExperienceLevel,
 } from "@/lib/routine-generator";
-import { RoutineGoal } from "@prisma/client";
+import { RoutineGoal, ExerciseType } from "@prisma/client";
 
 interface Member {
   id: string;
@@ -51,6 +53,16 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
   COOLDOWN: "Vuelta a la calma",
 };
 
+const EXERCISE_TYPE_LABELS: Partial<Record<ExerciseType, string>> = {
+  STRENGTH: "Fuerza",
+  FUNCTIONAL: "Funcional",
+  CARDIO: "Cardio",
+  PLYOMETRIC: "Pliometría",
+  REHABILITATION: "Rehabilitación",
+  MOBILITY: "Movilidad",
+  BALANCE: "Equilibrio",
+};
+
 export default function GenerarRutinaPage() {
   const router = useRouter();
 
@@ -73,10 +85,12 @@ export default function GenerarRutinaPage() {
   const [avoidMuscleGroups, setAvoidMuscleGroups] = useState<string[]>([]);
   const [prioritizeCompound, setPrioritizeCompound] = useState(true);
 
-  // overrides por día — clave: índice del día
-  const [dayGoalOverrides, setDayGoalOverrides] = useState<Record<number, RoutineGoal>>({});
   // overrides de count por bloque — clave: `${dayIndex}-${blockId}`
   const [blockCountOverrides, setBlockCountOverrides] = useState<Record<string, number>>({});
+  // overrides de exerciseTypes en bloques MAIN — clave: `${dayIndex}-${blockId}`
+  const [blockTypeOverrides, setBlockTypeOverrides] = useState<Record<string, ExerciseType[]>>({});
+  // bloques de estación agregados manualmente por día — clave: dayIndex
+  const [extraBlocksByDay, setExtraBlocksByDay] = useState<Record<number, SessionBlockConfig[]>>({});
 
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -92,12 +106,11 @@ export default function GenerarRutinaPage() {
       .finally(() => setLoadingMembers(false));
   }, []);
 
-  // Split base: preset resuelto (con goal por defecto) o el manual del coach
+  // Split base: preset resuelto o el manual del coach — siempre con el mismo goal (global)
   const baseSplitDays: SplitDay[] = useMemo(() => {
     if (splitPreset === "CUSTOM") {
       return customSplitDaysRaw.map((d) => ({
         name: d.name,
-        goal,
         muscleGroups: d.muscleGroups,
         blocks: buildDefaultBlocks(goal, d.muscleGroups),
       }));
@@ -109,25 +122,33 @@ export default function GenerarRutinaPage() {
     }
   }, [splitPreset, frequencyPerWeek, goal, customSplitDaysRaw]);
 
-  // Aplica primero el override de objetivo por día (regenerando bloques con ese goal)
-  // y después el override de count por bloque, sobre la estructura ya resuelta.
+  // Aplica overrides de count/exerciseTypes sobre los bloques base, y agrega los
+  // bloques de estación manuales (insertados antes del primer bloque de vuelta a la calma).
   const splitDays: SplitDay[] = useMemo(() => {
     return baseSplitDays.map((day, dayIndex) => {
-      const effectiveGoal = dayGoalOverrides[dayIndex] ?? day.goal;
-      const dayWithGoal: SplitDay =
-        effectiveGoal === day.goal
-          ? day
-          : { ...day, goal: effectiveGoal, blocks: buildDefaultBlocks(effectiveGoal, day.muscleGroups) };
+      let blocks = day.blocks.map((block) => {
+        const key = `${dayIndex}-${block.id}`;
+        let updated = block;
+        if (blockCountOverrides[key] != null) {
+          updated = { ...updated, count: blockCountOverrides[key] };
+        }
+        if (updated.type === "MAIN" && blockTypeOverrides[key] != null) {
+          updated = { ...updated, exerciseTypes: blockTypeOverrides[key] };
+        }
+        return updated;
+      });
 
-      return {
-        ...dayWithGoal,
-        blocks: dayWithGoal.blocks.map((block) => {
-          const key = `${dayIndex}-${block.id}`;
-          return blockCountOverrides[key] != null ? { ...block, count: blockCountOverrides[key] } : block;
-        }),
-      };
+      const extra = extraBlocksByDay[dayIndex] ?? [];
+      if (extra.length) {
+        const cooldownIndex = blocks.findIndex((b) => b.type === "COOLDOWN");
+        blocks = cooldownIndex === -1
+          ? [...blocks, ...extra]
+          : [...blocks.slice(0, cooldownIndex), ...extra, ...blocks.slice(cooldownIndex)];
+      }
+
+      return { ...day, blocks };
     });
-  }, [baseSplitDays, blockCountOverrides, dayGoalOverrides]);
+  }, [baseSplitDays, blockCountOverrides, blockTypeOverrides, extraBlocksByDay]);
 
   // Si cambia la frecuencia y estamos en CUSTOM, ajustamos el array de días
   useEffect(() => {
@@ -141,12 +162,12 @@ export default function GenerarRutinaPage() {
     });
   }, [frequencyPerWeek, splitPreset]);
 
-  // Estructura del split cambió de raíz (preset o frecuencia) — los overrides ya no
-  // corresponden necesariamente a los mismos días, así que los reseteamos.
+  // Cambio estructural (preset, frecuencia u objetivo) invalida los overrides/bloques manuales previos
   useEffect(() => {
-    setDayGoalOverrides({});
     setBlockCountOverrides({});
-  }, [splitPreset, frequencyPerWeek]);
+    setBlockTypeOverrides({});
+    setExtraBlocksByDay({});
+  }, [splitPreset, frequencyPerWeek, goal]);
 
   function updateCustomDay(index: number, field: "name" | "muscleGroups", value: string) {
     setCustomSplitDaysRaw((prev) => {
@@ -163,12 +184,43 @@ export default function GenerarRutinaPage() {
     });
   }
 
-  function updateDayGoal(dayIndex: number, newGoal: RoutineGoal) {
-    setDayGoalOverrides((prev) => ({ ...prev, [dayIndex]: newGoal }));
-  }
-
   function updateBlockCount(dayIndex: number, blockId: string, count: number) {
     setBlockCountOverrides((prev) => ({ ...prev, [`${dayIndex}-${blockId}`]: Math.max(0, count) }));
+  }
+
+  function toggleBlockExerciseType(dayIndex: number, block: SessionBlockConfig, type: ExerciseType) {
+    const key = `${dayIndex}-${block.id}`;
+    setBlockTypeOverrides((prev) => {
+      const current = prev[key] ?? block.exerciseTypes;
+      const next = current.includes(type) ? current.filter((t) => t !== type) : [...current, type];
+      if (next.length === 0) return prev; // no dejar el bloque sin ningún tipo elegido
+      return { ...prev, [key]: next };
+    });
+  }
+
+  function addStationBlockToDay(dayIndex: number) {
+    setExtraBlocksByDay((prev) => {
+      const current = prev[dayIndex] ?? [];
+      const day = splitDays[dayIndex];
+      const stationNumber = day.blocks.filter((b) => b.type === "MAIN").length + current.length + 1;
+      const newBlock: SessionBlockConfig = {
+        id: `main-station-${Date.now()}`,
+        type: "MAIN",
+        label: `Bloque ${stationNumber} (estación)`,
+        mode: "STATIONS",
+        muscleGroups: day.muscleGroups,
+        exerciseTypes: [...GOAL_EXERCISE_TYPES[goal]],
+        count: 4,
+      };
+      return { ...prev, [dayIndex]: [...current, newBlock] };
+    });
+  }
+
+  function removeExtraBlock(dayIndex: number, blockId: string) {
+    setExtraBlocksByDay((prev) => ({
+      ...prev,
+      [dayIndex]: (prev[dayIndex] ?? []).filter((b) => b.id !== blockId),
+    }));
   }
 
   async function handleGenerate() {
@@ -320,7 +372,7 @@ export default function GenerarRutinaPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Objetivo general</label>
+            <label className="block text-sm font-medium mb-1">Objetivo</label>
             <select
               className="w-full border rounded-lg px-3 py-2"
               value={goal}
@@ -333,8 +385,19 @@ export default function GenerarRutinaPage() {
               ))}
             </select>
             <p className="text-xs text-gray-400 mt-1">
-              Se usa como default para cada día — podés cambiarlo por día más abajo.
+              Es el objetivo de toda la rutina. Lo que podés variar por día es qué tipo de ejercicio usar (más abajo).
             </p>
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium mb-1">Descripción / notas</label>
+            <textarea
+              className="w-full border rounded-lg px-3 py-2 text-sm"
+              rows={2}
+              placeholder="Notas para esta rutina (ej: dolor lumbar reciente, prioriza técnica antes de cargar peso)"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </div>
 
           <div>
@@ -348,17 +411,6 @@ export default function GenerarRutinaPage() {
               value={frequencyPerWeek}
               onChange={(e) => setFrequencyPerWeek(Number(e.target.value))}
               className="w-full"
-            />
-          </div>
-
-          <div className="sm:col-span-2">
-            <label className="block text-sm font-medium mb-1">Descripción / notas</label>
-            <textarea
-              className="w-full border rounded-lg px-3 py-2 text-sm"
-              rows={2}
-              placeholder="Notas para esta rutina (ej: dolor lumbar reciente, prioriza técnica antes de cargar peso)"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
             />
           </div>
 
@@ -439,42 +491,86 @@ export default function GenerarRutinaPage() {
             </div>
           )}
 
-          {/* EDITOR DE OBJETIVO + BLOQUES POR DÍA */}
+          {/* EDITOR DE BLOQUES POR DÍA */}
           <div className="space-y-3">
-            {splitDays.map((day, dayIndex) => (
-              <div key={dayIndex} className="border rounded-lg p-3 bg-gray-50">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm font-semibold">{day.name}</div>
-                  <select
-                    className="text-xs border rounded px-2 py-1"
-                    value={day.goal}
-                    onChange={(e) => updateDayGoal(dayIndex, e.target.value as RoutineGoal)}
+            {splitDays.map((day, dayIndex) => {
+              const extraIds = new Set((extraBlocksByDay[dayIndex] ?? []).map((b) => b.id));
+              return (
+                <div key={dayIndex} className="border rounded-lg p-3 bg-gray-50">
+                  <div className="text-sm font-semibold mb-2">{day.name}</div>
+
+                  <div className="space-y-2">
+                    {day.blocks.map((block) => {
+                      const key = `${dayIndex}-${block.id}`;
+                      const activeTypes = blockTypeOverrides[key] ?? block.exerciseTypes;
+                      const showTypeToggle = block.type === "MAIN" && GOAL_EXERCISE_TYPES[goal].length > 1;
+
+                      return (
+                        <div key={block.id} className="bg-white border rounded-lg px-3 py-2">
+                          <div className="flex items-center justify-between">
+                            <div className="text-xs">
+                              <div className="font-medium">{block.label || BLOCK_TYPE_LABELS[block.type]}</div>
+                              <div className="text-gray-400">
+                                {BLOCK_TYPE_LABELS[block.type]}{block.mode === "STATIONS" ? " · estaciones" : ""}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                min={0}
+                                max={12}
+                                className="w-14 border rounded px-1.5 py-1 text-center text-sm"
+                                value={block.count}
+                                onChange={(e) => updateBlockCount(dayIndex, block.id, Number(e.target.value) || 0)}
+                              />
+                              {extraIds.has(block.id) && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeExtraBlock(dayIndex, block.id)}
+                                  className="text-red-500 text-xs"
+                                >
+                                  Quitar
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {showTypeToggle && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {GOAL_EXERCISE_TYPES[goal].map((type) => {
+                                const active = activeTypes.includes(type);
+                                return (
+                                  <button
+                                    key={type}
+                                    type="button"
+                                    onClick={() => toggleBlockExerciseType(dayIndex, block, type)}
+                                    className={`px-2 py-0.5 rounded-full text-[11px] border ${
+                                      active
+                                        ? "bg-blue-600 text-white border-blue-600"
+                                        : "bg-white text-gray-600 border-gray-300"
+                                    }`}
+                                  >
+                                    {EXERCISE_TYPE_LABELS[type] ?? type}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => addStationBlockToDay(dayIndex)}
+                    className="mt-2 text-xs text-blue-600 font-medium"
                   >
-                    {Object.entries(GOAL_LABELS).map(([value, label]) => (
-                      <option key={value} value={value}>{label}</option>
-                    ))}
-                  </select>
+                    + Agregar bloque (estación)
+                  </button>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {day.blocks.map((block) => (
-                    <div key={block.id} className="flex items-center justify-between bg-white border rounded-lg px-3 py-2">
-                      <div className="text-xs">
-                        <div className="font-medium">{block.label || BLOCK_TYPE_LABELS[block.type]}</div>
-                        <div className="text-gray-400">{BLOCK_TYPE_LABELS[block.type]}{block.mode === "STATIONS" ? " · estaciones" : ""}</div>
-                      </div>
-                      <input
-                        type="number"
-                        min={0}
-                        max={12}
-                        className="w-14 border rounded px-1.5 py-1 text-center text-sm"
-                        value={block.count}
-                        onChange={(e) => updateBlockCount(dayIndex, block.id, Number(e.target.value) || 0)}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -622,7 +718,6 @@ export default function GenerarRutinaPage() {
               <h3 className="font-semibold mb-3">
                 {day.dayName}
                 {!sameEachWeek && ` — Semana ${day.weekNumber}`}
-                <span className="text-xs font-normal text-gray-400 ml-2">{GOAL_LABELS[day.goal]}</span>
               </h3>
 
               <div className="space-y-4">

@@ -57,7 +57,6 @@ export async function POST(req: NextRequest) {
         weekNumber: day.weekNumber,
         dayOfWeek: day.dayOfWeek,
         dayName: day.dayName,
-        goal: day.goal,
         order: day.order,
         organizationId: orgId,
       },

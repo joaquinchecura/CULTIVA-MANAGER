@@ -43,7 +43,6 @@ export interface SessionBlockConfig {
 
 export interface SplitDay {
   name: string;
-  goal: RoutineGoal;        // NUEVO — cada día tiene su propio objetivo
   muscleGroups: string[];
   blocks: SessionBlockConfig[];
 }
@@ -76,7 +75,6 @@ export interface GeneratedDay {
   dayOfWeek: number;
   dayName: string;
   order: number;
-  goal: RoutineGoal;   // NUEVO
   blocks: GeneratedBlockResult[];
 }
 
@@ -265,10 +263,10 @@ function buildBlockExercises(
   return { blockId: block.id, label, type: block.type, mode: block.mode, exercises: exercisesOut };
 }
 
-// Recorre los bloques de un día en orden; acumula lo ya usado ese día (usedInDay) para que
-// dos bloques MAIN (ej: estación 1 y estación 2 de un funcional) nunca repitan el mismo ejercicio (punto 7).
+// buildDayExercises vuelve a recibir "goal" como parámetro global, no desde splitDay
 function buildDayExercises(
-  splitDay: SplitDay, // ya no recibe "goal" aparte, sale de splitDay.goal
+  goal: RoutineGoal,
+  splitDay: SplitDay,
   exercises: Exercise[],
   rules: RoutineRule[],
   equipment: string[] | null,
@@ -277,7 +275,6 @@ function buildDayExercises(
   prioritizeCompound: boolean,
   weeklyExclude: Set<string>
 ): GeneratedBlockResult[] {
-  const goal = splitDay.goal; // <-- acá el cambio clave
   const orderRef = { order: 1 };
   const usedInDay = new Set<string>();
   const results: GeneratedBlockResult[] = [];
@@ -294,6 +291,7 @@ function buildDayExercises(
   return results;
 }
 
+// generateRoutinePreview: goal vuelve a usarse global, sin GeneratedDay.goal
 export function generateRoutinePreview(input: GeneratorInput): GeneratedRoutinePreview {
   const {
     goal, frequencyPerWeek, totalWeeks, sameEachWeek, splitDays, availableEquipment,
@@ -312,7 +310,7 @@ export function generateRoutinePreview(input: GeneratorInput): GeneratedRoutineP
 
   const fixedWeekBlocks: GeneratedBlockResult[][] | null = sameEachWeek
     ? splitDays.map((sd) =>
-        buildDayExercises(sd, exercises, rules, availableEquipment, avoidMuscleGroups, experienceLevel, prioritizeCompound, new Set())
+        buildDayExercises(goal, sd, exercises, rules, availableEquipment, avoidMuscleGroups, experienceLevel, prioritizeCompound, new Set())
       )
     : null;
 
@@ -327,7 +325,7 @@ export function generateRoutinePreview(input: GeneratorInput): GeneratedRoutineP
         dayBlocks = fixedWeekBlocks[dayOfWeek - 1];
       } else {
         dayBlocks = buildDayExercises(
-          splitDay, exercises, rules, availableEquipment,
+          goal, splitDay, exercises, rules, availableEquipment,
           avoidMuscleGroups, experienceLevel, prioritizeCompound, previousWeekMainIds[dayOfWeek - 1]
         );
         const mainIds = dayBlocks.filter((b) => b.type === "MAIN").flatMap((b) => b.exercises.map((e) => e.exerciseId));
@@ -340,7 +338,6 @@ export function generateRoutinePreview(input: GeneratorInput): GeneratedRoutineP
         dayOfWeek,
         dayName: splitDay.name,
         order: dayOfWeek,
-        goal: splitDay.goal, // NUEVO
         blocks: dayBlocks,
       });
     }
@@ -427,15 +424,14 @@ export const SPLIT_PRESETS: Record<string, { label: string; days: { name: string
   },
 };
 
-// resolveSplitDays: ahora recibe un goal por defecto para todos los días del preset,
-// pero cada día queda editable individualmente después en la UI
-export function resolveSplitDays(presetKey: string, frequencyPerWeek: number, defaultGoal: RoutineGoal): SplitDay[] {
+// resolveSplitDays: SplitDay ya no lleva "goal" (goal solo se usa para armar los defaults de bloques)
+export function resolveSplitDays(presetKey: string, frequencyPerWeek: number, goal: RoutineGoal): SplitDay[] {
   const preset = SPLIT_PRESETS[presetKey];
   if (!preset) throw new Error(`Preset desconocido: ${presetKey}`);
   const result: SplitDay[] = [];
   for (let i = 0; i < frequencyPerWeek; i++) {
     const d = preset.days[i % preset.days.length];
-    result.push({ name: d.name, goal: defaultGoal, muscleGroups: d.muscleGroups, blocks: buildDefaultBlocks(defaultGoal, d.muscleGroups) });
+    result.push({ name: d.name, muscleGroups: d.muscleGroups, blocks: buildDefaultBlocks(goal, d.muscleGroups) });
   }
   return result;
 }

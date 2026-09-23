@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     totalWeeks,
     days,
   }: {
-    memberId: string;
+    memberId?: string | null;
     name: string;
     description?: string;
     goal: RoutineGoal;
@@ -27,17 +27,22 @@ export async function POST(req: NextRequest) {
     days: GeneratedDay[];
   } = body;
 
-  const member = await prisma.member.findFirst({
-    where: { id: memberId, organizationId: orgId },
-    select: { id: true },
-  });
-  if (!member) {
-    return NextResponse.json({ error: "Cliente no encontrado" }, { status: 404 });
+  // Cliente es opcional en este endpoint — se asigna después desde el editor.
+  let verifiedMemberId: string | null = null;
+  if (memberId) {
+    const member = await prisma.member.findFirst({
+      where: { id: memberId, organizationId: orgId },
+      select: { id: true },
+    });
+    if (!member) {
+      return NextResponse.json({ error: "Cliente no encontrado" }, { status: 404 });
+    }
+    verifiedMemberId = member.id;
   }
 
   const routine = await prisma.routine.create({
     data: {
-      memberId,
+      memberId: verifiedMemberId, // null hasta que se asigne un cliente desde el editor
       name,
       description,
       goal,

@@ -15,12 +15,6 @@ import {
 } from "@/lib/routine-generator";
 import { RoutineGoal, ExerciseType } from "@prisma/client";
 
-interface Member {
-  id: string;
-  firstName: string;
-  lastName: string;
-}
-
 const GOAL_LABELS: Record<RoutineGoal, string> = {
   HYPERTROPHY: "Hipertrofia",
   STRENGTH: "Fuerza",
@@ -66,10 +60,6 @@ const EXERCISE_TYPE_LABELS: Partial<Record<ExerciseType, string>> = {
 export default function GenerarRutinaPage() {
   const router = useRouter();
 
-  const [members, setMembers] = useState<Member[]>([]);
-  const [loadingMembers, setLoadingMembers] = useState(true);
-
-  const [memberId, setMemberId] = useState<string>("");
   const [routineName, setRoutineName] = useState("");
   const [goal, setGoal] = useState<RoutineGoal>("HYPERTROPHY");
   const [description, setDescription] = useState("");
@@ -95,14 +85,6 @@ export default function GenerarRutinaPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedWeek, setSelectedWeek] = useState(1);
 
-  useEffect(() => {
-    fetch("/api/members")
-      .then((res) => res.json())
-      .then((data) => setMembers(Array.isArray(data) ? data : data.members ?? []))
-      .catch(() => setError("No se pudo cargar la lista de clientes"))
-      .finally(() => setLoadingMembers(false));
-  }, []);
-
   const baseSplitDays: SplitDay[] = useMemo(() => {
     if (splitPreset === "CUSTOM") {
       return customSplitDaysRaw.map((d) => ({
@@ -118,9 +100,22 @@ export default function GenerarRutinaPage() {
     }
   }, [splitPreset, frequencyPerWeek, goal, customSplitDaysRaw]);
 
+  // 1. Mezclamos primero los bloques base con los de estación agregados a mano.
+  // 2. Recién ahora aplicamos los overrides — a TODOS los bloques, base y estación por igual.
+  //    (antes esto corría antes del merge, así que los bloques de estación nunca recibían
+  //    el override de exerciseTypes que se tildaba en la UI)
   const splitDays: SplitDay[] = useMemo(() => {
     return baseSplitDays.map((day, dayIndex) => {
-      let blocks = day.blocks.map((block) => {
+      const extra = extraBlocksByDay[dayIndex] ?? [];
+      let blocks = day.blocks;
+      if (extra.length) {
+        const cooldownIndex = blocks.findIndex((b) => b.type === "COOLDOWN");
+        blocks = cooldownIndex === -1
+          ? [...blocks, ...extra]
+          : [...blocks.slice(0, cooldownIndex), ...extra, ...blocks.slice(cooldownIndex)];
+      }
+
+      blocks = blocks.map((block) => {
         const key = `${dayIndex}-${block.id}`;
         let updated = block;
         if (blockCountOverrides[key] != null) {
@@ -131,14 +126,6 @@ export default function GenerarRutinaPage() {
         }
         return updated;
       });
-
-      const extra = extraBlocksByDay[dayIndex] ?? [];
-      if (extra.length) {
-        const cooldownIndex = blocks.findIndex((b) => b.type === "COOLDOWN");
-        blocks = cooldownIndex === -1
-          ? [...blocks, ...extra]
-          : [...blocks.slice(0, cooldownIndex), ...extra, ...blocks.slice(cooldownIndex)];
-      }
 
       return { ...day, blocks };
     });
@@ -193,8 +180,8 @@ export default function GenerarRutinaPage() {
   function addStationBlockToDay(dayIndex: number) {
     setExtraBlocksByDay((prev) => {
       const current = prev[dayIndex] ?? [];
-      const day = splitDays[dayIndex];
-      const stationNumber = day.blocks.filter((b) => b.type === "MAIN").length + current.length + 1;
+      const day = splitDays[dayIndex]; // ya incluye las estaciones agregadas antes
+      const stationNumber = day.blocks.filter((b) => b.type === "MAIN").length + 1;
       const newBlock: SessionBlockConfig = {
         id: `main-station-${Date.now()}`,
         type: "MAIN",
@@ -217,10 +204,7 @@ export default function GenerarRutinaPage() {
 
   async function handleGenerate() {
     setError(null);
-    if (!memberId) {
-      setError("Elegí un cliente antes de generar la rutina.");
-      return;
-    }
+
     if (splitDays.length !== frequencyPerWeek) {
       setError("La cantidad de días del split no coincide con la frecuencia semanal.");
       return;
@@ -290,7 +274,7 @@ export default function GenerarRutinaPage() {
   }
 
   async function handleSave() {
-    if (!preview || !memberId) return;
+    if (!preview) return;
     setError(null);
     setSaving(true);
     try {
@@ -298,7 +282,6 @@ export default function GenerarRutinaPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          memberId,
           name: routineName || `Rutina ${GOAL_LABELS[goal]}`,
           description,
           goal,
@@ -338,23 +321,6 @@ export default function GenerarRutinaPage() {
 
         {/* DATOS BÁSICOS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Cliente</label>
-            <select
-              className="w-full border rounded-lg px-3 py-2"
-              value={memberId}
-              onChange={(e) => setMemberId(e.target.value)}
-              disabled={loadingMembers}
-            >
-              <option value="">Seleccioná un cliente</option>
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.firstName} {m.lastName}
-                </option>
-              ))}
-            </select>
-          </div>
-
           <div>
             <label className="block text-sm font-medium mb-1">Nombre de la rutina</label>
             <input
@@ -433,7 +399,7 @@ export default function GenerarRutinaPage() {
           </div>
         </div>
 
-        {/* NIVEL Y PREFERENCIAS — ahora antes del split */}
+        {/* NIVEL Y PREFERENCIAS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t">
           <div className="pt-4">
             <label className="block text-sm font-medium mb-1">Nivel de experiencia</label>

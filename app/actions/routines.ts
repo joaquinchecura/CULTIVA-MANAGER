@@ -463,10 +463,14 @@ export async function completeSession(sessionLogId: string) {
   const { userId } = await auth()
   if (!userId) throw new Error('No autenticado')
 
-  return prisma.sessionLog.update({
-    where: { id: sessionLogId },
+  const member = await prisma.member.findFirst({ where: { clerkUserId: userId } })
+  if (!member) throw new Error('Miembro no encontrado')
+
+  const result = await prisma.sessionLog.updateMany({
+    where: { id: sessionLogId, memberId: member.id },
     data: { completedAt: new Date() },
   })
+  if (result.count === 0) throw new Error('Sesión no encontrada')
 }
 
 export async function getSessionProgress(routineDayId: string) {
@@ -505,6 +509,22 @@ export async function logProgress(data: {
   const member = await prisma.member.findFirst({ where: { clerkUserId: userId } })
   if (!member) throw new Error('Miembro no encontrado')
 
+  // La rutina tiene que ser de este member
+  const routine = await prisma.routine.findFirst({
+    where: { id: data.routineId, memberId: member.id },
+    select: { id: true },
+  })
+  if (!routine) throw new Error('Rutina no encontrada')
+
+  // Si mandan sessionLogId, también tiene que ser de este member
+  if (data.sessionLogId) {
+    const sessionLog = await prisma.sessionLog.findFirst({
+      where: { id: data.sessionLogId, memberId: member.id },
+      select: { id: true },
+    })
+    if (!sessionLog) throw new Error('Sesión no encontrada')
+  }
+
   const log = await prisma.progressLog.create({
     data: {
       routineId: data.routineId,
@@ -526,7 +546,14 @@ export async function deleteProgressLog(logId: string) {
   const { userId } = await auth()
   if (!userId) throw new Error('No autenticado')
 
-  await prisma.progressLog.delete({ where: { id: logId } })
+  const member = await prisma.member.findFirst({ where: { clerkUserId: userId } })
+  if (!member) throw new Error('Miembro no encontrado')
+
+  const result = await prisma.progressLog.deleteMany({
+    where: { id: logId, memberId: member.id },
+  })
+  if (result.count === 0) throw new Error('Registro no encontrado')
+
   revalidatePath('/rutina')
 }
 

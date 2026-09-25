@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { getRoutineHistoryForMember, getTemplates } from '@/app/actions/routines'
 import AssignTemplateButton from '@/components/clientes/AssignTemplateButton'
+import LiberarClienteButton from '@/components/clientes/LiberarClienteButton'
 
 const TZ = 'America/Argentina/Buenos_Aires'
 
@@ -114,6 +115,7 @@ export default async function ClienteDetallePage({
             </div>
           </div>
         </div>
+        <LiberarClienteButton memberId={id} />
 
         <div className="flex gap-2 flex-wrap justify-end">
           {[

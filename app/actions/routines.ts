@@ -430,6 +430,17 @@ export async function startSession(routineId: string, routineDayId: string) {
   const member = await prisma.member.findFirst({ where: { clerkUserId: userId } })
   if (!member) throw new Error('Miembro no encontrado')
 
+  // Verificar que la RoutineDay pertenezca a una rutina de este mismo member
+  const routineDay = await prisma.routineDay.findFirst({
+    where: {
+      id: routineDayId,
+      routineId,
+      routine: { memberId: member.id },
+    },
+    select: { id: true },
+  })
+  if (!routineDay) throw new Error('Sesión no encontrada')
+
   const existing = await prisma.sessionLog.findFirst({
     where: {
       routineDayId,

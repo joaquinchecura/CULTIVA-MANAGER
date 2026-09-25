@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 
 export async function POST(request: Request) {
   try {
+    const { orgId } = await auth()
+    if (!orgId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { qrData } = await request.json()
 
     const [memberId, token] = qrData.split(':')
@@ -16,6 +22,7 @@ export async function POST(request: Request) {
         memberId,
         qrToken: token,
         status: 'PENDING',
+        organizationId: orgId, // ← clave: solo asistencias de la org del staff logueado
       },
       include: { member: true },
     })
@@ -23,7 +30,7 @@ export async function POST(request: Request) {
     if (!attendance) {
       return NextResponse.json({ error: 'QR expirado o ya utilizado' }, { status: 400 })
     }
-
+    // ... el resto del archivo queda igual
     // entryTime acá todavía es la hora de GENERACIÓN del QR (seteada en generar-qr)
     const tokenAge = Date.now() - attendance.entryTime.getTime()
     const maxAge = 2 * 60 * 1000

@@ -45,19 +45,11 @@ const navGroups = [
     ],
   },
   {
-    title: 'Contenido',
-    items: [
-      { href: '/admin/rutinas', label: 'Rutinas', icon: ClipboardList },
-      { href: '/admin/ejercicios', label: 'Ejercicios', icon: BookOpen },
-      { href: '/admin/actividades', label: 'Actividades', icon: Dumbbell },
-      { href: '/admin/noticias', label: 'Noticias', icon: Newspaper },
-    ],
-  },
-  {
     title: 'Operaciones',
     items: [
       { href: '/admin/agenda', label: 'Agenda Clases', icon: CalendarDays },
       { href: '/admin/agenda-pt', label: 'Agenda P.T.', icon: UserCircle2 },
+      { href: '/admin/actividades', label: 'Actividades', icon: Dumbbell },
       { href: '/admin/acceso', label: 'Acceso', icon: Scan },
     ],
   },
@@ -65,6 +57,9 @@ const navGroups = [
     title: 'Herramientas',
     items: [
       { href: '/admin/herramientas', label: 'Apps para tus clientes', icon: Wrench },
+      { href: '/admin/rutinas', label: 'Rutinas', icon: ClipboardList },
+      { href: '/admin/ejercicios', label: 'Ejercicios', icon: BookOpen },
+      { href: '/admin/noticias', label: 'Noticias', icon: Newspaper },
     ],
   },
   {

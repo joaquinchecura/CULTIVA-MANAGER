@@ -24,47 +24,51 @@ const herramientas: Herramienta[] = [
 ]
 
 export default function HerramientasPage() {
-  return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      <div>
-        <h2 className="text-2xl font-bold text-slate-900">Herramientas para tus clientes</h2>
-        <p className="text-slate-500 mt-1">
-          Apps del ecosistema Cultiva Fitness.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {herramientas.map(function (app) {
-          return (
-            <a
-              key={app.name}
-              href={app.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group bg-white border border-slate-200 rounded-xl p-5 hover:border-slate-300 hover:shadow-sm transition-all"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white shrink-0"
-                  style={{ backgroundColor: app.color }}
-                >
-                  {app.name[0]}
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-slate-900">{app.name}</h3>
-                  <span
-                    className="text-[10px] font-mono tracking-wider uppercase"
-                    style={{ color: app.color }}
+    return (
+      <div className="space-y-6 max-w-6xl mx-auto">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Herramientas para tus clientes</h2>
+          <p className="text-slate-500 mt-1">
+            Apps del ecosistema Cultiva Fitness.
+          </p>
+        </div>
+  
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {herramientas.map(function (app) {
+            return (
+              <a
+                key={app.name}
+                href={app.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group bg-white border border-slate-200 rounded-xl p-5 hover:border-slate-300 hover:shadow-sm transition-all"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 overflow-hidden"
+                    style={{ backgroundColor: `${app.color}15` }}
                   >
-                    {app.tag}
-                  </span>
+                    <img
+                      src={`/images/logo${app.name.toLowerCase()}.png`}
+                      alt={app.name}
+                      className="w-7 h-7 object-contain"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-900">{app.name}</h3>
+                    <span
+                      className="text-[10px] font-mono tracking-wider uppercase"
+                      style={{ color: app.color }}
+                    >
+                      {app.tag}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <p className="text-xs text-slate-500 leading-relaxed">{app.desc}</p>
-            </a>
-          )
-        })}
+                <p className="text-xs text-slate-500 leading-relaxed">{app.desc}</p>
+              </a>
+            )
+          })}
+        </div>
       </div>
-    </div>
-  )
-}
+    )
+  }

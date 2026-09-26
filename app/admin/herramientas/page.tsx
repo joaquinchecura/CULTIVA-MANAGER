@@ -29,7 +29,7 @@ export default function HerramientasPage() {
       <div>
         <h2 className="text-2xl font-bold text-slate-900">Herramientas para tus clientes</h2>
         <p className="text-slate-500 mt-1">
-          Apps del ecosistema Cultiva Fitness — usalas como recurso en tus sesiones. No comparten datos con Manager.
+          Apps del ecosistema Cultiva Fitness.
         </p>
       </div>
 

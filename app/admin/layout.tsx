@@ -22,6 +22,7 @@ import {
   ChevronDown,
   Settings,  
   UserCircle2, 
+  Wrench,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -58,6 +59,12 @@ const navGroups = [
       { href: '/admin/agenda', label: 'Agenda Clases', icon: CalendarDays },
       { href: '/admin/agenda-pt', label: 'Agenda P.T.', icon: UserCircle2 },
       { href: '/admin/acceso', label: 'Acceso', icon: Scan },
+    ],
+  },
+  {
+    title: 'Herramientas',
+    items: [
+      { href: '/admin/herramientas', label: 'Apps para tus clientes', icon: Wrench },
     ],
   },
   {
@@ -115,21 +122,6 @@ export default function AdminLayout({
           </div>
         </div>
 
-        {/* Cuenta y organización activa — clave para saber siempre dónde estás parado */}
-        <div className="px-3 py-3 border-b border-slate-100 space-y-2">
-          <div className="flex items-center gap-2 px-2">
-            <span className="text-xs text-slate-500 truncate">Tu cuenta</span>
-          </div>
-          <OrganizationSwitcher
-            hidePersonal
-            appearance={{
-              elements: {
-                rootBox: 'w-full',
-                organizationSwitcherTrigger: 'w-full justify-between px-2 py-1.5 rounded-lg border border-slate-200 text-sm',
-              },
-            }}
-          />
-        </div>
         {/* Navegación con viñetas */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {navGroups.map((group) => {
@@ -182,6 +174,22 @@ export default function AdminLayout({
             )
           })}
         </nav>
+
+       {/* Organización activa — al fondo, uso ocasional */}
+        <div className="px-3 py-3 border-t border-slate-100 space-y-2">
+          <div className="flex items-center gap-2 px-2">
+            <span className="text-xs text-slate-500 truncate">Tu cuenta</span>
+          </div>
+          <OrganizationSwitcher
+            hidePersonal
+            appearance={{
+              elements: {
+                rootBox: 'w-full',
+                organizationSwitcherTrigger: 'w-full justify-between px-2 py-1.5 rounded-lg border border-slate-200 text-sm',
+              },
+            }}
+          />
+        </div>
 
         {/* Footer */}
         <div className="p-3 border-t border-slate-100">

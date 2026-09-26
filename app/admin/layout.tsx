@@ -56,7 +56,7 @@ const navGroups = [
   {
     title: 'Herramientas',
     items: [
-      { href: '/admin/herramientas', label: 'Apps para tus clientes', icon: Wrench },
+      { href: '/admin/herramientas', label: 'Apps', icon: Wrench },
       { href: '/admin/rutinas', label: 'Rutinas', icon: ClipboardList },
       { href: '/admin/ejercicios', label: 'Ejercicios', icon: BookOpen },
       { href: '/admin/noticias', label: 'Noticias', icon: Newspaper },

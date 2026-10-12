@@ -33,7 +33,7 @@ const addDays = (d: Date, n: number) => { const x = new Date(d); x.setDate(x.get
 const FIRST_F = ['Sofía','Valentina','Camila','Martina','Lucía','Julieta','Agustina','Florencia','Micaela','Carolina','Paula','Romina','Daniela','Antonella','Milagros','Belén','Rocío','Candela','Natalia','Mariana']
 const FIRST_M = ['Mateo','Santiago','Lucas','Nicolás','Facundo','Tomás','Franco','Joaquín','Matías','Federico','Ignacio','Gonzalo','Agustín','Bruno','Emiliano','Leandro','Maximiliano','Diego','Pablo','Sebastián']
 const LAST = ['González','Rodríguez','Fernández','López','Martínez','Pérez','Gómez','Sánchez','Romero','Díaz','Álvarez','Torres','Ruiz','Ramírez','Flores','Acosta','Benítez','Medina','Herrera','Suárez','Castro','Ortiz','Silva','Molina','Rojas','Vega','Giménez','Cabrera','Ledesma','Aguirre']
-const CITIES = ['Buenos Aires','Rosario','Córdoba','Mendoza','La Plata','Mar del Plata','Tucumán']
+const CITIES = ['Buenos Aires','Rosario','Córdoba','Mendoza','La Plata','Mar del Plata']
 
 async function reset(orgId: string) {
   // Orden: hijos → padres

@@ -1,4 +1,13 @@
+import Image from 'next/image'
 import { SignIn } from '@clerk/nextjs'
+import { Users, Dumbbell, CreditCard, CalendarClock } from 'lucide-react'
+
+const features = [
+  { icon: Users, label: 'Clientes' },
+  { icon: Dumbbell, label: 'Rutinas' },
+  { icon: CreditCard, label: 'Pagos' },
+  { icon: CalendarClock, label: 'Agenda' },
+]
 
 export default function LoginPage() {
   return (
@@ -56,17 +65,36 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-sm bg-white/90 backdrop-blur-xl border border-slate-200 rounded-3xl shadow-xl shadow-slate-200/60 p-8 sm:p-10">
         <div className="flex flex-col items-center text-center mb-6">
           <span className="text-[11px] font-semibold tracking-[0.2em] text-slate-400 uppercase mb-6">
-            Gestión de Gimnasios
+            Gestión para profesionales
           </span>
 
-          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-600/20">
-            <span className="text-2xl font-bold text-white">C</span>
-          </div>
+          {/* Logo real de Cultiva */}
+          <Image
+            src="/images/logo2.png"
+            alt="Cultiva Fitness"
+            width={72}
+            height={72}
+            priority
+            className="w-[72px] h-[72px] rounded-2xl object-cover mb-4 shadow-lg shadow-emerald-900/10 ring-1 ring-emerald-900/10"
+          />
 
           <h1 className="text-2xl font-bold text-slate-900 leading-tight">Cultiva</h1>
           <p className="text-xs font-semibold tracking-[0.2em] text-slate-400 uppercase">
             Manager
           </p>
+
+          {/* Íconos de lo que incluye la plataforma */}
+          <ul className="mt-5 flex flex-wrap items-center justify-center gap-2" aria-label="Qué incluye MANAGER">
+            {features.map(({ icon: Icon, label }) => (
+              <li
+                key={label}
+                className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 border border-slate-200 px-2.5 py-1 text-[11px] font-medium text-slate-600"
+              >
+                <Icon className="w-3.5 h-3.5 text-blue-600" aria-hidden="true" />
+                {label}
+              </li>
+            ))}
+          </ul>
         </div>
 
         <SignIn

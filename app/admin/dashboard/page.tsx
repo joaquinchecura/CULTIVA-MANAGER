@@ -55,6 +55,8 @@ export default async function DashboardPage() {
   const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
   const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1)
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+  // debajo de const thirtyDaysAgo...
+  const prevMonthSamePoint = new Date(prevMonthStart.getTime() + (now.getTime() - monthStart.getTime()))
   const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
 
   const [
@@ -71,7 +73,7 @@ export default async function DashboardPage() {
   ] = await Promise.all([
     prisma.member.groupBy({ by: ['status'], where: { organizationId: orgId }, _count: { _all: true } }),
     prisma.member.count({ where: { organizationId: orgId, createdAt: { gte: monthStart } } }),
-    prisma.member.count({ where: { organizationId: orgId, createdAt: { gte: prevMonthStart, lt: monthStart } } }),
+    prisma.member.count({ where: { organizationId: orgId, createdAt: { gte: prevMonthStart, lt: prevMonthSamePoint } } }),
     prisma.payment.findMany({
       where: { organizationId: orgId, status: 'COMPLETED', createdAt: { gte: sixMonthsAgo } },
       select: { amount: true, method: true, createdAt: true },
@@ -126,7 +128,7 @@ export default async function DashboardPage() {
     if (p.createdAt >= monthStart) {
       revenueThisMonth += amt
       methodTotals.set(p.method, (methodTotals.get(p.method) ?? 0) + 1)
-    } else if (p.createdAt >= prevMonthStart) revenuePrevMonth += amt
+    } else if (p.createdAt >= prevMonthStart && p.createdAt < prevMonthSamePoint) revenuePrevMonth += amt
   }
   const revenueData = Array.from(revenueByMonth.entries()).map(([k, monto]) => ({
     mes: MESES[Number(k.split('-')[1])], monto,

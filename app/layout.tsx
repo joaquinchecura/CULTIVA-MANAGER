@@ -8,8 +8,8 @@ const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Cultiva Fitness MANAGER',
-  description: 'Sistema de gestión para gimnasio y Personal Trainers',
+  title: 'MANAGER',
+  description: 'Sistema de gestión para gimnasios, clubes y Personal Trainers',
   manifest: "/site.webmanifest",
   icons: {
     icon: [

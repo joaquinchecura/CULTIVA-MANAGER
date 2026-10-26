@@ -1,6 +1,6 @@
 {
   "name": "Cultiva Fitness MANAGER",
-  "short_name": "Cultiva Manager",
+  "short_name": "MANAGER",
   "description": "Sistema de gestión para gimnasio y Personal Trainers",
   "start_url": "/",
   "display": "standalone",

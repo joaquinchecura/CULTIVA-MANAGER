@@ -4,13 +4,15 @@ import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { requireOrgForPage } from '@/lib/get-org'
 import {
+  getOrgTimezone,
+  startOfCurrentMonth,
+  startOfPreviousMonth,
+} from '@/lib/date-utils'
+import {
   Users, CreditCard, Scan, CalendarCheck, ArrowUpRight, ArrowDownRight, Clock, Dumbbell,
 } from 'lucide-react'
 import { RevenueChart, AttendanceChart, HoursChart, DonutChart } from './DashboardCharts'
 
-// Argentina = UTC-3 (sin horario de verano). El server (Vercel) corre en UTC.
-const TZ_OFFSET_MS = -3 * 60 * 60 * 1000
-const localDate = (d: Date) => new Date(d.getTime() + TZ_OFFSET_MS)
 const ars = (n: number) => `$${Math.round(n).toLocaleString('es-AR')}`
 const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 
@@ -47,15 +49,44 @@ function Card({ title, subtitle, children, className = '' }: { title: string; su
   )
 }
 
+/**
+ * Extrae el día y la hora de un Date, pero en la timezone del gimnasio.
+ * Usamos Intl.DateTimeFormat para evitar problemas con offsets manuales.
+ */
+function getDayAndHourInTZ(date: Date, timezone: string) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    hour12: false,
+  }).formatToParts(date)
+  
+  const get = (type: string) => parts.find(p => p.type === type)?.value ?? '00'
+  
+  return {
+    day: `${get('month')}/${get('day')}`, // MM/DD
+    hour: Number(get('hour')),
+  }
+}
+
 export default async function DashboardPage() {
   const orgId = await requireOrgForPage()
+  const tz = await getOrgTimezone(orgId)
 
   const now = new Date()
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-  const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-  const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1)
+  
+  // Usamos los helpers multi-tenant para los cálculos mensuales
+  const monthStart = startOfCurrentMonth(tz)
+  const prevMonthStart = startOfPreviousMonth(tz)
+  
+  // Para los gráficos de "últimos 6 meses", calculamos sobre los inicios de mes
+  const sixMonthsAgo = new Date(monthStart)
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5)
+  
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-  // debajo de const thirtyDaysAgo...
+  // Punto de comparación del mes anterior (mismo día del mes)
   const prevMonthSamePoint = new Date(prevMonthStart.getTime() + (now.getTime() - monthStart.getTime()))
   const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
 
@@ -115,7 +146,8 @@ export default async function DashboardPage() {
 
   const revenueByMonth = new Map<string, number>()
   for (let i = 0; i < 6; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1)
+    const d = new Date(sixMonthsAgo)
+    d.setMonth(d.getMonth() + i)
     revenueByMonth.set(`${d.getFullYear()}-${d.getMonth()}`, 0)
   }
   const methodTotals = new Map<string, number>()
@@ -137,16 +169,22 @@ export default async function DashboardPage() {
   // Asistencias por día (últimos 30) y por hora
   const perDay = new Map<string, number>()
   for (let i = 29; i >= 0; i--) {
-    const d = localDate(new Date(now.getTime() - i * 86400000))
-    perDay.set(d.toISOString().slice(5, 10), 0)
+    const d = new Date(now.getTime() - i * 86400000)
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: tz, month: '2-digit', day: '2-digit',
+    }).formatToParts(d)
+    const month = parts.find(p => p.type === 'month')?.value
+    const day = parts.find(p => p.type === 'day')?.value
+    perDay.set(`${month}/${day}`, 0)
   }
+  
   const perHour = new Array(24).fill(0)
   for (const a of attendances30) {
-    const d = localDate(a.entryTime)
-    const key = d.toISOString().slice(5, 10)
-    if (perDay.has(key)) perDay.set(key, (perDay.get(key) ?? 0) + 1)
-    perHour[d.getUTCHours()]++
+    const { day, hour } = getDayAndHourInTZ(a.entryTime, tz)
+    if (perDay.has(day)) perDay.set(day, (perDay.get(day) ?? 0) + 1)
+    perHour[hour]++
   }
+  
   const attendanceData = Array.from(perDay.entries()).map(([k, asistencias]) => ({
     dia: `${k.slice(3)}/${k.slice(0, 2)}`, asistencias,
   }))
@@ -154,9 +192,13 @@ export default async function DashboardPage() {
     .map((asistencias, h) => ({ hora: `${String(h).padStart(2, '0')}h`, asistencias }))
     .filter((h) => h.hora >= '06h' && h.hora <= '22h')
 
-  const todayKey = localDate(now).toISOString().slice(5, 10)
+  const todayParts = new Intl.DateTimeFormat('en-CA', { timeZone: tz, month: '2-digit', day: '2-digit' }).formatToParts(now)
+  const todayKey = `${todayParts.find(p => p.type === 'month')?.value}/${todayParts.find(p => p.type === 'day')?.value}`
   const attendancesToday = perDay.get(todayKey) ?? 0
-  const yesterdayKey = localDate(new Date(now.getTime() - 86400000)).toISOString().slice(5, 10)
+  
+  const yesterday = new Date(now.getTime() - 86400000)
+  const yesterdayParts = new Intl.DateTimeFormat('en-CA', { timeZone: tz, month: '2-digit', day: '2-digit' }).formatToParts(yesterday)
+  const yesterdayKey = `${yesterdayParts.find(p => p.type === 'month')?.value}/${yesterdayParts.find(p => p.type === 'day')?.value}`
   const attendancesYesterday = perDay.get(yesterdayKey) ?? 0
 
   // Distribuciones

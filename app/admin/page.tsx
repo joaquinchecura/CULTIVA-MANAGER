@@ -3,25 +3,54 @@ export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 import { requireOrgForPage } from '@/lib/get-org'
 import {
+  getOrgTimezone,
+  startOfToday,
+  startOfTomorrow,
+  startOfYesterday,
+  startOfCurrentMonth,
+  startOfPreviousMonth,
+  formatDateTZ,
+} from '@/lib/date-utils'
+import { QUICK_ACTIONS_CATALOG, QuickActionKey } from '@/lib/quick-actions'
+import {
   Users,
   UserPlus,
   CreditCard,
   CalendarDays,
   Scan,
   AlertCircle,
-  TrendingUp,
   Clock,
   ArrowUpRight,
   ArrowDownRight,
   Activity,
   Smartphone,
+  LayoutGrid,
 } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function AdminDashboard() {
   const orgId = await requireOrgForPage()
+  const tz = await getOrgTimezone(orgId)
 
-  // Datos reales de la base, ya filtrados por organización
+  // 👇 Buscamos la config del gym para leer las acciones rápidas preferidas
+  const gymConfig = await prisma.gymConfig.findFirst({
+    where: { organizationId: orgId },
+    select: { dashboardQuickActions: true },
+  })
+  
+  const preferredKeys = (gymConfig?.dashboardQuickActions as QuickActionKey[] | null)
+    ?? ['clientes', 'rutinas', 'agenda', 'pagos']
+  
+  const quickActions = preferredKeys
+    .filter((key) => QUICK_ACTIONS_CATALOG[key])
+    .map((key) => ({ key, ...QUICK_ACTIONS_CATALOG[key] }))
+
+  const today = startOfToday(tz)
+  const tomorrow = startOfTomorrow(tz)
+  const yesterday = startOfYesterday(tz)
+  const thisMonth = startOfCurrentMonth(tz)
+  const lastMonth = startOfPreviousMonth(tz)
+
   const [
     totalClientes,
     clientesNuevosMes,
@@ -30,8 +59,6 @@ export default async function AdminDashboard() {
     totalPagosMesAnterior,
     asistenciasHoy,
     asistenciasAyer,
-    clasesHoy,
-    clasesSemana,
     membresiasPorVencer,
     membresiasVencidas,
   ] = await Promise.all([
@@ -39,18 +66,14 @@ export default async function AdminDashboard() {
     prisma.member.count({
       where: {
         organizationId: orgId,
-        createdAt: {
-          gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-        },
+        createdAt: { gte: thisMonth },
       },
     }),
     prisma.member.count({ where: { organizationId: orgId, status: 'PENDING' } }),
     prisma.payment.aggregate({
       where: {
         organizationId: orgId,
-        createdAt: {
-          gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-        },
+        createdAt: { gte: thisMonth },
         status: 'COMPLETED',
       },
       _sum: { amount: true },
@@ -58,10 +81,7 @@ export default async function AdminDashboard() {
     prisma.payment.aggregate({
       where: {
         organizationId: orgId,
-        createdAt: {
-          gte: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1),
-          lt: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-        },
+        createdAt: { gte: lastMonth, lt: thisMonth },
         status: 'COMPLETED',
       },
       _sum: { amount: true },
@@ -69,32 +89,15 @@ export default async function AdminDashboard() {
     prisma.attendance.count({
       where: {
         organizationId: orgId,
-        entryTime: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
+        status: 'ALLOWED',
+        entryTime: { gte: today, lt: tomorrow },
       },
     }),
     prisma.attendance.count({
       where: {
         organizationId: orgId,
-        entryTime: {
-          gte: new Date(new Date().setDate(new Date().getDate() - 1)),
-          lt: new Date(new Date().setHours(0, 0, 0, 0)),
-        },
-      },
-    }),
-    prisma.schedule.count({
-      where: {
-        organizationId: orgId,
-        date: new Date(new Date().setHours(0, 0, 0, 0)),
-        isCancelled: false,
-      },
-    }),
-    prisma.schedule.count({
-      where: {
-        organizationId: orgId,
-        date: {
-          gte: new Date(new Date().setDate(new Date().getDate() - 7)),
-        },
-        isCancelled: false,
+        status: 'ALLOWED',
+        entryTime: { gte: yesterday, lt: today },
       },
     }),
     prisma.membership.count({
@@ -118,13 +121,15 @@ export default async function AdminDashboard() {
 
   const montoMes = Number(totalPagosMes._sum.amount || 0)
   const montoMesAnterior = Number(totalPagosMesAnterior._sum.amount || 0)
-  const variacionPagos = montoMesAnterior > 0
-    ? ((montoMes - montoMesAnterior) / montoMesAnterior * 100).toFixed(1)
-    : '0'
+  const variacionPagos =
+    montoMesAnterior > 0
+      ? (((montoMes - montoMesAnterior) / montoMesAnterior) * 100).toFixed(1)
+      : null
 
-  const variacionAsistencias = asistenciasAyer > 0
-    ? ((asistenciasHoy - asistenciasAyer) / asistenciasAyer * 100).toFixed(1)
-    : '0'
+  const variacionAsistencias =
+    asistenciasAyer > 0
+      ? (((asistenciasHoy - asistenciasAyer) / asistenciasAyer) * 100).toFixed(1)
+      : null
 
   const metricCards = [
     {
@@ -136,7 +141,8 @@ export default async function AdminDashboard() {
       color: 'text-blue-600',
       bg: 'bg-blue-50',
       border: 'border-blue-100',
-      trend: clientesNuevosMes > 0 ? 'up' : 'neutral' as const,
+      trend: clientesNuevosMes > 0 ? ('up' as const) : ('neutral' as const),
+      trendValue: undefined,
     },
     {
       href: '/admin/acceso',
@@ -147,8 +153,18 @@ export default async function AdminDashboard() {
       color: 'text-emerald-600',
       bg: 'bg-emerald-50',
       border: 'border-emerald-100',
-      trend: Number(variacionAsistencias) > 0 ? 'up' : Number(variacionAsistencias) < 0 ? 'down' : 'neutral' as const,
-      trendValue: `${Math.abs(Number(variacionAsistencias))}%`,
+      trend:
+        variacionAsistencias === null
+          ? ('neutral' as const)
+          : Number(variacionAsistencias) > 0
+          ? ('up' as const)
+          : Number(variacionAsistencias) < 0
+          ? ('down' as const)
+          : ('neutral' as const),
+      trendValue:
+        variacionAsistencias !== null
+          ? `${Math.abs(Number(variacionAsistencias))}%`
+          : undefined,
     },
     {
       href: '/admin/clientes/vincular',
@@ -159,19 +175,30 @@ export default async function AdminDashboard() {
       color: 'text-amber-600',
       bg: 'bg-amber-50',
       border: 'border-amber-100',
-      trend: clientesPendientes > 0 ? 'up' : 'neutral' as const,
+      trend: clientesPendientes > 0 ? ('up' as const) : ('neutral' as const),
+      trendValue: undefined,
     },
     {
       href: '/admin/pagos',
       label: 'Recaudación Mes',
       value: `$${montoMes.toLocaleString('es-AR')}`,
-      sublabel: 'vs mes anterior',
+      sublabel: variacionPagos !== null ? 'vs mes anterior' : 'sin datos previos',
       icon: CreditCard,
       color: 'text-violet-600',
       bg: 'bg-violet-50',
       border: 'border-violet-100',
-      trend: Number(variacionPagos) > 0 ? 'up' : Number(variacionPagos) < 0 ? 'down' : 'neutral' as const,
-      trendValue: `${Math.abs(Number(variacionPagos))}%`,
+      trend:
+        variacionPagos === null
+          ? ('neutral' as const)
+          : Number(variacionPagos) > 0
+          ? ('up' as const)
+          : Number(variacionPagos) < 0
+          ? ('down' as const)
+          : ('neutral' as const),
+      trendValue:
+        variacionPagos !== null
+          ? `${Math.abs(Number(variacionPagos))}%`
+          : undefined,
     },
   ]
 
@@ -196,13 +223,6 @@ export default async function AdminDashboard() {
       border: 'border-red-200',
       alert: membresiasVencidas > 0,
     },
-  ]
-
-  const quickActions = [
-    { href: '/admin/clientes/nuevo', label: 'Nuevo Cliente', icon: UserPlus, className: 'bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-100' },
-    { href: '/admin/rutinas/nueva', label: 'Nueva Rutina', icon: Activity, className: 'bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-100' },
-    { href: '/admin/agenda', label: 'Ver Agenda', icon: CalendarDays, className: 'bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-100' },
-    { href: '/admin/pagos', label: 'Registrar Pago', icon: CreditCard, className: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-100' },
   ]
 
   return (
@@ -251,8 +271,20 @@ export default async function AdminDashboard() {
 
       {/* Alertas + Acciones rápidas */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider lg:col-span-1">Alertas</h3>
-        <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider lg:col-span-2">Acciones Rápidas</h3>
+        <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider lg:col-span-1">
+          Alertas
+        </h3>
+        <div className="lg:col-span-2 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">
+            Acciones Rápidas
+          </h3>
+          <Link
+            href="/admin/configuracion"
+            className="text-xs text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-1"
+          >
+            <LayoutGrid size={12} /> Personalizar
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 -mt-3">
@@ -261,7 +293,7 @@ export default async function AdminDashboard() {
             <Link
               key={card.label}
               href={card.href}
-              className={`flex items-center gap-4 p-4 rounded-xl border ${card.border} ${card.bg} ${card.alert ? 'animate-pulse' : ''} hover:shadow-md transition-all`}
+              className={`flex items-center gap-4 p-4 rounded-xl border ${card.border} ${card.bg} hover:shadow-md transition-all`}
             >
               <div className="p-2.5 rounded-xl bg-white/80">
                 <card.icon size={22} className={card.color} />
@@ -272,7 +304,7 @@ export default async function AdminDashboard() {
               </div>
               {card.alert && (
                 <div className="ml-auto">
-                  <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
                 </div>
               )}
             </Link>
@@ -280,18 +312,29 @@ export default async function AdminDashboard() {
         </div>
 
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {quickActions.map((action) => (
-            <Link
-              key={action.href}
-              href={action.href}
-              className={`flex items-center gap-3 p-4 rounded-xl font-medium shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all ${action.className}`}
-            >
-              <div className="p-2 rounded-lg bg-white/60">
-                <action.icon size={18} />
-              </div>
-              <span className="text-sm">{action.label}</span>
-            </Link>
-          ))}
+          {quickActions.length > 0 ? (
+            quickActions.map((action) => (
+              <Link
+                key={action.key}
+                href={action.href}
+                className={`flex items-center gap-3 p-4 rounded-xl font-medium shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all ${action.className}`}
+              >
+                <div className="p-2 rounded-lg bg-white/60">
+                  <action.icon size={18} />
+                </div>
+                <span className="text-sm">{action.label}</span>
+              </Link>
+            ))
+          ) : (
+            <div className="col-span-2 p-4 rounded-xl border border-dashed border-slate-300 text-center">
+              <p className="text-sm text-slate-500">
+                No tenés acciones rápidas configuradas.{' '}
+                <Link href="/admin/configuracion" className="text-blue-600 hover:underline">
+                  Elegir ahora
+                </Link>
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -306,15 +349,21 @@ export default async function AdminDashboard() {
             Ver scanner →
           </Link>
         </div>
-        <UltimasAsistencias orgId={orgId} />
+        <UltimasAsistencias orgId={orgId} tz={tz} />
       </div>
     </div>
   )
 }
 
-async function UltimasAsistencias({ orgId }: { orgId: string }) {
+async function UltimasAsistencias({ orgId, tz }: { orgId: string; tz: string }) {
+  const today = startOfToday(tz)
+  const tomorrow = startOfTomorrow(tz)
+
   const attendances = await prisma.attendance.findMany({
-    where: { organizationId: orgId },
+    where: {
+      organizationId: orgId,
+      entryTime: { gte: today, lt: tomorrow },
+    },
     orderBy: { entryTime: 'desc' },
     take: 5,
     include: { member: true },
@@ -330,16 +379,11 @@ async function UltimasAsistencias({ orgId }: { orgId: string }) {
     )
   }
 
-  function formatDevice(a: any) {
-    const parts = [a.deviceBrand, a.deviceModel].filter(Boolean).join(' ')
-    if (!parts && !a.deviceOS) return null
-    return { label: parts || 'Desconocido', os: a.deviceOS || null }
-  }
-
   return (
     <div className="divide-y divide-slate-100">
       {attendances.map((a) => {
-        const device = formatDevice(a)
+        const deviceLabel = [a.deviceBrand, a.deviceModel].filter(Boolean).join(' ')
+        const deviceOS = a.deviceOS || null
         return (
           <div key={a.id} className="px-5 py-3 flex items-center gap-4 hover:bg-slate-50 transition-colors">
             {a.member.photoUrl ? (
@@ -355,15 +399,20 @@ async function UltimasAsistencias({ orgId }: { orgId: string }) {
             )}
 
             <div className="w-48 shrink-0">
-              <p className="text-sm font-medium text-slate-900 truncate">{a.member.firstName} {a.member.lastName}</p>
+              <p className="text-sm font-medium text-slate-900 truncate">
+                {a.member.firstName} {a.member.lastName}
+              </p>
               <p className="text-xs text-slate-500">DNI: {a.member.dni}</p>
             </div>
 
             <div className="flex-1 flex items-center gap-1.5 text-xs text-slate-500 min-w-0">
-              {device ? (
+              {deviceLabel || deviceOS ? (
                 <>
                   <Smartphone size={13} className="text-slate-400 shrink-0" />
-                  <span className="truncate">{device.label}{device.os && ` · ${device.os}`}</span>
+                  <span className="truncate">
+                    {deviceLabel}
+                    {deviceOS && ` · ${deviceOS}`}
+                  </span>
                 </>
               ) : (
                 <span className="text-slate-300 italic">Sin datos de dispositivo</span>
@@ -371,14 +420,14 @@ async function UltimasAsistencias({ orgId }: { orgId: string }) {
             </div>
 
             <div className="text-right shrink-0">
-              <p className="text-xs text-slate-500">
-                {new Date(a.entryTime).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })}
-                {' · '}
-                {new Date(a.entryTime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' })}
-              </p>
-              <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full mt-1 ${
-                a.status === 'ALLOWED' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
-              }`}>
+              <p className="text-xs text-slate-500">{formatDateTZ(a.entryTime, tz)}</p>
+              <span
+                className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full mt-1 ${
+                  a.status === 'ALLOWED'
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : 'bg-red-50 text-red-700'
+                }`}
+              >
                 {a.status === 'ALLOWED' ? '✓ Permitido' : '✗ Denegado'}
               </span>
             </div>

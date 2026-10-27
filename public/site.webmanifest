@@ -1,7 +1,7 @@
 {
   "name": "Cultiva Fitness MANAGER",
   "short_name": "MANAGER",
-  "description": "Sistema de gestión para gimnasio y Personal Trainers",
+  "description": "Sistema de gestión para gimnasios y Personal Trainers",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F6FDF7",

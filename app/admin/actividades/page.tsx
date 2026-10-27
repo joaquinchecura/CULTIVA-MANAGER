@@ -407,49 +407,60 @@ export default function ActividadesPage() {
         </div>
       )}
 
-      {/* Grid View */}
-      {viewMode === 'grid' && (
+          {/* Grid View */}
+          {viewMode === 'grid' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredActivities.map((activity) => {
             const style = getActivityStyle(activity)
+            
+            // 👇 ESTILOS PASTELES SEGÚN EL TIPO DE ACTIVIDAD
+            const cardStyle = activity.type === 'PERSONAL' 
+              ? 'bg-violet-50/40 border-violet-200 hover:border-violet-300' 
+              : 'bg-blue-50/40 border-blue-200 hover:border-blue-300'
+
+            const badgeStyle = activity.type === 'PERSONAL'
+              ? 'bg-violet-100 text-violet-700 border border-violet-200'
+              : 'bg-blue-100 text-blue-700 border border-blue-200'
+
             return (
               <div
                 key={activity.id}
-                className={`bg-white rounded-xl border p-5 transition-all hover:shadow-lg hover:-translate-y-0.5 ${
-                  activity.isActive ? 'border-slate-200' : 'border-slate-200 opacity-60'
+                className={`rounded-xl border p-5 transition-all hover:shadow-lg hover:-translate-y-0.5 ${
+                  activity.isActive ? cardStyle : 'bg-slate-50 border-slate-200 opacity-60'
                 }`}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                    activity.isActive ? `${style.bg} ${style.text}` : 'bg-slate-100 text-slate-400'
+                    activity.isActive ? `bg-white shadow-sm ${style.text}` : 'bg-slate-100 text-slate-400'
                   }`}>
                     <style.Icon size={24} />
                   </div>
                   <div className="flex gap-1">
                     <button
                       onClick={() => handleEdit(activity)}
-                      className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-blue-600 transition-colors"
+                      className="p-1.5 rounded-lg hover:bg-white/80 text-slate-400 hover:text-blue-600 transition-colors"
                     >
                       <Edit2 size={14} />
                     </button>
                     <button
                       onClick={() => handleDelete(activity.id)}
-                      className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-red-600 transition-colors"
+                      className="p-1.5 rounded-lg hover:bg-white/80 text-slate-400 hover:text-red-600 transition-colors"
                     >
                       <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
+                
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="text-lg font-bold text-slate-900">{activity.name}</h3>
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                    activity.type === 'PERSONAL' ? 'bg-violet-50 text-violet-700' : 'bg-blue-50 text-blue-700'
-                  }`}>
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${badgeStyle}`}>
                     {activity.type === 'PERSONAL' ? 'Personal' : 'Grupal'}
                   </span>
                 </div>
+                
                 <p className="text-sm text-slate-500 mt-1 line-clamp-2">{activity.description || 'Sin descripción'}</p>
-                <div className="flex items-center gap-4 mt-4 text-sm text-slate-600">
+                
+                <div className="flex items-center gap-4 mt-4 text-sm text-slate-600 bg-white/60 p-2.5 rounded-lg">
                   <span className="flex items-center gap-1.5">
                     <Clock size={14} className="text-slate-400" />
                     {activity.defaultDuration} min
@@ -461,18 +472,19 @@ export default function ActividadesPage() {
                     </span>
                   )}
                 </div>
-                <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+                
+                <div className="mt-4 pt-4 border-t border-slate-200/50 flex items-center justify-between">
                   <button
                     onClick={() => handleToggleActive(activity.id, activity.isActive)}
                     className={`text-xs font-medium px-2.5 py-1 rounded-full transition-colors ${
                       activity.isActive
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : 'bg-slate-100 text-slate-500'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-slate-200 text-slate-600'
                     }`}
                   >
                     {activity.isActive ? '● Activa' : '○ Inactiva'}
                   </button>
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-slate-500 font-medium">
                     {activity._count?.schedules || 0} clases programadas
                   </span>
                 </div>

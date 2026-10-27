@@ -132,3 +132,19 @@ body {
 .animate-accordion-up {
   animation: accordion-up 0.2s ease-out;
 }
+.rbc-event {
+  padding: 0 !important;
+}
+
+.rbc-event-content {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.rbc-event-label {
+  display: none !important;
+}
+
+.rbc-day-slot .rbc-events-container {
+  margin-right: 0 !important;
+}

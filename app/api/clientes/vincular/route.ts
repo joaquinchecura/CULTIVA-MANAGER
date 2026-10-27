@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { clerkClient } from '@clerk/clerk-sdk-node'
+import { clerkClient } from '@clerk/nextjs/server' // <-- CAMBIO ACÁ
 import { requireOrg } from '@/lib/get-org'
 
 export async function POST(request: Request) {
@@ -30,7 +30,8 @@ export async function POST(request: Request) {
     })
 
     // 2. Actualizar metadata en Clerk
-    await clerkClient.users.updateUser(clerkUserId, {
+    const client = await clerkClient() // <-- CAMBIO ACÁ (ahora es asíncrono)
+    await client.users.updateUser(clerkUserId, {
       publicMetadata: {
         memberId: member.id,
       },

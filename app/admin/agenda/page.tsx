@@ -158,7 +158,7 @@ export default function AgendaPage() {
     })
   }, [filteredSchedules])
 
-  const eventStyleGetter = (event: any) => {
+  const eventStyleGetter = (event: any): { style: React.CSSProperties } => {
     const schedule = event.resource as Schedule
     const status = getScheduleStatus(schedule)
     const backgroundColor = STATUS_CONFIG[status].color
@@ -166,14 +166,19 @@ export default function AgendaPage() {
     return {
       style: {
         backgroundColor,
-        borderRadius: '8px',
+        borderRadius: '4px',
         opacity: status === 'cancelada' ? 0.65 : status === 'finalizada' ? 0.75 : 1,
         color: 'white',
         border: 'none',
-        fontSize: '12px',
-        fontWeight: 500,
-        padding: '4px 8px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        fontSize: '11px',
+        fontWeight: 600,
+        padding: '4px',         // 👈 padding dentro del evento
+        margin: '0',           // 👈 sin margen externo
+        width: '100%',         // 👈 ocupa todo el ancho
+        boxShadow: 'none',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
       }
     }
   }
@@ -240,10 +245,10 @@ export default function AgendaPage() {
   const CustomEvent = ({ event }: any) => {
     const s = event.resource as Schedule
     return (
-      <div className="h-full flex flex-col justify-center gap-0.5">
-        <span className="font-medium truncate">{event.title}</span>
-        <span className="text-[10px] opacity-90 truncate">
-          {s.room ? `📍 ${s.room} · ` : ''}{s.bookings.length}/{s.maxCapacity}
+      <div className="w-full h-full flex flex-col justify-center gap-0.5 px-1">
+        <span className="font-bold truncate text-[11px] text-white leading-tight">{event.title}</span>
+        <span className="text-[10px] text-white/90 truncate font-medium leading-tight">
+          {s.bookings.length}/{s.maxCapacity} cupos
         </span>
       </div>
     )
@@ -321,12 +326,13 @@ export default function AgendaPage() {
         </div>
       </div>
 
-      {/* Layout principal: Calendario + Sidebar */}
-      <div className="flex gap-4">
+          {/* Layout principal: Calendario + Sidebar */}
+          <div className="flex gap-4">
         {/* Calendario */}
         <div className={`bg-white rounded-xl shadow-sm border border-slate-200 p-4 ${sideView !== 'none' ? 'flex-1' : 'w-full'}`}>
           <Calendar
             localizer={localizer}
+            dayLayoutAlgorithm="no-overlap" 
             culture="es"
             events={events}
             startAccessor="start"
@@ -372,8 +378,8 @@ export default function AgendaPage() {
           />
         </div>
 
-               {/* Sidebar */}
-               {sideView !== 'none' && (
+        {/* Sidebar */}
+        {sideView !== 'none' && (
           <div className="w-80 bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-slate-900 capitalize">

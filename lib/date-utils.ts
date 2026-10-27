@@ -78,3 +78,47 @@ export function formatDateTZ(date: Date | string, timezone: string): string {
     minute: '2-digit',
   })
 }
+export function startOfWeek(date: Date, timezone: string): Date {
+  const zoned = toZonedTime(date, timezone)
+  const day = zoned.getDay()
+  const diff = zoned.getDate() - day + (day === 0 ? -6 : 1) // Lunes
+  zoned.setDate(diff)
+  zoned.setHours(0, 0, 0, 0)
+  return fromZonedTime(zoned, timezone)
+}
+
+export function endOfWeek(date: Date, timezone: string): Date {
+  const start = startOfWeek(date, timezone)
+  const end = new Date(start)
+  end.setDate(end.getDate() + 6)
+  end.setHours(23, 59, 59, 999)
+  return end
+}
+
+export function startOfMonth(date: Date): Date {
+  const d = new Date(date)
+  d.setDate(1)
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+export function endOfMonth(date: Date): Date {
+  const d = new Date(date)
+  d.setMonth(d.getMonth() + 1, 0)
+  d.setHours(23, 59, 59, 999)
+  return d
+}
+
+export function addDays(date: Date, days: number): Date {
+  const d = new Date(date)
+  d.setDate(d.getDate() + days)
+  return d
+}
+
+export function addMonths(date: Date, months: number): Date {
+  const d = new Date(date)
+  d.setMonth(d.getMonth() + months)
+  return d
+}
+
+export { format } from 'date-fns' // Exportamos format para no importarlo de dos lados

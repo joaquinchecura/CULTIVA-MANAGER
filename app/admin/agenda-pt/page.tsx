@@ -2,7 +2,16 @@ export const dynamic = 'force-dynamic'
 
 import { prisma } from '@/lib/prisma'
 import { requireOrgForPage } from '@/lib/get-org'
-import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, addMonths, format } from 'date-fns'
+import {
+  getOrgTimezone,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  addDays,
+  addMonths,
+  format,
+} from '@/lib/date-utils'
 import { es } from 'date-fns/locale'
 import Link from 'next/link'
 import { Plus, TrendingUp, UserCircle2, LayoutGrid, List } from 'lucide-react'
@@ -18,16 +27,21 @@ export default async function AgendaPTPage({
   searchParams: Promise<{ week?: string; month?: string; view?: string }>
 }) {
   const orgId = await requireOrgForPage()
+  const tz = await getOrgTimezone(orgId)
   const params = await searchParams
   const isMonthView = params.view === 'month'
 
   if (isMonthView) {
-    const baseDate = params.month ? new Date(params.month) : new Date()
+    const baseDate = params.month ? new Date(params.month + 'T12:00:00') : new Date()
     const start = startOfMonth(baseDate)
     const end = endOfMonth(baseDate)
 
     const schedules = await prisma.schedule.findMany({
-      where: { organizationId: orgId, maxCapacity: 1, date: { gte: start, lte: end } },
+      where: {
+        organizationId: orgId,
+        activity: { type: 'PERSONAL' },
+        date: { gte: start, lte: end },
+      },
       include: {
         activity: true,
         bookings: {
@@ -81,12 +95,17 @@ export default async function AgendaPTPage({
   }
 
   // ── Vista semanal (default) ──
-  const baseDate = params.week ? new Date(params.week) : new Date()
-  const start = startOfWeek(baseDate, { weekStartsOn: 1 })
-  const end = endOfWeek(baseDate, { weekStartsOn: 1 })
+  const baseDate = params.week ? new Date(params.week + 'T12:00:00') : new Date()
+  
+  const start = startOfWeek(baseDate, tz)
+  const end = endOfWeek(baseDate, tz)
 
   const schedules = await prisma.schedule.findMany({
-    where: { organizationId: orgId, maxCapacity: 1, date: { gte: start, lte: end } },
+    where: {
+      organizationId: orgId,
+      activity: { type: 'PERSONAL' },
+      date: { gte: start, lte: end },
+    },
     include: {
       activity: true,
       bookings: {
@@ -147,7 +166,7 @@ export default async function AgendaPTPage({
           <div key={dateKey} className="bg-white border border-slate-200 rounded-xl overflow-hidden">
             <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-100">
               <p className="text-sm font-semibold text-slate-700 capitalize">
-                {format(new Date(dateKey + 'T00:00:00'), "EEEE d 'de' MMMM", { locale: es })}
+                {format(new Date(dateKey + 'T12:00:00'), "EEEE d 'de' MMMM", { locale: es })}
               </p>
             </div>
             {items.length === 0 ? (
@@ -177,7 +196,7 @@ export default async function AgendaPTPage({
   )
 }
 
-// ── Subcomponentes compartidos (sin cambios) ──────────────────────────────
+// ── Subcomponentes compartidos ─────────────────────────────────────────────
 
 function Header() {
   return (

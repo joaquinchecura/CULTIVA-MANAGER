@@ -22,11 +22,14 @@ const goalLabels: Record<string, string> = {
 
 export default async function RutinaDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ memberId?: string }>;
 }) {
   const orgId = await requireOrgForPage();
   const { id } = await params;
+  const { memberId } = await searchParams; // 👈 Leemos el memberId
 
   const routine = await prisma.routine.findFirst({
     where: { id, organizationId: orgId },
@@ -53,12 +56,16 @@ export default async function RutinaDetailPage({
     0
   );
 
+  // 👇 Lógica del botón volver
+  const backUrl = memberId ? `/admin/clientes/${memberId}` : '/admin/rutinas';
+  const backLabel = memberId ? 'Volver al cliente' : 'Volver a rutinas';
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-3">
-        <Link href="/admin/rutinas">
+        <Link href={backUrl}>
           <Button variant="ghost" size="sm" className="gap-1">
-            <ArrowLeft size={16} /> Volver
+            <ArrowLeft size={16} /> {backLabel}
           </Button>
         </Link>
       </div>
@@ -105,7 +112,7 @@ export default async function RutinaDetailPage({
               </span>
             </div>
           </div>
-          <Link href={`/admin/rutinas/${id}/editar`}>
+          <Link href={`/admin/rutinas/${id}/editar?memberId=${memberId || ''}`}>
             <Button variant="outline" size="sm" className="gap-2">
               <Edit2 size={14} /> Editar
             </Button>

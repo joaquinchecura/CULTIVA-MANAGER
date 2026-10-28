@@ -24,8 +24,8 @@ export default async function ClienteAsistenciasPage({ params }: { params: Promi
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/admin/clientes" className="text-slate-500 hover:text-slate-900">
+            <div className="flex items-center gap-4">
+        <Link href={`/admin/clientes/${id}`} className="text-slate-500 hover:text-slate-900">
           <ArrowLeft size={20} />
         </Link>
         <div>

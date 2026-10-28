@@ -7,20 +7,25 @@ import Link from 'next/link'
 import {
   Dumbbell, ArrowLeft, DollarSign, TrendingUp,
   UserCheck, Calendar, Phone, Mail, MapPin,
-  AlertCircle, Copy, Plus, ChevronRight,
-  CheckCircle2, Clock, History, User,
+  AlertCircle, Plus, ChevronRight, CheckCircle2, Clock, History, User, Edit2, Activity, Weight
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { getRoutineHistoryForMember, getTemplates } from '@/app/actions/routines'
 import AssignTemplateButton from '@/components/clientes/AssignTemplateButton'
 import LiberarClienteButton from '@/components/clientes/LiberarClienteButton'
+import { ClientAccordion } from '@/components/clientes/ClientAccordion'
 
 const TZ = 'America/Argentina/Buenos_Aires'
 
 function fmtFecha(d: Date | string) {
   return new Date(d).toLocaleDateString('es-AR', {
     day: 'numeric', month: 'long', year: 'numeric', timeZone: TZ,
+  })
+}
+
+function fmtFechaHora(d: Date | string) {
+  return new Date(d).toLocaleString('es-AR', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: TZ,
   })
 }
 
@@ -52,6 +57,23 @@ export default async function ClienteDetallePage({
           include: { plan: true },
           orderBy: { createdAt: 'desc' },
         },
+        attendances: {
+          orderBy: { entryTime: 'desc' },
+          take: 5,
+        },
+        payments: {
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        },
+        progressLogs: {
+          orderBy: { date: 'desc' },
+          take: 5,
+          include: { exercise: { select: { name: true } } }
+        },
+        bodyCompositions: {
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        },
       },
     }),
     getRoutineHistoryForMember(id),
@@ -74,34 +96,31 @@ export default async function ClienteDetallePage({
 
   const progress = routineProgress(activeRoutine)
 
-  return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+  // Summaries para las cards
+  const lastAttendance = member.attendances[0]
+  const lastPayment = member.payments[0]
+  const lastProgress = member.progressLogs[0]
+  const lastBodyComp = member.bodyCompositions[0]
 
+  return (
+    <div className="space-y-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           <Link href="/admin/clientes">
             <Button variant="ghost" size="icon" className="h-9 w-9">
               <ArrowLeft size={18} />
             </Button>
           </Link>
-
           {member.photoUrl ? (
-            <img
-              src={member.photoUrl}
-              alt={`${member.firstName} ${member.lastName}`}
-              className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm shrink-0"
-            />
+            <img src={member.photoUrl} alt="" className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm shrink-0" />
           ) : (
             <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-semibold text-sm shrink-0">
               {initials(member.firstName, member.lastName)}
             </div>
           )}
-
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">
-              {member.firstName} {member.lastName}
-            </h1>
+            <h1 className="text-2xl font-bold text-slate-900">{member.firstName} {member.lastName}</h1>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-sm text-slate-500">DNI {member.dni}</span>
               <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${st.color}`}>
@@ -115,119 +134,162 @@ export default async function ClienteDetallePage({
             </div>
           </div>
         </div>
-        <LiberarClienteButton memberId={id} />
-
-        <div className="flex gap-2 flex-wrap justify-end">
-          {[
-            { href: `/admin/clientes/${id}/asistencias`, label: 'Asistencias', icon: UserCheck, color: 'bg-indigo-600 hover:bg-indigo-700' },
-            { href: `/admin/clientes/${id}/pagos`,       label: 'Pagos',       icon: DollarSign, color: 'bg-emerald-600 hover:bg-emerald-700' },
-            { href: `/admin/clientes/${id}/progreso`,    label: 'Progreso',    icon: TrendingUp, color: 'bg-orange-600 hover:bg-orange-700' },
-            { href: `/admin/clientes/${id}/membresia`,   label: 'Membresía',   icon: Calendar,   color: 'bg-blue-600 hover:bg-blue-700' },
-          ].map(({ href, label, icon: Icon, color }) => (
-            <Link key={href} href={href}>
-              <Button size="sm" className={`gap-1.5 text-white ${color}`}>
-                <Icon size={15} /> {label}
-              </Button>
-            </Link>
-          ))}
+        <div className="flex items-center gap-2">
+          <LiberarClienteButton memberId={id} />
+          <Link href={`/admin/clientes/${id}/editar`}>
+            <Button variant="outline" size="sm" className="gap-1.5 h-9">
+              <Edit2 size={14} /> Editar datos
+            </Button>
+          </Link>
         </div>
       </div>
 
-      {/* Grid principal */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* COLUMNA IZQUIERDA: Datos y Foto */}
         <div className="lg:col-span-1 space-y-5">
-
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             {member.photoUrl ? (
-              <img
-                src={member.photoUrl}
-                alt={`${member.firstName} ${member.lastName}`}
-                className="w-full aspect-square max-w-[320px] mx-auto rounded-2xl object-cover border border-slate-100"
-              />
+              <img src={member.photoUrl} alt="" className="w-full aspect-square max-w-[320px] mx-auto rounded-2xl object-cover border border-slate-100" />
             ) : (
               <div className="w-full aspect-square max-w-[320px] mx-auto rounded-2xl bg-slate-50 border border-dashed border-slate-200 flex flex-col items-center justify-center gap-2">
                 <User size={40} className="text-slate-300" />
-                <p className="text-xs text-slate-400 text-center px-6">
-                  Sin foto de perfil todavía
-                </p>
+                <p className="text-xs text-slate-400 text-center px-6">Sin foto de perfil</p>
               </div>
             )}
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl p-5">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4 uppercase tracking-wider">
-              Datos personales
-            </h3>
+          <div className="bg-white border border-slate-200 rounded-xl p-5 relative group">
+            <Link href={`/admin/clientes/${id}/editar`} className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+              <Edit2 size={14} />
+            </Link>
+            <h3 className="text-sm font-semibold text-slate-900 mb-4 uppercase tracking-wider">Datos personales</h3>
             <div className="space-y-3 text-sm">
-              {[
-                { icon: Mail,    label: member.email },
-                { icon: Phone,   label: member.phone },
-                { icon: MapPin,  label: [member.address, member.city].filter(Boolean).join(', ') || '—' },
-                { icon: Calendar, label: fmtFecha(member.birthDate) },
-              ].map(({ icon: Icon, label }) => (
-                <div key={label} className="flex items-start gap-2.5 text-slate-600">
-                  <Icon size={14} className="text-slate-400 mt-0.5 shrink-0" />
-                  <span className="break-all">{label}</span>
-                </div>
-              ))}
+              <div className="flex items-start gap-2.5 text-slate-600">
+                <User size={14} className="text-slate-400 mt-0.5 shrink-0" />
+                <span><strong>DNI:</strong> {member.dni}</span>
+              </div>
+              <div className="flex items-start gap-2.5 text-slate-600">
+                <Mail size={14} className="text-slate-400 mt-0.5 shrink-0" />
+                <span className="break-all">{member.email}</span>
+              </div>
+              <div className="flex items-start gap-2.5 text-slate-600">
+                <Phone size={14} className="text-slate-400 mt-0.5 shrink-0" />
+                <span>{member.phone}</span>
+              </div>
+              <div className="flex items-start gap-2.5 text-slate-600">
+                <MapPin size={14} className="text-slate-400 mt-0.5 shrink-0" />
+                <span>{[member.address, member.city].filter(Boolean).join(', ') || '—'}</span>
+              </div>
+              <div className="flex items-start gap-2.5 text-slate-600">
+                <Calendar size={14} className="text-slate-400 mt-0.5 shrink-0" />
+                <span>{fmtFecha(member.birthDate)}</span>
+              </div>
             </div>
-          </div>
 
-          {(member.emergencyContactName || member.medicalNotes) && (
-            <div className="bg-white border border-slate-200 rounded-xl p-5">
-              <h3 className="text-sm font-semibold text-slate-900 mb-4 uppercase tracking-wider">
-                Emergencia
-              </h3>
-              <div className="space-y-2 text-sm text-slate-600">
+            {/* Info de emergencia y notas */}
+            {(member.emergencyContactName || member.emergencyContactPhone || member.medicalNotes || member.internalNotes) && (
+              <div className="mt-4 pt-4 border-t border-slate-100 space-y-3">
+                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Información adicional</h4>
                 {member.emergencyContactName && (
-                  <p><span className="font-medium text-slate-700">Contacto:</span> {member.emergencyContactName}</p>
+                  <div className="flex items-start gap-2.5 text-sm text-slate-600">
+                    <AlertCircle size={14} className="text-amber-500 mt-0.5 shrink-0" />
+                    <span>
+                      <strong>Emergencia:</strong> {member.emergencyContactName}
+                      {member.emergencyContactPhone && ` (${member.emergencyContactPhone})`}
+                    </span>
+                  </div>
                 )}
-                {member.emergencyContactPhone && (
-                  <p><span className="font-medium text-slate-700">Tel:</span> {member.emergencyContactPhone}</p>
+                {member.medicalNotes && (
+                  <div className="flex items-start gap-2.5 text-sm text-slate-600">
+                    <Activity size={14} className="text-red-500 mt-0.5 shrink-0" />
+                    <span><strong>Notas médicas:</strong> {member.medicalNotes}</span>
+                  </div>
+                )}
+                {member.internalNotes && (
+                  <div className="flex items-start gap-2.5 text-sm text-slate-600">
+                    <User size={14} className="text-slate-400 mt-0.5 shrink-0" />
+                    <span><strong>Notas internas:</strong> {member.internalNotes}</span>
+                  </div>
                 )}
               </div>
-              {member.medicalNotes && (
-                <div className="mt-3 p-3 bg-amber-50 border border-amber-100 rounded-lg text-xs text-amber-800 flex items-start gap-2">
-                  <AlertCircle size={13} className="shrink-0 mt-0.5" />
-                  {member.medicalNotes}
-                </div>
-              )}
-            </div>
-          )}
+            )}
+          </div>
+        </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl p-5">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4 uppercase tracking-wider">
-              Membresías
-            </h3>
+        {/* COLUMNA DERECHA: Acordeones */}
+        <div className="lg:col-span-2 space-y-4">
+
+          {/* 1. Membresía */}
+          <ClientAccordion
+            title="Detalle de Membresía"
+            iconName="Calendar"
+            iconColor="text-blue-600"
+            summary={activeMembership ? `Plan ${activeMembership.plan.name} activo` : 'Sin membresía activa'}
+            href={`/admin/clientes/${id}/membresia`}
+          >
             {member.memberships.length > 0 ? (
-              <div className="space-y-2">
-                {member.memberships.slice(0, 3).map(mem => (
-                  <div key={mem.id} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg">
+              <div className="space-y-3 py-2">
+                 {member.memberships.slice(0, 3).map(mem => (
+                  <div key={mem.id} className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{mem.plan.name}</p>
-                      <p className="text-xs text-slate-500">
-                        hasta {new Date(mem.endDate).toLocaleDateString('es-AR', { timeZone: TZ })}
-                      </p>
+                      <p className="font-medium text-slate-900">{mem.plan.name}</p>
+                      <p className="text-xs text-slate-500">Vence: {fmtFecha(mem.endDate)}</p>
                     </div>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      mem.status === 'ACTIVE'
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : 'bg-slate-100 text-slate-500'
-                    }`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${mem.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
                       {mem.status === 'ACTIVE' ? 'Activa' : 'Vencida'}
                     </span>
                   </div>
                 ))}
               </div>
-            ) : (
-              <p className="text-sm text-slate-400">Sin membresías</p>
-            )}
-          </div>
-        </div>
+            ) : <p className="text-sm text-slate-400 py-2">No hay membresías registradas.</p>}
+          </ClientAccordion>
 
-        <div className="lg:col-span-2 space-y-5">
+          {/* 2. Pagos */}
+          <ClientAccordion
+            title="Pagos"
+            iconName="CreditCard"
+            iconColor="text-emerald-600"
+            summary={lastPayment ? `Último pago: $${Number(lastPayment.amount).toLocaleString('es-AR')} (${fmtFecha(lastPayment.createdAt)})` : 'Sin pagos registrados'}
+            href={`/admin/clientes/${id}/pagos`}
+          >
+            {member.payments.length > 0 ? (
+              <div className="divide-y divide-slate-100">
+                {member.payments.map(p => (
+                  <div key={p.id} className="py-2 flex items-center justify-between text-sm">
+                    <div>
+                      <p className="font-medium text-slate-900">${Number(p.amount).toLocaleString('es-AR')}</p>
+                      <p className="text-xs text-slate-500">{p.concept}</p>
+                    </div>
+                    <span className="text-xs text-slate-400">{fmtFecha(p.createdAt)}</span>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="text-sm text-slate-400 py-2">No hay pagos recientes.</p>}
+          </ClientAccordion>
 
+          {/* 3. Asistencias */}
+          <ClientAccordion
+            title="Asistencias"
+            iconName="UserCheck"
+            iconColor="text-indigo-600"
+            summary={lastAttendance ? `Última: ${fmtFechaHora(lastAttendance.entryTime)}` : 'Sin asistencias registradas'}
+            href={`/admin/clientes/${id}/asistencias`}
+          >
+            {member.attendances.length > 0 ? (
+              <div className="divide-y divide-slate-100">
+                {member.attendances.map(a => (
+                  <div key={a.id} className="py-2 flex items-center justify-between text-sm">
+                    <span className="text-slate-600">{fmtFechaHora(a.entryTime)}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${a.status === 'ALLOWED' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+                      {a.status === 'ALLOWED' ? 'Permitido' : 'Denegado'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="text-sm text-slate-400 py-2">No hay registros recientes.</p>}
+          </ClientAccordion>
+
+          {/* 4. Rutina Activa (fija) */}
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider flex items-center gap-2">
@@ -240,79 +302,78 @@ export default async function ClienteDetallePage({
                     <Plus size={13} /> Nueva rutina
                   </Button>
                 </Link>
-                {templates.length > 0 && (
-                  <AssignTemplateButton memberId={id} templates={templates} />
-                )}
+                {templates.length > 0 && <AssignTemplateButton memberId={id} templates={templates} />}
               </div>
             </div>
-
             {activeRoutine ? (
               <div className="p-5">
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div>
                     <h4 className="text-base font-bold text-slate-900">{activeRoutine.name}</h4>
                     <div className="flex flex-wrap gap-2 mt-1.5">
-                      {activeRoutine.goal && (
-                        <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                          {activeRoutine.goal}
-                        </span>
-                      )}
-                      <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                        {activeRoutine.frequencyPerWeek} ses/sem · {activeRoutine.totalWeeks} semanas
-                      </span>
+                      {activeRoutine.goal && <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">{activeRoutine.goal}</span>}
+                      <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">{activeRoutine.frequencyPerWeek} ses/sem · {activeRoutine.totalWeeks} semanas</span>
                     </div>
                   </div>
                   <div className="flex gap-2 shrink-0">
-                    <Link href={`/admin/rutinas/${activeRoutine.id}`}>
-                      <Button variant="outline" size="sm" className="h-8 text-xs">Ver</Button>
-                    </Link>
-                    <Link href={`/admin/rutinas/${activeRoutine.id}/editar`}>
-                      <Button variant="outline" size="sm" className="h-8 text-xs">Editar</Button>
-                    </Link>
+                    <Link href={`/admin/rutinas/${activeRoutine.id}?memberId=${id}`}><Button variant="outline" size="sm" className="h-8 text-xs">Ver</Button></Link>
+                    <Link href={`/admin/rutinas/${activeRoutine.id}/editar?memberId=${id}`}><Button variant="outline" size="sm" className="h-8 text-xs">Editar</Button></Link>
                   </div>
                 </div>
-
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs text-slate-500">
                     <span>{progress.completed} de {progress.total} sesiones completadas</span>
                     <span className="font-semibold text-slate-900">{progress.pct}%</span>
                   </div>
                   <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-emerald-500 rounded-full transition-all"
-                      style={{ width: `${progress.pct}%` }}
-                    />
+                    <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${progress.pct}%` }} />
                   </div>
                 </div>
               </div>
             ) : (
               <div className="p-8 text-center">
-                <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <Dumbbell size={22} className="text-slate-300" />
-                </div>
                 <p className="text-sm font-medium text-slate-700 mb-1">Sin rutina activa</p>
-                <p className="text-xs text-slate-400">
-                  Creá una rutina nueva o asigná un template existente
-                </p>
+                <p className="text-xs text-slate-400">Creá una rutina nueva o asigná un template existente</p>
               </div>
             )}
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                <History size={15} className="text-slate-400" />
-                Historial de rutinas
-              </h3>
-              {archivedRoutines.length > 3 && (
-                <Link href={`/admin/clientes/${id}/rutinas`} className="text-xs text-blue-600 hover:underline">
-                  Ver todas ({archivedRoutines.length})
-                </Link>
-              )}
-            </div>
+          {/* 5. Progreso de Rutina (Activa) */}
+          <ClientAccordion
+            title="Progreso de Rutina (Activa)"
+            iconName="Activity"
+            iconColor="text-violet-600"
+            summary={lastProgress ? `Último: ${Number(lastProgress.weightUsed)}kg en ${lastProgress.exercise.name}` : 'Sin registros de series/reps'}
+            href={`/admin/clientes/${id}/rutinas`}
+          >
+            {member.progressLogs.length > 0 ? (
+              <div className="divide-y divide-slate-100">
+                {member.progressLogs.map(log => (
+                  <div key={log.id} className="py-2 flex items-center justify-between text-sm">
+                    <div>
+                      <p className="font-medium text-slate-900">{log.exercise.name}</p>
+                      <p className="text-xs text-slate-500">{log.setsCompleted} series x {log.repsCompleted} reps</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-slate-700">{log.weightUsed} kg</p>
+                      <p className="text-xs text-slate-400">{fmtFecha(log.date)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="text-sm text-slate-400 py-2">No hay registros de series.</p>}
+          </ClientAccordion>
 
+          {/* 6. Historial de Rutinas (desplegable) */}
+          <ClientAccordion
+            title="Historial de Rutinas"
+            iconName="History"
+            iconColor="text-slate-500"
+            summary={archivedRoutines.length > 0 ? `Tenés ${archivedRoutines.length} rutinas archivadas` : 'Sin rutinas archivadas'}
+            href={`/admin/clientes/${id}/rutinas`}
+          >
             {archivedRoutines.length === 0 ? (
-              <div className="px-5 py-6 text-center text-sm text-slate-400">
+              <div className="px-2 py-4 text-center text-sm text-slate-400">
                 Aún no hay rutinas archivadas
               </div>
             ) : (
@@ -322,8 +383,8 @@ export default async function ClienteDetallePage({
                   return (
                     <Link
                       key={routine.id}
-                      href={`/admin/rutinas/${routine.id}`}
-                      className="flex items-center gap-4 px-5 py-3.5 hover:bg-slate-50 transition-colors group"
+                      href={`/admin/rutinas/${routine.id}?memberId=${id}`}
+                      className="flex items-center gap-4 py-3 hover:bg-slate-50 transition-colors group"
                     >
                       <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
                         {p.pct === 100
@@ -352,7 +413,34 @@ export default async function ClienteDetallePage({
                 })}
               </div>
             )}
-          </div>
+          </ClientAccordion>
+
+          {/* 7. Progreso Físico (al final) */}
+          <ClientAccordion
+            title="Progreso Físico"
+            iconName="Weight"
+            iconColor="text-orange-600"
+            summary={lastBodyComp ? `Último peso: ${Number(lastBodyComp.weight)}kg (${fmtFecha(lastBodyComp.createdAt)})` : 'Sin registros de composición corporal'}
+            href={`/admin/clientes/${id}/progreso`}
+          >
+            {member.bodyCompositions.length > 0 ? (
+              <div className="divide-y divide-slate-100">
+                {member.bodyCompositions.map(log => (
+                  <div key={log.id} className="py-2 flex items-center justify-between text-sm">
+                    <div>
+                      <p className="font-medium text-slate-900">{Number(log.weight)} kg</p>
+                      <p className="text-xs text-slate-500">IMC: {log.bmi ? Number(log.bmi).toFixed(1) : '—'}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-slate-500">Grasa: {log.bodyFatPercent ? `${Number(log.bodyFatPercent)}%` : '—'}</p>
+                      <p className="text-xs text-slate-400">{fmtFecha(log.createdAt)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="text-sm text-slate-400 py-2">No hay registros de composición corporal.</p>}
+          </ClientAccordion>
+
         </div>
       </div>
     </div>

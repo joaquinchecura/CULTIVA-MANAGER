@@ -5,10 +5,9 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   Users, Plus, DoorOpen, BarChart3, Search,
-  Filter, Download, Edit2, Trash2, MoreHorizontal,
+  Download, Edit2, Trash2,
   MapPin, TrendingUp, UserMinus, UserCheck,
-  ChevronDown, ChevronUp, X, CheckCircle,
-  Calendar, Phone, Mail, MapPin as MapPinIcon
+  CheckCircle, Calendar, Phone, Mail, MapPin as MapPinIcon
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,7 +27,7 @@ interface Member {
   city: string | null
   status: string
   createdAt: string
-  photoUrl: string | null   // ← agregar esta línea
+  photoUrl: string | null
   memberships: {
     id: string
     plan: { name: string }
@@ -54,10 +53,31 @@ export default function ClientesPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [cityFilter, setCityFilter] = useState('all')
-  const router = useRouter()
   const [attendances, setAttendances] = useState<any[]>([])
-  const [attendanceFilter, setAttendanceFilter] = useState('all') // 'all' | 'today' | 'week' | 'month'
 
+  // Colores pastel para cada tab
+  const tabStyles: Record<Tab, { active: string; idle: string; icon: string }> = {
+    listado: {
+      active: 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm',
+      idle: 'text-slate-600 hover:bg-blue-50/50 hover:text-blue-700 border-transparent',
+      icon: 'text-blue-500',
+    },
+    nuevo: {
+      active: 'bg-violet-50 text-violet-700 border-violet-200 shadow-sm',
+      idle: 'text-slate-600 hover:bg-violet-50/50 hover:text-violet-700 border-transparent',
+      icon: 'text-violet-500',
+    },
+    accesos: {
+      active: 'bg-amber-50 text-amber-700 border-amber-200 shadow-sm',
+      idle: 'text-slate-600 hover:bg-amber-50/50 hover:text-amber-700 border-transparent',
+      icon: 'text-amber-500',
+    },
+    estadisticas: {
+      active: 'bg-pink-50 text-pink-700 border-pink-200 shadow-sm',
+      idle: 'text-slate-600 hover:bg-pink-50/50 hover:text-pink-700 border-transparent',
+      icon: 'text-pink-500',
+    },
+  }
 
   const tabs = [
     { id: 'listado' as Tab, label: 'Listado', icon: Users },
@@ -125,7 +145,7 @@ export default function ClientesPage() {
   }
 
   const filteredMembers = members.filter(m => {
-    const matchesSearch = 
+    const matchesSearch =
       m.firstName.toLowerCase().includes(search.toLowerCase()) ||
       m.lastName.toLowerCase().includes(search.toLowerCase()) ||
       m.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -164,26 +184,28 @@ export default function ClientesPage() {
         <p className="text-slate-500 mt-1">Gestión completa de clientes del gimnasio</p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 bg-white border border-slate-200 rounded-xl p-1 w-fit">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-              activeTab === tab.id
-                ? 'bg-slate-900 text-white shadow-sm'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
-          >
-            <tab.icon size={16} />
-            {tab.label}
-          </button>
-        ))}
+      {/* Tabs con colores pastel */}
+      <div className="flex flex-wrap gap-1 bg-white border border-slate-200 rounded-xl p-1 w-fit">
+        {tabs.map((tab) => {
+          const styles = tabStyles[tab.id]
+          const isActive = activeTab === tab.id
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all border ${
+                isActive ? styles.active : styles.idle
+              }`}
+            >
+              <tab.icon size={16} className={isActive ? '' : styles.icon} />
+              {tab.label}
+            </button>
+          )
+        })}
       </div>
 
       {activeTab === 'listado' && (
-        <ClientesListado 
+        <ClientesListado
           members={filteredMembers}
           loading={loading}
           search={search}
@@ -205,17 +227,8 @@ export default function ClientesPage() {
 }
 
 // ============================================
-// TAB: LISTADO
+// FUNCIÓN EXPORTAR CSV (a nivel módulo)
 // ============================================
-function ClientesListado({ 
-  members, loading, search, setSearch, statusFilter, setStatusFilter,
-  cityFilter, setCityFilter, cities, getStatusBadge, deleteMember 
-}: any) {
-  if (loading) return <div className="p-8 text-center text-slate-500">Cargando clientes...</div>
-
-// components/admin/clientes/ClientesListado.tsx (o donde esté el componente)
-// Agregar esta función arriba del return, junto a las demás funciones del componente:
-
 function exportarCSV(members: Member[]) {
   const headers = [
     'Nombre', 'Apellido', 'DNI', 'Email', 'Teléfono',
@@ -240,7 +253,6 @@ function exportarCSV(members: Member[]) {
     ]
   })
 
-  // Escapar valores con comas, comillas o saltos de línea
   function escapeCSV(value: string) {
     if (/[",\n]/.test(value)) {
       return `"${value.replace(/"/g, '""')}"`
@@ -252,7 +264,6 @@ function exportarCSV(members: Member[]) {
     .map(row => row.map(v => escapeCSV(String(v))).join(','))
     .join('\n')
 
-  // BOM para que Excel reconozca UTF-8 (tildes, ñ) correctamente
   const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
@@ -266,20 +277,29 @@ function exportarCSV(members: Member[]) {
   URL.revokeObjectURL(url)
 }
 
+// ============================================
+// TAB: LISTADO
+// ============================================
+function ClientesListado({
+  members, loading, search, setSearch, statusFilter, setStatusFilter,
+  cityFilter, setCityFilter, cities, getStatusBadge, deleteMember
+}: any) {
+  if (loading) return <div className="p-8 text-center text-slate-500">Cargando clientes...</div>
+
   return (
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
       {/* Toolbar */}
       <div className="p-4 border-b border-slate-100 flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[280px]">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <Input 
-            placeholder="Buscar por nombre, email o DNI..." 
+          <Input
+            placeholder="Buscar por nombre, email o DNI..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 h-9 text-sm"
           />
         </div>
-        <select 
+        <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           className="h-9 px-3 border border-slate-200 rounded-lg text-sm bg-white text-slate-600"
@@ -292,7 +312,7 @@ function exportarCSV(members: Member[]) {
           <option value="OVERDUE">Atrasado</option>
         </select>
         {cities.length > 0 && (
-          <select 
+          <select
             value={cityFilter}
             onChange={(e) => setCityFilter(e.target.value)}
             className="h-9 px-3 border border-slate-200 rounded-lg text-sm bg-white text-slate-600"
@@ -304,13 +324,13 @@ function exportarCSV(members: Member[]) {
           </select>
         )}
         <Button
-  variant="outline"
-  size="sm"
-  className="gap-2"
-  onClick={() => exportarCSV(members)}
->
-  <Download size={14} /> Exportar CSV
-</Button>
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          onClick={() => exportarCSV(members)}
+        >
+          <Download size={14} /> Exportar CSV
+        </Button>
       </div>
 
       {/* Table */}
@@ -332,7 +352,7 @@ function exportarCSV(members: Member[]) {
               const activeMembership = m.memberships.find(mem => mem.status === 'ACTIVE')
               return (
                 <tr key={m.id} className="hover:bg-slate-50 transition-colors">
-                                   <td className="px-5 py-4">
+                  <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       {m.photoUrl ? (
                         <img
@@ -378,7 +398,7 @@ function exportarCSV(members: Member[]) {
                           {activeMembership.plan.name}
                         </span>
                         <p className="text-xs text-slate-400 mt-1">
-                          Vence: {new Date(activeMembership.endDate).toLocaleDateString('es-AR')}
+                          Vence: {new Date(activeMembership.endDate).toLocaleDateString('es-AR', { timeZone: 'UTC' })}
                         </p>
                       </div>
                     ) : (
@@ -387,7 +407,7 @@ function exportarCSV(members: Member[]) {
                   </td>
                   <td className="px-5 py-4">{getStatusBadge(m.status)}</td>
                   <td className="px-5 py-4 text-xs text-slate-500">
-                    {new Date(m.createdAt).toLocaleDateString('es-AR')}
+                    {new Date(m.createdAt).toLocaleDateString('es-AR', { timeZone: 'UTC' })}
                   </td>
                   <td className="px-5 py-4 text-right">
                     <div className="flex items-center justify-end gap-1">
@@ -396,9 +416,9 @@ function exportarCSV(members: Member[]) {
                           <Edit2 size={14} />
                         </Button>
                       </Link>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         className="h-8 w-8 text-slate-400 hover:text-red-600"
                         onClick={() => deleteMember(m.id)}
                       >
@@ -437,7 +457,7 @@ function NuevoCliente({ onSuccess }: { onSuccess: () => void }) {
     e.preventDefault()
     setSaving(true)
     const formData = new FormData(e.currentTarget)
-    
+
     try {
       const res = await fetch('/api/admin/clientes', {
         method: 'POST',
@@ -453,7 +473,7 @@ function NuevoCliente({ onSuccess }: { onSuccess: () => void }) {
           city: formData.get('city'),
         }),
       })
-      
+
       if (res.ok) {
         onSuccess()
       } else {
@@ -470,7 +490,7 @@ function NuevoCliente({ onSuccess }: { onSuccess: () => void }) {
     <div className="bg-white border border-slate-200 rounded-xl p-6 max-w-2xl">
       <h3 className="text-lg font-semibold text-slate-900 mb-1">Crear nuevo cliente</h3>
       <p className="text-sm text-slate-500 mb-6">Completá los datos para registrar un nuevo miembro</p>
-      
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
@@ -750,7 +770,7 @@ function AccesosApp({ attendances, members }: { attendances: any[], members: Mem
                 const member = getMember(a.memberId)
                 return (
                   <tr key={a.id} className="hover:bg-slate-50 transition-colors">
-                                        <td className="px-5 py-3">
+                    <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
                         {member?.photoUrl ? (
                           <img
@@ -889,7 +909,7 @@ function EstadisticasClientes({ stats, members }: { stats: Stats | null, members
         {/* Ubicación geográfica */}
         <div className="bg-white border border-slate-200 rounded-xl p-5">
           <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-            <MapPin size={16} className="text-slate-400" /> 
+            <MapPin size={16} className="text-slate-400" />
             Distribución por ciudad
           </h3>
           <div className="space-y-3">
@@ -897,7 +917,7 @@ function EstadisticasClientes({ stats, members }: { stats: Stats | null, members
               <div key={city} className="flex items-center gap-3">
                 <span className="text-sm text-slate-600 w-32 truncate">{city}</span>
                 <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className="h-full bg-blue-500 rounded-full transition-all"
                     style={{ width: `${(count / maxCityCount) * 100}%` }}
                   />
@@ -914,7 +934,7 @@ function EstadisticasClientes({ stats, members }: { stats: Stats | null, members
         {/* Nuevos por mes */}
         <div className="bg-white border border-slate-200 rounded-xl p-5">
           <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-            <Calendar size={16} className="text-slate-400" /> 
+            <Calendar size={16} className="text-slate-400" />
             Nuevos clientes por mes
           </h3>
           <div className="space-y-3">
@@ -922,7 +942,7 @@ function EstadisticasClientes({ stats, members }: { stats: Stats | null, members
               <div key={mes} className="flex items-center gap-3">
                 <span className="text-sm text-slate-600 w-20">{mes}</span>
                 <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className="h-full bg-emerald-500 rounded-full transition-all"
                     style={{ width: `${Math.min((cantidad / (stats.nuevosEsteMes || 1)) * 100, 100)}%` }}
                   />
@@ -998,7 +1018,7 @@ function EdadesChart({ members }: { members: Member[] }) {
           <div key={range.label} className="flex items-center gap-3">
             <span className="text-sm text-slate-600 w-12">{range.label}</span>
             <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden">
-              <div 
+              <div
                 className="h-full bg-violet-500 rounded-full transition-all"
                 style={{ width: `${(count / maxCount) * 100}%` }}
               />

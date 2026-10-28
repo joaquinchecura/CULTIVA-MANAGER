@@ -435,7 +435,12 @@ export default function AgendaPage() {
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-slate-900 text-sm">{s.activity.name}</span>
                         <span className="text-xs text-slate-400">
-                          {format(new Date(s.date), 'dd/MM')}
+                          {/* 👇 Acá está el fix: formateamos con UTC para que no se corra el día */}
+                          {new Date(s.date).toLocaleDateString('es-AR', {
+                            timeZone: 'UTC',
+                            day: '2-digit',
+                            month: '2-digit',
+                          })}
                         </span>
                       </div>
                       <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500">

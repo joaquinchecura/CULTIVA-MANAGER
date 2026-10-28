@@ -1,21 +1,31 @@
 import { NextResponse } from 'next/server'
-import { clerkClient } from '@clerk/clerk-sdk-node'
+import { clerkClient } from '@clerk/nextjs/server' // <-- CAMBIO
+import { requireOrg } from '@/lib/get-org'
 
 export async function GET() {
   try {
-    const response = await clerkClient.users.getUserList()
+    const { orgId, error } = await requireOrg()
+    if (error) return error
+
+    const client = await clerkClient() // <-- CAMBIO (es asíncrono)
     
-    // En la nueva versión, getUserList() devuelve { data: User[], totalCount: number }
-    const simplifiedUsers = response.data.map(user => ({
-      id: user.id,
-      emailAddresses: user.emailAddresses.map(e => ({ emailAddress: e.emailAddress })),
-      firstName: user.firstName,
-      lastName: user.lastName,
+    // Buscar miembros de la organización
+    const { data: memberships } = await client.organizations.getOrganizationMembershipList({
+      organizationId: orgId,
+    })
+
+    // Mapear los datos para devolver algo limpio
+    const users = memberships.map((m) => ({
+      id: m.publicUserData?.userId,
+      firstName: m.publicUserData?.firstName,
+      lastName: m.publicUserData?.lastName,
+      email: m.publicUserData?.identifier,
+      role: m.role,
     }))
 
-    return NextResponse.json(simplifiedUsers)
+    return NextResponse.json(users)
   } catch (error) {
-    console.error('Error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Error al obtener usuarios de Clerk:', error)
+    return NextResponse.json({ error: 'Error al obtener usuarios' }, { status: 500 })
   }
 }

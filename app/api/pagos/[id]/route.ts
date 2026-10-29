@@ -1,27 +1,29 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { z } from 'zod'
 import { requireOrg } from '@/lib/get-org'
+import { z } from 'zod'
 
-const updatePaymentSchema = z.object({
-  amount: z.number().positive().optional(),
+const updateSchema = z.object({
+  amount: z.coerce.number().positive().optional(),
   method: z.enum(['CASH', 'TRANSFER', 'MERCADOPAGO', 'CARD', 'OTHER']).optional(),
-  status: z.enum(['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED']).optional(),
   concept: z.string().min(1).optional(),
-  reference: z.string().nullable().optional(),
-  notes: z.string().nullable().optional(),
+  reference: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
 })
 
-export async function PATCH(
+export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { orgId, error } = await requireOrg()
     if (error) return error
-
     const { id } = await params
 
+    const body = await request.json()
+    const data = updateSchema.parse(body)
+
+    // Verificar que el pago sea de esta organización
     const existing = await prisma.payment.findFirst({
       where: { id, organizationId: orgId },
       select: { id: true },
@@ -30,21 +32,23 @@ export async function PATCH(
       return NextResponse.json({ error: 'Pago no encontrado' }, { status: 404 })
     }
 
-    const body = await request.json()
-    const data = updatePaymentSchema.parse(body)
-
     const payment = await prisma.payment.update({
       where: { id },
-      data,
-      include: { member: true },
+      data: {
+        amount: data.amount,
+        method: data.method,
+        concept: data.concept,
+        reference: data.reference,
+        notes: data.notes,
+      },
     })
 
     return NextResponse.json(payment)
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 })
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return NextResponse.json({ error: err.errors }, { status: 400 })
     }
-    console.error('Error updating payment:', error)
+    console.error('Error updating payment:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -56,17 +60,22 @@ export async function DELETE(
   try {
     const { orgId, error } = await requireOrg()
     if (error) return error
-
     const { id } = await params
 
-    const result = await prisma.payment.deleteMany({ where: { id, organizationId: orgId } })
-    if (result.count === 0) {
+    // Verificar que el pago sea de esta organización
+    const existing = await prisma.payment.findFirst({
+      where: { id, organizationId: orgId },
+      select: { id: true },
+    })
+    if (!existing) {
       return NextResponse.json({ error: 'Pago no encontrado' }, { status: 404 })
     }
 
+    await prisma.payment.delete({ where: { id } })
+
     return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error('Error deleting payment:', error)
+  } catch (err) {
+    console.error('Error deleting payment:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

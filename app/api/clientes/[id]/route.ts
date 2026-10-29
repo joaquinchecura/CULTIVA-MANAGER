@@ -13,16 +13,16 @@ export async function GET(
 
     const { id } = await params
 
-    const member = await prisma.member.findFirst({
-      where: { id, organizationId: orgId },
-      include: {
-        memberships: {
-          include: { plan: true },
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-        },
-      },
-    })
+  // ✅ ASÍ DEBERÍA ESTAR
+const member = await prisma.member.findFirst({
+  where: { id, organizationId: orgId },
+  include: {
+    memberships: {
+      include: { plan: true },
+      orderBy: { createdAt: 'desc' }
+    }
+  }
+})
 
     if (!member) {
       return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 })

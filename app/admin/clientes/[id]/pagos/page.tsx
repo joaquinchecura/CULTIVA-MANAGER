@@ -1,113 +1,210 @@
-export const dynamic = 'force-dynamic'
+'use client'
 
-import { prisma } from '@/lib/prisma'
-import { requireOrgForPage } from '@/lib/get-org'
-import { ArrowLeft, CreditCard, DollarSign, Calendar } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import NuevoPago from './NuevoPago'
+import { ArrowLeft, Edit2, Trash2, CreditCard, Download } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { EditPaymentModal } from '@/components/clientes/EditPaymentModal'
+import { toast } from 'sonner'
 
-export default async function ClientePagosPage({ params }: { params: Promise<{ id: string }> }) {
-  const orgId = await requireOrgForPage()
-  const { id } = await params
+interface Payment {
+  id: string
+  amount: number
+  method: string
+  status: string
+  concept: string
+  reference: string | null
+  notes: string | null
+  createdAt: string
+}
 
-  const member = await prisma.member.findFirst({
-    where: { id, organizationId: orgId },
-    include: {
-      payments: {
-        orderBy: { createdAt: 'desc' },
-      },
-    },
-  })
+const METHOD_LABELS: Record<string, string> = {
+  CASH: 'Efectivo',
+  TRANSFER: 'Transferencia',
+  MERCADOPAGO: 'Mercado Pago',
+  CARD: 'Tarjeta',
+  OTHER: 'Otro',
+}
 
-  if (!member) {
-    return <div className="p-6">Cliente no encontrado</div>
+export default function PagosPage({ params }: { params: Promise<{ id: string }> }) {
+  const [payments, setPayments] = useState<Payment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [memberId, setMemberId] = useState('')
+  const [memberName, setMemberName] = useState('')
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null)
+
+  useEffect(() => {
+    const getParams = async () => {
+      const resolved = await params
+      setMemberId(resolved.id)
+    }
+    getParams()
+  }, [params])
+
+  useEffect(() => {
+    if (memberId) fetchData()
+  }, [memberId])
+
+  const fetchData = async () => {
+    try {
+      const [memberRes, paymentsRes] = await Promise.all([
+        fetch(`/api/clientes/${memberId}`),
+        fetch(`/api/pagos?memberId=${memberId}`),
+      ])
+      if (memberRes.ok) {
+        const data = await memberRes.json()
+        setMemberName(`${data.firstName} ${data.lastName}`)
+      }
+      if (paymentsRes.ok) {
+        const data = await paymentsRes.json()
+        setPayments(data)
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const totalPagado = member.payments
-    .filter(p => p.status === 'COMPLETED')
-    .reduce((sum, p) => sum + Number(p.amount), 0)
+  const handleDelete = async (id: string) => {
+    if (!confirm('¿Estás seguro de eliminar este pago? Esta acción no se puede deshacer.')) return
+
+    try {
+      const res = await fetch(`/api/pagos/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast.success('Pago eliminado')
+        setPayments(prev => prev.filter(p => p.id !== id))
+      } else {
+        toast.error('Error al eliminar')
+      }
+    } catch {
+      toast.error('Error de conexión')
+    }
+  }
+
+  const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount), 0)
+
+  if (loading) return <div className="p-6">Cargando...</div>
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href={`/admin/clientes/${id}`} className="text-slate-500 hover:text-slate-900">
-          <ArrowLeft size={20} />
+    <div className="space-y-6 max-w-5xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <Link href={`/admin/clientes/${memberId}`}>
+          <Button variant="ghost" size="icon" className="h-9 w-9">
+            <ArrowLeft size={18} />
+          </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Pagos de {member.firstName}</h1>
-          <p className="text-slate-500">DNI: {member.dni}</p>
+          <h1 className="text-2xl font-bold text-slate-900">Pagos de {memberName}</h1>
+          <p className="text-sm text-slate-500">DNI: {memberId}</p>
         </div>
       </div>
 
+      {/* KPIs */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <p className="text-2xl font-bold text-slate-900">${totalPagado.toLocaleString('es-AR')}</p>
+        <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 rounded-xl p-4 shadow-sm">
           <p className="text-sm text-slate-500">Total pagado</p>
+          <p className="text-2xl font-bold text-emerald-700">
+            ${totalPaid.toLocaleString('es-AR')}
+          </p>
         </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <p className="text-2xl font-bold text-slate-900">{member.payments.length}</p>
+        <div className="bg-gradient-to-br from-blue-50 to-white border border-blue-100 rounded-xl p-4 shadow-sm">
           <p className="text-sm text-slate-500">Pagos registrados</p>
+          <p className="text-2xl font-bold text-blue-700">{payments.length}</p>
         </div>
       </div>
 
-      <NuevoPago memberId={member.id} />
-
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100">
-          <h3 className="font-semibold text-slate-900">Historial de pagos</h3>
+      {/* Historial */}
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+            <CreditCard size={16} className="text-slate-400" />
+            Historial de pagos
+          </h3>
         </div>
-        {member.payments.length === 0 ? (
+
+        {payments.length === 0 ? (
           <div className="p-8 text-center text-slate-500">
-            <CreditCard className="mx-auto mb-2 text-slate-300" size={40} />
             <p>Sin pagos registrados</p>
           </div>
         ) : (
-          <table className="w-full">
-            <thead className="bg-slate-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">Fecha</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">Concepto</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">Método</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">Monto</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">Estado</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {member.payments.map((p) => (
-                <tr key={p.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 text-sm text-slate-900">
-                    {new Date(p.createdAt).toLocaleDateString('es-AR')}
-                  </td>
-                  <td className="px-4 py-3 text-sm font-medium text-slate-900">{p.concept}</td>
-                  <td className="px-4 py-3 text-sm text-slate-600">
-                    <span className="inline-flex items-center gap-1">
-                      <DollarSign size={14} />
-                      {p.method === 'CASH' ? 'Efectivo' :
-                       p.method === 'TRANSFER' ? 'Transferencia' :
-                       p.method === 'MERCADOPAGO' ? 'MercadoPago' :
-                       p.method === 'CARD' ? 'Tarjeta' : 'Otro'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm font-bold text-slate-900">
-                    ${Number(p.amount).toLocaleString('es-AR')}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                      p.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
-                      p.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
-                      'bg-red-100 text-red-700'
-                    }`}>
-                      {p.status === 'COMPLETED' ? 'Completado' :
-                       p.status === 'PENDING' ? 'Pendiente' :
-                       p.status === 'FAILED' ? 'Fallido' : 'Reembolsado'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="divide-y divide-slate-100">
+            {payments.map((payment) => (
+              <div key={payment.id} className="px-5 py-4 hover:bg-slate-50 transition-colors">
+                <div className="flex items-start justify-between gap-4">
+                  {/* Información del pago */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <p className="text-lg font-bold text-slate-900">
+                        ${Number(payment.amount).toLocaleString('es-AR')}
+                      </p>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                        {METHOD_LABELS[payment.method] || payment.method}
+                      </span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        payment.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+                      }`}>
+                        {payment.status === 'COMPLETED' ? 'Completado' : payment.status}
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-700 font-medium">{payment.concept}</p>
+                    
+                    {payment.reference && (
+                      <p className="text-xs text-slate-500 mt-1">
+                        <span className="font-medium">Ref:</span> {payment.reference}
+                      </p>
+                    )}
+                    {payment.notes && (
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        <span className="font-medium">Notas:</span> {payment.notes}
+                      </p>
+                    )}
+                    <p className="text-xs text-slate-400 mt-1.5">
+                      {new Date(payment.createdAt).toLocaleString('es-AR', {
+                        timeZone: 'America/Argentina/Buenos_Aires',
+                        day: '2-digit', month: '2-digit', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit',
+                      })}
+                    </p>
+                  </div>
+
+                  {/* Acciones */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-slate-400 hover:text-blue-600"
+                      onClick={() => setEditingPayment(payment)}
+                      title="Editar pago"
+                    >
+                      <Edit2 size={14} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-slate-400 hover:text-red-600"
+                      onClick={() => handleDelete(payment.id)}
+                      title="Eliminar pago"
+                    >
+                      <Trash2 size={14} />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
+
+      {/* Modal de edición */}
+      {editingPayment && (
+        <EditPaymentModal
+          payment={editingPayment}
+          onClose={() => setEditingPayment(null)}
+          onSuccess={fetchData}
+        />
+      )}
     </div>
   )
 }

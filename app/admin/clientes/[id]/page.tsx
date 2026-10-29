@@ -14,6 +14,7 @@ import { getRoutineHistoryForMember, getTemplates } from '@/app/actions/routines
 import AssignTemplateButton from '@/components/clientes/AssignTemplateButton'
 import LiberarClienteButton from '@/components/clientes/LiberarClienteButton'
 import { ClientAccordion } from '@/components/clientes/ClientAccordion'
+import { ClientProgressChart } from '@/components/clientes/ClientProgressChart'
 
 const TZ = 'America/Argentina/Buenos_Aires'
 
@@ -67,8 +68,8 @@ export default async function ClienteDetallePage({
         },
         progressLogs: {
           orderBy: { date: 'desc' },
-          take: 5,
-          include: { exercise: { select: { name: true } } }
+          take: 30, // 👈 Aumentamos para que el gráfico tenga más datos
+          include: { exercise: { select: { name: true, type: true } } } // 👈 Agregamos type
         },
         bodyCompositions: {
           orderBy: { createdAt: 'desc' },
@@ -338,28 +339,43 @@ export default async function ClienteDetallePage({
             )}
           </div>
 
-          {/* 5. Progreso de Rutina (Activa) */}
-          <ClientAccordion
+                            {/* 5. Progreso de Rutina (Activa) */}
+                            <ClientAccordion
             title="Progreso de Rutina (Activa)"
             iconName="Activity"
             iconColor="text-violet-600"
             summary={lastProgress ? `Último: ${Number(lastProgress.weightUsed)}kg en ${lastProgress.exercise.name}` : 'Sin registros de series/reps'}
-            href={`/admin/clientes/${id}/rutinas`}
+            href={`/admin/clientes/${id}/progreso-rutina`} // 👈 CAMBIO ACÁ
           >
             {member.progressLogs.length > 0 ? (
-              <div className="divide-y divide-slate-100">
-                {member.progressLogs.map(log => (
-                  <div key={log.id} className="py-2 flex items-center justify-between text-sm">
-                    <div>
-                      <p className="font-medium text-slate-900">{log.exercise.name}</p>
-                      <p className="text-xs text-slate-500">{log.setsCompleted} series x {log.repsCompleted} reps</p>
+              <div className="space-y-4 py-2">
+                {/* Gráfico de barras (idéntico al de MIPLAN) */}
+                <ClientProgressChart
+                  data={member.progressLogs.map(log => ({
+                    exerciseName: log.exercise.name,
+                    exerciseType: log.exercise.type || 'STRENGTH', // Asumiendo que el include trae el type
+                    date: log.date.toISOString(),
+                    weightUsed: Number(log.weightUsed),
+                    setsCompleted: log.setsCompleted,
+                    repsCompleted: log.repsCompleted,
+                  }))}
+                />
+
+                {/* Lista de últimos registros */}
+                <div className="divide-y divide-slate-100 pt-2 border-t border-slate-100">
+                  {member.progressLogs.slice(0, 5).map(log => (
+                    <div key={log.id} className="py-2 flex items-center justify-between text-sm">
+                      <div>
+                        <p className="font-medium text-slate-900">{log.exercise.name}</p>
+                        <p className="text-xs text-slate-500">{log.setsCompleted} series x {log.repsCompleted} reps</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-slate-700">{log.weightUsed} kg</p>
+                        <p className="text-xs text-slate-400">{fmtFecha(log.date)}</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-slate-700">{log.weightUsed} kg</p>
-                      <p className="text-xs text-slate-400">{fmtFecha(log.date)}</p>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             ) : <p className="text-sm text-slate-400 py-2">No hay registros de series.</p>}
           </ClientAccordion>

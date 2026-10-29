@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, CreditCard, DollarSign, Loader2 } from 'lucide-react'
+import { Plus, DollarSign, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface Props {
   memberId: string
@@ -21,8 +22,10 @@ export default function NuevoPago({ memberId }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.amount || !form.concept) {
-      alert('Monto y concepto son obligatorios')
+    
+    // Validación local
+    if (!form.amount || !form.concept || !form.reference || !form.notes) {
+      toast.error('Todos los campos son obligatorios')
       return
     }
 
@@ -36,26 +39,34 @@ export default function NuevoPago({ memberId }: Props) {
           amount: parseFloat(form.amount),
           method: form.method,
           concept: form.concept,
-          reference: form.reference || null,
-          notes: form.notes || null,
+          reference: form.reference,
+          notes: form.notes,
         }),
       })
 
       if (res.ok) {
+        toast.success('Pago registrado con éxito')
         window.location.reload()
       } else {
         const data = await res.json()
-        alert(data.error || 'Error al registrar pago')
+        // 👇 Manejo de errores de Zod (array de objetos)
+        let errorMsg = 'Error al registrar pago'
+        if (typeof data.error === 'string') {
+          errorMsg = data.error
+        } else if (Array.isArray(data.error)) {
+          errorMsg = data.error.map((e: any) => e.message).join(', ')
+        }
+        toast.error(errorMsg)
       }
     } catch (error) {
-      alert('Error de conexión')
+      toast.error('Error de conexión')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -70,11 +81,11 @@ export default function NuevoPago({ memberId }: Props) {
             <span className="text-xs text-slate-500">Agregar nuevo pago del cliente</span>
           </div>
         </div>
-        <span className="text-slate-400">{open ? '−' : '+'}</span>
+        <span className="text-slate-400 text-xl font-light">{open ? '−' : '+'}</span>
       </button>
 
       {open && (
-        <form onSubmit={handleSubmit} className="p-5 border-t border-slate-100">
+        <form onSubmit={handleSubmit} className="p-5 border-t border-slate-100 bg-slate-50/30">
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Monto *</label>
@@ -114,9 +125,10 @@ export default function NuevoPago({ memberId }: Props) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Referencia</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Referencia *</label>
               <input
                 type="text"
+                required
                 value={form.reference}
                 onChange={(e) => setForm({ ...form, reference: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -124,9 +136,10 @@ export default function NuevoPago({ memberId }: Props) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Notas</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Notas *</label>
               <input
                 type="text"
+                required
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -135,11 +148,18 @@ export default function NuevoPago({ memberId }: Props) {
             </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors font-medium text-sm"
+            >
+              Cancelar
+            </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center gap-2 bg-green-600 text-white px-6 py-2.5 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-medium"
+              className="flex items-center gap-2 bg-green-600 text-white px-6 py-2.5 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-medium text-sm"
             >
               {loading ? (
                 <>

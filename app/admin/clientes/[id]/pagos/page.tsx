@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Edit2, Trash2, CreditCard, Download } from 'lucide-react'
+import { ArrowLeft, Edit2, Trash2, CreditCard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EditPaymentModal } from '@/components/clientes/EditPaymentModal'
 import { toast } from 'sonner'
+import NuevoPago from './NuevoPago' // 👈 IMPORTANTE: Verificá la ruta real
 
 interface Payment {
   id: string
@@ -31,6 +32,7 @@ export default function PagosPage({ params }: { params: Promise<{ id: string }> 
   const [loading, setLoading] = useState(true)
   const [memberId, setMemberId] = useState('')
   const [memberName, setMemberName] = useState('')
+  const [memberDni, setMemberDni] = useState('') // 👈 Estado para el DNI real
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null)
 
   useEffect(() => {
@@ -54,6 +56,7 @@ export default function PagosPage({ params }: { params: Promise<{ id: string }> 
       if (memberRes.ok) {
         const data = await memberRes.json()
         setMemberName(`${data.firstName} ${data.lastName}`)
+        setMemberDni(data.dni || '') // 👈 Guardamos el DNI
       }
       if (paymentsRes.ok) {
         const data = await paymentsRes.json()
@@ -97,7 +100,7 @@ export default function PagosPage({ params }: { params: Promise<{ id: string }> 
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Pagos de {memberName}</h1>
-          <p className="text-sm text-slate-500">DNI: {memberId}</p>
+          <p className="text-sm text-slate-500">DNI: {memberDni || '—'}</p> {/* 👈 Mostramos el DNI real */}
         </div>
       </div>
 
@@ -114,6 +117,9 @@ export default function PagosPage({ params }: { params: Promise<{ id: string }> 
           <p className="text-2xl font-bold text-blue-700">{payments.length}</p>
         </div>
       </div>
+
+      {/* 👇 ACÁ VA EL COMPONENTE NUEVO PAGO 👇 */}
+      <NuevoPago memberId={memberId} />
 
       {/* Historial */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">

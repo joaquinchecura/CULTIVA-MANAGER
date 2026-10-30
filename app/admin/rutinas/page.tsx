@@ -3,12 +3,11 @@ export const dynamic = "force-dynamic"
 import { getRoutines, getTemplates } from "@/app/actions/routines"
 import { RoutineActions } from "@/components/routines/routine-actions"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import {
   Dumbbell, Plus, Search, Calendar, Users, Target,
-  Filter, Copy, FileText, TrendingUp,
+  Filter, Copy, FileText, TrendingUp, ChevronRight
 } from "lucide-react"
 import Link from "next/link"
 
@@ -22,7 +21,7 @@ const goalColors: Record<string, string> = {
   STRENGTH: "bg-red-50 text-red-700 border-red-200",
   ENDURANCE: "bg-emerald-50 text-emerald-700 border-emerald-200",
   WEIGHT_LOSS: "bg-orange-50 text-orange-700 border-orange-200",
-  MAINTENANCE: "bg-purple-50 text-purple-700 border-purple-200",
+  MAINTENANCE: "bg-violet-50 text-violet-700 border-violet-200",
   REHABILITATION: "bg-cyan-50 text-cyan-700 border-cyan-200",
 }
 
@@ -59,89 +58,82 @@ export default async function RutinasPage({
   }
 
   const isTemplateView = params.view === "templates"
-  // Rutinas asignadas → generador nuevo (por cliente). Templates → generador viejo (manual).
-  const newRoutineHref = isTemplateView ? "/admin/rutinas/nueva" : "/admin/rutinas/generar"
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-5 max-w-7xl mx-auto">
+      {/* Header compacto */}
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <Dumbbell size={24} className="text-blue-600" />
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <Dumbbell size={22} className="text-blue-600" />
             Rutinas
-          </h2>
-          <p className="text-slate-500 mt-1">
+          </h1>
+          <p className="text-sm text-slate-500 mt-0.5">
             {stats.total} {isTemplateView ? "templates" : "rutinas"} · {stats.active} activas
           </p>
         </div>
         {isTemplateView ? (
-  <Link href="/admin/rutinas/nueva?template=true">
-    <Button className="gap-2">
-      <Plus size={16} /> Nuevo template
-    </Button>
-  </Link>
-) : (
-  <div className="flex gap-2">
-    <Link href="/admin/rutinas/nueva">
-      <Button variant="outline" className="gap-2">
-        <Plus size={16} /> Rutina manual
-      </Button>
-    </Link>
-    <Link href="/admin/rutinas/generar">
-      <Button className="gap-2">
-        <Plus size={16} /> Rutina automática
-      </Button>
-    </Link>
-  </div>
-)}
+          <Link href="/admin/rutinas/nueva?template=true">
+            <Button className="gap-2 shrink-0">
+              <Plus size={16} /> Nuevo template
+            </Button>
+          </Link>
+        ) : (
+          <div className="flex gap-2 shrink-0">
+            <Link href="/admin/rutinas/nueva">
+              <Button variant="outline" className="gap-2">
+                <Plus size={16} /> Rutina manual
+              </Button>
+            </Link>
+            <Link href="/admin/rutinas/generar">
+              <Button className="gap-2 bg-blue-600 hover:bg-blue-700">
+                <Plus size={16} /> Rutina automática
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white border border-slate-200 rounded-xl p-4">
+      {/* Stats compactos */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="bg-gradient-to-br from-blue-50 to-white border border-blue-100 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-1">
-            <FileText size={16} className="text-blue-600" />
-            <span className="text-xs text-slate-500">Total</span>
+            <FileText size={14} className="text-blue-600" />
+            <span className="text-xs text-slate-500 font-medium">Total</span>
           </div>
-          <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
+          <p className="text-2xl font-bold text-blue-700">{stats.total}</p>
         </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-4">
+        <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-1">
-            <TrendingUp size={16} className="text-emerald-600" />
-            <span className="text-xs text-slate-500">Activas</span>
+            <TrendingUp size={14} className="text-emerald-600" />
+            <span className="text-xs text-slate-500 font-medium">Activas</span>
           </div>
-          <p className="text-2xl font-bold text-emerald-600">{stats.active}</p>
+          <p className="text-2xl font-bold text-emerald-700">{stats.active}</p>
         </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-4">
+        <div className="bg-gradient-to-br from-violet-50 to-white border border-violet-100 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-1">
-            <Target size={16} className="text-purple-600" />
-            <span className="text-xs text-slate-500">Objetivos</span>
+            <Target size={14} className="text-violet-600" />
+            <span className="text-xs text-slate-500 font-medium">Objetivos</span>
           </div>
-          <p className="text-2xl font-bold text-purple-600">
-            {Object.keys(stats.byGoal).length}
-          </p>
+          <p className="text-2xl font-bold text-violet-700">{Object.keys(stats.byGoal).length}</p>
         </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-4">
+        <div className="bg-gradient-to-br from-orange-50 to-white border border-orange-100 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-1">
-            <Users size={16} className="text-orange-600" />
-            <span className="text-xs text-slate-500">Clientes</span>
+            <Users size={14} className="text-orange-600" />
+            <span className="text-xs text-slate-500 font-medium">Clientes</span>
           </div>
-          <p className="text-2xl font-bold text-orange-600">
-            {isTemplateView
-              ? "—"
-              : new Set(routines.map((r: any) => r.memberId).filter(Boolean)).size
-            }
+          <p className="text-2xl font-bold text-orange-700">
+            {isTemplateView ? "—" : new Set(routines.map((r: any) => r.memberId).filter(Boolean)).size}
           </p>
         </div>
       </div>
 
-      {/* View tabs */}
+      {/* Tabs */}
       <div className="flex gap-1 bg-white border border-slate-200 rounded-xl p-1 w-fit">
         <Link href="/admin/rutinas">
           <button className={cn(
             "px-4 py-2 rounded-lg text-sm font-medium transition-all",
-            !isTemplateView ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50"
+            !isTemplateView ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:bg-slate-50"
           )}>
             Rutinas asignadas
           </button>
@@ -149,7 +141,7 @@ export default async function RutinasPage({
         <Link href="/admin/rutinas?view=templates">
           <button className={cn(
             "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5",
-            isTemplateView ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50"
+            isTemplateView ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:bg-slate-50"
           )}>
             <Copy size={14} /> Templates
           </button>
@@ -168,35 +160,25 @@ export default async function RutinasPage({
           />
         </div>
         {isTemplateView && <input type="hidden" name="view" value="templates" />}
-        <select
-          name="goal"
-          defaultValue={params.goal || ""}
-          className="h-9 px-3 border border-slate-200 rounded-lg text-sm bg-white text-slate-600"
-        >
+        <select name="goal" defaultValue={params.goal || ""} className="h-9 px-3 border border-slate-200 rounded-lg text-sm bg-white text-slate-600">
           <option value="">Todos los objetivos</option>
           {Object.entries(goalLabels).map(([key, label]) => (
             <option key={key} value={key}>{label}</option>
           ))}
         </select>
         {!isTemplateView && (
-          <select
-            name="status"
-            defaultValue={params.status || ""}
-            className="h-9 px-3 border border-slate-200 rounded-lg text-sm bg-white text-slate-600"
-          >
+          <select name="status" defaultValue={params.status || ""} className="h-9 px-3 border border-slate-200 rounded-lg text-sm bg-white text-slate-600">
             <option value="">Todos los estados</option>
             <option value="active">Activas</option>
             <option value="inactive">Inactivas</option>
           </select>
         )}
-        <Button type="submit" variant="outline" size="sm" className="h-9">
-          <Filter size={14} className="mr-1" /> Filtrar
+        <Button type="submit" variant="outline" size="sm" className="h-9 gap-1.5">
+          <Filter size={14} /> Filtrar
         </Button>
         {(params.search || params.goal || params.status) && (
           <Link href={isTemplateView ? "/admin/rutinas?view=templates" : "/admin/rutinas"}>
-            <Button type="button" variant="ghost" size="sm" className="h-9 text-slate-500">
-              Limpiar
-            </Button>
+            <Button type="button" variant="ghost" size="sm" className="h-9 text-slate-500">Limpiar</Button>
           </Link>
         )}
       </form>
@@ -205,9 +187,7 @@ export default async function RutinasPage({
       {filteredRoutines.length === 0 ? (
         <div className="text-center py-16 bg-white border border-slate-200 rounded-xl">
           <Dumbbell className="mx-auto text-slate-300 mb-3" size={48} />
-          <p className="text-slate-500 font-medium">
-            {isTemplateView ? "No hay templates" : "No hay rutinas"}
-          </p>
+          <p className="text-slate-500 font-medium">{isTemplateView ? "No hay templates" : "No hay rutinas"}</p>
           <p className="text-sm text-slate-400 mt-1">
             {params.search || params.goal
               ? "Probá con otros filtros"
@@ -215,78 +195,79 @@ export default async function RutinasPage({
               ? "Creá un template genérico para reutilizar con varios clientes"
               : "Creá la primera rutina para un cliente"}
           </p>
-          <Link
-  href={isTemplateView ? "/admin/rutinas/nueva?template=true" : "/admin/rutinas/generar"}
-  className="inline-block mt-4"
->
-  <Button size="sm" className="gap-2">
-    <Plus size={16} /> {isTemplateView ? "Nuevo template" : "Rutina automática"}
-  </Button>
-</Link>
+          <Link href={isTemplateView ? "/admin/rutinas/nueva?template=true" : "/admin/rutinas/generar"} className="inline-block mt-4">
+            <Button size="sm" className="gap-2">
+              <Plus size={16} /> {isTemplateView ? "Nuevo template" : "Rutina automática"}
+            </Button>
+          </Link>
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           {filteredRoutines.map((routine: any) => {
-            const totalExercises = routine.days.reduce(
-              (sum: number, d: any) => sum + d.exercises.length, 0
-            )
+            const totalExercises = routine.days.reduce((sum: number, d: any) => sum + d.exercises.length, 0)
+            const goalStyle = routine.goal ? goalColors[routine.goal] : "bg-slate-50 text-slate-600 border-slate-200"
+
             return (
-              <div
+              <Link
                 key={routine.id}
+                href={`/admin/rutinas/${routine.id}`}
                 className={cn(
-                  "bg-white border rounded-xl p-5 transition-all hover:shadow-lg hover:-translate-y-0.5",
+                  "group block bg-white border rounded-xl p-4 transition-all hover:shadow-md hover:-translate-y-0.5",
                   routine.isActive ? "border-slate-200" : "border-slate-200 opacity-60"
                 )}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-2">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
                       {isTemplateView && (
-                        <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-200">
-                          <Copy size={10} /> Template
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-200">
+                          <Copy size={10} /> TEMPLATE
                         </span>
                       )}
-                      <h3 className="text-lg font-bold text-slate-900">{routine.name}</h3>
+                      <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                        {routine.name}
+                      </h3>
                       {routine.goal && (
-                        <Badge
-                          variant="outline"
-                          className={`text-xs ${goalColors[routine.goal] || "bg-slate-50 text-slate-600"}`}
-                        >
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${goalStyle}`}>
                           {goalLabels[routine.goal] || routine.goal}
-                        </Badge>
+                        </span>
                       )}
                       {!routine.isActive && (
-                        <Badge className="text-xs bg-slate-100 text-slate-500">Inactiva</Badge>
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
+                          Inactiva
+                        </span>
                       )}
                     </div>
 
                     {routine.description && (
-                      <p className="text-sm text-slate-500 mb-3 line-clamp-2">{routine.description}</p>
+                      <p className="text-xs text-slate-500 mb-2 line-clamp-1">{routine.description}</p>
                     )}
 
-                    <div className="flex items-center gap-4 text-sm text-slate-500 flex-wrap">
-                      <span className="flex items-center gap-1.5">
-                        <Calendar size={14} className="text-slate-400" />
-                        {routine.frequencyPerWeek && `${routine.frequencyPerWeek} ses/sem · `}
-                        {routine.totalWeeks && `${routine.totalWeeks} sem · `}
+                    <div className="flex items-center gap-4 text-xs text-slate-500 flex-wrap">
+                      <span className="flex items-center gap-1">
+                        <Calendar size={12} className="text-slate-400" />
+                        {routine.frequencyPerWeek && `${routine.frequencyPerWeek} ses/sem`}
+                        {routine.totalWeeks && ` · ${routine.totalWeeks} sem`}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Dumbbell size={12} className="text-slate-400" />
                         {totalExercises} ejercicios
                       </span>
                       {!isTemplateView && routine.member && (
-                        <span className="flex items-center gap-1.5">
-                          <Users size={14} className="text-slate-400" />
+                        <span className="flex items-center gap-1">
+                          <Users size={12} className="text-slate-400" />
                           {routine.member.firstName} {routine.member.lastName}
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <RoutineActions
-                    routineId={routine.id}
-                    isActive={routine.isActive}
-                    routineName={routine.name}
-                  />
+                  <div className="flex items-center gap-2 shrink-0">
+                    <RoutineActions routineId={routine.id} isActive={routine.isActive} routineName={routine.name} />
+                    <ChevronRight size={16} className="text-slate-300 group-hover:text-slate-500 transition-colors" />
+                  </div>
                 </div>
-              </div>
+              </Link>
             )
           })}
         </div>

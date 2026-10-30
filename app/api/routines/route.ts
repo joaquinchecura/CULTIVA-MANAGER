@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireOrg } from "@/lib/get-org";
+import { sendNewRoutineEmail } from '@/lib/email'
 
 export async function GET(req: NextRequest) {
   const { orgId, error } = await requireOrg();
@@ -82,6 +83,45 @@ export async function POST(req: NextRequest) {
         include: { days: { include: { exercises: { include: { exercise: true } } } } },
       });
     });
+
+    // 👇 ENVIAR EMAIL AL ALUMNO (no bloquea la respuesta)
+    if (routine && routine.memberId) {
+      try {
+        const member = await prisma.member.findUnique({
+          where: { id: routine.memberId },
+          select: { email: true, firstName: true },
+        })
+
+        const gymConfig = await prisma.gymConfig.findFirst({
+          where: { organizationId: orgId },
+          select: { name: true },
+        })
+
+        const goalLabels: Record<string, string> = {
+          HYPERTROPHY: 'Hipertrofia',
+          STRENGTH: 'Fuerza',
+          ENDURANCE: 'Resistencia',
+          WEIGHT_LOSS: 'Pérdida de peso',
+          MAINTENANCE: 'Mantenimiento',
+          REHABILITATION: 'Rehabilitación',
+        }
+
+        if (member?.email) {
+          // No esperamos la respuesta del email para no demorar al profe
+          sendNewRoutineEmail({
+            to: member.email,
+            firstName: member.firstName,
+            gymName: gymConfig?.name || 'Tu gimnasio',
+            routineName: routine.name,
+            routineGoal: routine.goal ? goalLabels[routine.goal] : 'General',
+            miplanUrl: process.env.NEXT_PUBLIC_MIPLAN_URL || 'https://miplan.cultivafitness.app',
+          }).catch(err => console.error('Error enviando email de rutina:', err))
+        }
+      } catch (emailErr) {
+        // Si falla el email, no rompemos la creación de la rutina
+        console.error('Error preparando email de rutina:', emailErr)
+      }
+    }
 
     return NextResponse.json(routine, { status: 201 });
   } catch (error) {

@@ -13,13 +13,12 @@ import {
   Select, SelectContent, SelectItem,
   SelectTrigger, SelectValue,
 } from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Exercise, mapPrismaExercise } from "@/types/exercise"
 import {
-  Dumbbell, Trash2, Plus, Save, ChevronUp, ChevronDown,
-  X, ArrowRight, ArrowLeft, TrendingUp, Zap, Target,
-  Calendar, Info, Check, Copy,   // ← agregar Copy
+  Trash2, Save, ChevronUp, ChevronDown,
+  ArrowRight, ArrowLeft, TrendingUp, Zap, Target,
+  Calendar, Info, Check, Copy,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -42,18 +41,17 @@ interface TemplateSession {
   exercises: TemplateExercise[]
 }
 
-// weightOverrides[sessionNumber][exerciseIndex] = kg
 type WeightOverrides = Record<number, Record<number, number | null>>
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
 const GOALS = [
-  { value: "HYPERTROPHY", label: "Hipertrofia" },
-  { value: "STRENGTH",    label: "Fuerza" },
-  { value: "ENDURANCE",   label: "Resistencia" },
-  { value: "WEIGHT_LOSS", label: "Pérdida de peso" },
-  { value: "MAINTENANCE", label: "Mantenimiento" },
-  { value: "REHABILITATION", label: "Rehabilitación" },
+  { value: "HYPERTROPHY", label: "Hipertrofia", color: "bg-blue-50 text-blue-700 border-blue-200" },
+  { value: "STRENGTH",    label: "Fuerza", color: "bg-red-50 text-red-700 border-red-200" },
+  { value: "ENDURANCE",   label: "Resistencia", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  { value: "WEIGHT_LOSS", label: "Pérdida de peso", color: "bg-orange-50 text-orange-700 border-orange-200" },
+  { value: "MAINTENANCE", label: "Mantenimiento", color: "bg-violet-50 text-violet-700 border-violet-200" },
+  { value: "REHABILITATION", label: "Rehabilitación", color: "bg-cyan-50 text-cyan-700 border-cyan-200" },
 ]
 
 const TOTAL_WEEKS_OPTIONS = [4, 6, 8, 10, 12]
@@ -63,7 +61,6 @@ const STEPS = [
   { id: 3, label: "Progresión" },
 ]
 
-// sessionNumber is 1-based absolute number across all weeks
 function getSessionNumber(week: number, dayOfWeek: number, freq: number) {
   return (week - 1) * freq + dayOfWeek
 }
@@ -73,14 +70,12 @@ function getSessionNumber(week: number, dayOfWeek: number, freq: number) {
 interface RoutineBuilderProps {
   members: { id: string; firstName: string; lastName: string }[]
   initialData?: any
-  defaultMemberId?: string   // ← nuevo
+  defaultMemberId?: string
 }
 
 export function RoutineBuilder({ members, initialData, defaultMemberId }: RoutineBuilderProps) {
   const router = useRouter()
   const isEditing = !!initialData
-
-  // Step 1
 
   const [memberId, setMemberId] = useState(initialData?.memberId || defaultMemberId || "")
   const searchParams = useSearchParams()
@@ -92,7 +87,6 @@ export function RoutineBuilder({ members, initialData, defaultMemberId }: Routin
   const [freq,        setFreq]        = useState<number>(initialData?.frequencyPerWeek || 3)
   const [totalWeeks,  setTotalWeeks]  = useState<number>(initialData?.totalWeeks || 4)
 
-  // Step 2: week template
   const buildInitialTemplate = (): TemplateSession[] => {
     if (initialData?.days) {
       const firstWeek = initialData.days.filter((d: any) => d.weekNumber === 1)
@@ -122,7 +116,6 @@ export function RoutineBuilder({ members, initialData, defaultMemberId }: Routin
 
   const [template, setTemplate] = useState<TemplateSession[]>(buildInitialTemplate)
 
-  // Step 3: weight overrides per session
   const buildInitialOverrides = (): WeightOverrides => {
     if (initialData?.days) {
       const overrides: WeightOverrides = {}
@@ -141,7 +134,6 @@ export function RoutineBuilder({ members, initialData, defaultMemberId }: Routin
   const [step,   setStep]   = useState(1)
   const [saving, setSaving] = useState(false)
 
-  // ── Freq change: resize template ──
   function handleFreqChange(newFreq: number) {
     setFreq(newFreq)
     setTemplate(prev => {
@@ -167,7 +159,6 @@ export function RoutineBuilder({ members, initialData, defaultMemberId }: Routin
     })
   }
 
-  // ── Template manipulation ──
   function addExercise(sIdx: number, exercise: Exercise) {
     setTemplate(prev => {
       const next = [...prev]
@@ -204,12 +195,7 @@ export function RoutineBuilder({ members, initialData, defaultMemberId }: Routin
     })
   }
 
-  function updateExercise(
-    sIdx: number,
-    exIdx: number,
-    field: keyof TemplateExercise,
-    value: any
-  ) {
+  function updateExercise(sIdx: number, exIdx: number, field: keyof TemplateExercise, value: any) {
     setTemplate(prev => {
       const next = [...prev]
       const exs = [...next[sIdx].exercises]
@@ -238,7 +224,6 @@ export function RoutineBuilder({ members, initialData, defaultMemberId }: Routin
     })
   }
 
-  // ── Weight table ──
   function getWeight(sNum: number, exIdx: number, templateEx: TemplateExercise) {
     if (weightOverrides[sNum]?.[exIdx] !== undefined) {
       return weightOverrides[sNum][exIdx]
@@ -253,13 +238,7 @@ export function RoutineBuilder({ members, initialData, defaultMemberId }: Routin
     }))
   }
 
-  function autoFill(
-    sIdx: number,
-    exIdx: number,
-    startWeight: number,
-    increment: number,
-    everyN: number
-  ) {
+  function autoFill(sIdx: number, exIdx: number, startWeight: number, increment: number, everyN: number) {
     setWeightOverrides(prev => {
       const next = { ...prev }
       for (let week = 1; week <= totalWeeks; week++) {
@@ -267,66 +246,62 @@ export function RoutineBuilder({ members, initialData, defaultMemberId }: Routin
         const group = Math.floor((week - 1) / everyN)
         const weight = startWeight + group * increment
         if (!next[sNum]) next[sNum] = {}
-        next[sNum][exIdx] = Math.round(weight * 4) / 4  // round to nearest 0.25
+        next[sNum][exIdx] = Math.round(weight * 4) / 4
       }
       return next
     })
   }
 
-  // ── Validation ──
   const canStep1 = (isTemplate || memberId) && name.trim() && freq >= 1 && totalWeeks >= 4
   const canStep2 = template.every(s => s.exercises.length > 0)
 
-  // ── Save ──
-async function handleSave() {
-  setSaving(true)
-  try {
-    const payload = {
-      memberId: isTemplate ? null : memberId,
-      isTemplate,
-      name,
-      description: description || null,
-      goal: goal || null,
-      frequencyPerWeek: freq,
-      totalWeeks,
-      weekTemplate: template.map(s => ({
-        dayOfWeek: s.dayOfWeek,
-        label: s.label || undefined,
-        exercises: s.exercises.map((ex, idx) => ({
-          exerciseId: ex.exerciseId,
-          sets: ex.sets,
-          reps: ex.reps,
-          targetWeight: ex.targetWeight,
-          rest: ex.rest || null,
-          order: idx,
-          notes: ex.notes || null,
+  async function handleSave() {
+    setSaving(true)
+    try {
+      const payload = {
+        memberId: isTemplate ? null : memberId,
+        isTemplate,
+        name,
+        description: description || null,
+        goal: goal || null,
+        frequencyPerWeek: freq,
+        totalWeeks,
+        weekTemplate: template.map(s => ({
+          dayOfWeek: s.dayOfWeek,
+          label: s.label || undefined,
+          exercises: s.exercises.map((ex, idx) => ({
+            exerciseId: ex.exerciseId,
+            sets: ex.sets,
+            reps: ex.reps,
+            targetWeight: ex.targetWeight,
+            rest: ex.rest || null,
+            order: idx,
+            notes: ex.notes || null,
+          })),
         })),
-      })),
-      weightOverrides,
+        weightOverrides,
+      }
+      if (isEditing) {
+        await updateRoutine(initialData.id, payload)
+      } else {
+        await createRoutine(payload)
+      }
+      router.push("/admin/rutinas")
+      router.refresh()
+    } catch (err) {
+      console.error(err)
+      alert("Error al guardar la rutina")
+    } finally {
+      setSaving(false)
     }
-    if (isEditing) {
-      await updateRoutine(initialData.id, payload)
-    } else {
-      await createRoutine(payload)
-    }
-    router.push("/admin/rutinas")
-    router.refresh()
-  } catch (err) {
-    console.error(err)
-    alert("Error al guardar la rutina")
-  } finally {
-    setSaving(false)
   }
-}
 
-  // ── Render ──
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-24">
-
       {/* Step indicator */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         {STEPS.map((s, i) => (
-          <div key={s.id} className="flex items-center gap-1">
+          <div key={s.id} className="flex items-center gap-2">
             <button
               onClick={() => step > s.id && setStep(s.id)}
               className={cn(
@@ -334,13 +309,13 @@ async function handleSave() {
                 step === s.id
                   ? "bg-blue-600 text-white shadow-sm"
                   : step > s.id
-                  ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
                   : "bg-slate-50 text-slate-400 cursor-default"
               )}
             >
               <span className={cn(
                 "w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold",
-                step === s.id ? "bg-white/20" : ""
+                step === s.id ? "bg-white/20" : step > s.id ? "bg-blue-100" : ""
               )}>
                 {step > s.id ? <Check size={10} /> : s.id}
               </span>
@@ -353,142 +328,176 @@ async function handleSave() {
         ))}
       </div>
 
-      {/* ══ STEP 1: Información ══ */}
+      {/* STEP 1: Información */}
       {step === 1 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Target size={18} className="text-blue-600" />
-              Información de la rutina
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5">
-          <div className="flex items-center gap-2 mb-3">
-  <button
-    type="button"
-    onClick={() => { setIsTemplate(!isTemplate); if (!isTemplate) setMemberId("") }}
-    className={cn(
-      "px-3 py-1.5 rounded-lg text-xs font-medium border transition-all flex items-center gap-1.5",
-      isTemplate
-        ? "bg-violet-50 border-violet-200 text-violet-700"
-        : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
-    )}
-  >
-    <Copy size={12} />
-    {isTemplate ? "Es un template (sin cliente asignado)" : "Guardar como template"}
-  </button>
-</div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2 mb-6">
+              <Target size={20} className="text-blue-600" />
+              Detalles del plan
+            </h2>
 
-              {!isTemplate && (
-  <div className="space-y-1.5">
-    <Label>Cliente *</Label>
-    <Select value={memberId} onValueChange={setMemberId}>
-      <SelectTrigger>
-        <SelectValue placeholder="Seleccionar cliente..." />
-      </SelectTrigger>
-      <SelectContent>
-        {members.map(m => (
-          <SelectItem key={m.id} value={m.id}>
-            {m.firstName} {m.lastName}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  </div>
-)}
-              <div className="space-y-1.5">
-                <Label>Nombre *</Label>
-                <Input
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="Ej: Plan fuerza — 3 meses"
+            <div className="space-y-5">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => { setIsTemplate(!isTemplate); if (!isTemplate) setMemberId("") }}
+                  className={cn(
+                    "px-4 py-2 rounded-lg text-sm font-medium border transition-all flex items-center gap-2",
+                    isTemplate
+                      ? "bg-violet-50 border-violet-200 text-violet-700 shadow-sm"
+                      : "bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-100"
+                  )}
+                >
+                  <Copy size={16} />
+                  {isTemplate ? "Modo Template (Sin cliente)" : "Guardar como template genérico"}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {!isTemplate && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-slate-700">Cliente asignado <span className="text-red-500">*</span></Label>
+                    <Select value={memberId} onValueChange={setMemberId}>
+                      <SelectTrigger className="h-10 bg-slate-50/50">
+                        <SelectValue placeholder="Seleccionar cliente..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {members.map(m => (
+                          <SelectItem key={m.id} value={m.id}>{m.firstName} {m.lastName}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-slate-700">Nombre de la rutina <span className="text-red-500">*</span></Label>
+                  <Input
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    placeholder="Ej: Plan Hipertrofia — Mes 1"
+                    className="h-10 bg-slate-50/50"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-slate-700">Descripción o notas del coach</Label>
+                <Textarea
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder="Contexto del plan, lesiones previas, observaciones..."
+                  rows={2}
+                  className="bg-slate-50/50 resize-none"
                 />
               </div>
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <Label>Objetivo</Label>
-                <Select value={goal} onValueChange={setGoal}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Objetivo..." />
-                  </SelectTrigger>
-                  <SelectContent>
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2 mb-6">
+              <Calendar size={20} className="text-blue-600" />
+              Objetivo y estructura
+            </h2>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 space-y-6">
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium text-slate-700">Objetivo principal</Label>
+                  <div className="flex flex-wrap gap-2">
                     {GOALS.map(g => (
-                      <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>
+                      <button
+                        key={g.value}
+                        onClick={() => setGoal(g.value)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-sm font-medium border transition-all",
+                          goal === g.value
+                            ? g.color + " ring-2 ring-offset-1 ring-slate-200 shadow-sm"
+                            : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                        )}
+                      >
+                        {g.label}
+                      </button>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  </div>
+                </div>
 
-              <div className="space-y-1.5">
-                <Label>Sesiones por semana *</Label>
-                <div className="flex gap-1.5 flex-wrap">
-                  {[1,2,3,4,5,6,7].map(n => (
-                    <button
-                      key={n}
-                      onClick={() => handleFreqChange(n)}
-                      className={cn(
-                        "w-9 h-9 rounded-lg text-sm font-bold border transition-all",
-                        freq === n
-                          ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                          : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
-                      )}
-                    >
-                      {n}
-                    </button>
-                  ))}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium text-slate-700">Días de entrenamiento por semana <span className="text-red-500">*</span></Label>
+                  <div className="flex gap-2 flex-wrap">
+                    {[1,2,3,4,5,6,7].map(n => (
+                      <button
+                        key={n}
+                        onClick={() => handleFreqChange(n)}
+                        className={cn(
+                          "w-11 h-11 rounded-lg text-base font-bold border transition-all flex items-center justify-center",
+                          freq === n
+                            ? "bg-blue-600 text-white border-blue-600 shadow-md transform scale-105"
+                            : "bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:text-blue-600"
+                        )}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium text-slate-700">Duración del plan</Label>
+                  <div className="flex gap-2 flex-wrap">
+                    {TOTAL_WEEKS_OPTIONS.map(n => (
+                      <button
+                        key={n}
+                        onClick={() => setTotalWeeks(n)}
+                        className={cn(
+                          "px-4 h-10 rounded-lg text-sm font-bold border transition-all flex items-center justify-center",
+                          totalWeeks === n
+                            ? "bg-slate-800 text-white border-slate-800 shadow-md"
+                            : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                        )}
+                      >
+                        {n} semanas
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <Label>Total de semanas *</Label>
-                <div className="flex gap-1.5 flex-wrap">
-                  {TOTAL_WEEKS_OPTIONS.map(n => (
-                    <button
-                      key={n}
-                      onClick={() => setTotalWeeks(n)}
-                      className={cn(
-                        "px-2.5 h-9 rounded-lg text-xs font-bold border transition-all",
-                        totalWeeks === n
-                          ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                          : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
-                      )}
-                    >
-                      {n} sem
-                    </button>
-                  ))}
+              <div className="lg:col-span-1">
+                <div className="h-full bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-5 flex flex-col justify-center relative overflow-hidden">
+                  <Calendar className="absolute -right-4 -bottom-4 text-blue-500/10 w-32 h-32" />
+                  <h3 className="text-sm font-semibold text-blue-900 mb-4 flex items-center gap-2">
+                    <Zap size={16} className="text-blue-500" />
+                    Resumen del plan
+                  </h3>
+                  <div className="space-y-4 relative z-10">
+                    <div>
+                      <p className="text-3xl font-black text-blue-700">{freq * totalWeeks}</p>
+                      <p className="text-xs text-blue-600/80 font-medium uppercase tracking-wide">Sesiones totales</p>
+                    </div>
+                    <div className="pt-4 border-t border-blue-200/50 space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-blue-800/70">Frecuencia:</span>
+                        <span className="font-semibold text-blue-900">{freq} días/sem</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-blue-800/70">Duración:</span>
+                        <span className="font-semibold text-blue-900">{totalWeeks} semanas</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-
-            {/* Summary pill */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-100 rounded-full text-sm text-blue-800">
-              <Calendar size={14} className="text-blue-500" />
-              <strong>{freq * totalWeeks} sesiones</strong> en total
-              <span className="text-blue-500">·</span>
-              {freq} por semana × {totalWeeks} semanas
-            </div>
-
-            <div className="space-y-1.5">
-              <Label>Descripción / notas</Label>
-              <Textarea
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-                placeholder="Objetivo del plan, contexto, observaciones..."
-                rows={2}
-              />
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
-      {/* ══ STEP 2: Sesiones ══ */}
+      {/* STEP 2: Sesiones */}
       {step === 2 && (
-        <div className="space-y-4">
-          <div className="flex items-start gap-2 px-4 py-3 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-800">
-            <Info size={15} className="shrink-0 mt-0.5" />
+        <div className="space-y-6">
+          <div className="flex items-start gap-3 px-5 py-4 bg-amber-50 border border-amber-200/60 rounded-xl text-sm text-amber-900 shadow-sm">
+            <Info size={18} className="shrink-0 mt-0.5 text-amber-600" />
             <span>
               Armá las <strong>{freq} sesiones de la semana base.</strong> Los ejercicios, series y reps
               se repiten en todas las semanas. Los pesos los ajustás sesión por sesión en el paso siguiente.
@@ -496,117 +505,127 @@ async function handleSave() {
           </div>
 
           {template.map((session, sIdx) => (
-            <Card key={sIdx}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center text-sm font-bold shrink-0">
-                    {sIdx + 1}
-                  </div>
-                  <div className="flex-1">
-  <CardTitle className="text-sm">Sesión {sIdx + 1}</CardTitle>
-  <p className="text-xs text-slate-400 mt-0.5">
-    Corresponde a las sesiones {Array.from({ length: totalWeeks }, (_, w) =>
-      getSessionNumber(w + 1, sIdx + 1, freq)
-    ).join(", ")} del plan completo
-  </p>
-</div>
-<Input
-  value={session.label}
-  onChange={e => updateSessionLabel(sIdx, e.target.value)}
-  placeholder="Ej: Push, Pull, Legs..."
-  className="h-8 text-sm w-40 shrink-0"
-/>
-                  <Badge variant="secondary" className="ml-auto text-xs">
-                    {session.exercises.length} ejercicios
-                  </Badge>
+            <div key={sIdx} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+              <div className="px-5 py-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-lg font-bold shadow-sm shrink-0">
+                  {sIdx + 1}
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {session.exercises.length === 0 ? (
-                  <p className="text-sm text-slate-400 text-center py-4 border-2 border-dashed border-slate-100 rounded-xl">
-                    Agregá al menos un ejercicio a esta sesión
+                <div className="flex-1 min-w-[200px]">
+                  <div className="flex items-center gap-3 mb-1">
+                    <h3 className="text-base font-bold text-slate-900">Sesión {sIdx + 1}</h3>
+                    <Badge variant="secondary" className="text-[11px] bg-white border-slate-200 text-slate-600 shadow-sm">
+                      {session.exercises.length} ejercicios
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] font-medium text-slate-500">
+                    Apariciones: Sesiones {Array.from({ length: totalWeeks }, (_, w) =>
+                      getSessionNumber(w + 1, sIdx + 1, freq)
+                    ).join(", ")} del plan
                   </p>
+                </div>
+                <div className="w-full sm:w-auto">
+                  <Input
+                    value={session.label}
+                    onChange={e => updateSessionLabel(sIdx, e.target.value)}
+                    placeholder="Ej: Push, Pull, Legs..."
+                    className="h-9 text-sm w-full sm:w-56 bg-white"
+                  />
+                </div>
+              </div>
+
+              <div className="p-5 space-y-4">
+                {session.exercises.length === 0 ? (
+                  <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                    <p className="text-sm font-medium text-slate-500">
+                      No hay ejercicios en esta sesión todavía.
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Hacé clic abajo para empezar a agregar.
+                    </p>
+                  </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {session.exercises.map((ex, exIdx) => (
-                      <div
-                        key={exIdx}
-                        className="border border-slate-100 rounded-xl p-3 bg-slate-50/50"
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-400 shrink-0 mt-0.5">
+                      <div key={exIdx} className="border border-slate-200 rounded-xl p-3 sm:p-4 bg-white hover:border-blue-300 transition-colors group/ex">
+                        <div className="flex items-start gap-4">
+                          <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center text-sm font-bold shrink-0 mt-0.5 border border-blue-100">
                             {exIdx + 1}
                           </div>
+
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-900 mb-2.5 truncate">
-                              {ex.exercise.name}
+                            <div className="flex items-center gap-2 mb-3">
+                              <p className="text-sm font-bold text-slate-900 truncate">
+                                {ex.exercise.name}
+                              </p>
                               {ex.exercise.muscleGroup && (
-                                <span className="text-xs text-slate-400 font-normal ml-2">
+                                <span className="text-[10px] font-semibold uppercase tracking-wide bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">
                                   {ex.exercise.muscleGroup}
                                 </span>
                               )}
-                            </p>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            </div>
+
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                               {[
                                 { label: "Series", field: "sets" as const, type: "number", placeholder: "3" },
                                 { label: "Reps", field: "reps" as const, type: "text", placeholder: "10" },
-                                { label: "Peso ref. (kg)", field: "targetWeight" as const, type: "number", placeholder: "—" },
+                                { label: "Peso (kg)", field: "targetWeight" as const, type: "number", placeholder: "—" },
                                 { label: "Descanso", field: "rest" as const, type: "text", placeholder: "60s" },
                               ].map(({ label, field, type, placeholder }) => (
-                                <div key={field}>
-                                  <label className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">
+                                <div key={field} className="bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                  <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">
                                     {label}
                                   </label>
                                   <Input
                                     type={type}
                                     min={type === "number" ? 0 : undefined}
                                     step={field === "targetWeight" ? 2.5 : undefined}
-                                    value={
-                                      field === "targetWeight"
-                                        ? (ex.targetWeight ?? "")
-                                        : (ex[field] as string | number)
-                                    }
-                                    onChange={e => updateExercise(
-                                      sIdx, exIdx, field,
+                                    value={field === "targetWeight" ? (ex.targetWeight ?? "") : (ex[field] as string | number)}
+                                    onChange={e => updateExercise(sIdx, exIdx, field,
                                       field === "sets"
                                         ? parseInt(e.target.value) || 1
                                         : field === "targetWeight"
                                         ? (e.target.value ? parseFloat(e.target.value) : null)
                                         : e.target.value
                                     )}
-                                    className="h-8 text-sm text-center mt-1"
+                                    className="h-8 text-sm text-center bg-white border-slate-200 font-medium"
                                     placeholder={placeholder}
                                   />
                                 </div>
                               ))}
                             </div>
-                            <Input
-                              value={ex.notes}
-                              onChange={e => updateExercise(sIdx, exIdx, "notes", e.target.value)}
-                              className="h-7 text-xs mt-2"
-                              placeholder="Nota del coach para este ejercicio..."
-                            />
+
+                            <div className="mt-3 flex items-center gap-2">
+                              <span className="text-xs font-medium text-slate-400 shrink-0">Nota:</span>
+                              <Input
+                                value={ex.notes}
+                                onChange={e => updateExercise(sIdx, exIdx, "notes", e.target.value)}
+                                className="h-8 text-xs bg-transparent border-transparent hover:border-slate-200 focus:bg-white focus:border-blue-300 transition-all text-slate-600 placeholder:text-slate-300"
+                                placeholder="Indicaciones extra para este ejercicio..."
+                              />
+                            </div>
                           </div>
-                          <div className="flex flex-col gap-0.5 shrink-0">
+
+                          <div className="flex flex-col gap-1 shrink-0 bg-slate-50 p-1 rounded-lg border border-slate-100 opacity-50 group-hover/ex:opacity-100 transition-opacity">
                             <button
                               onClick={() => moveExercise(sIdx, exIdx, "up")}
                               disabled={exIdx === 0}
-                              className="p-1.5 rounded text-slate-300 hover:text-slate-600 disabled:opacity-20 transition-colors"
+                              className="p-1.5 rounded-md text-slate-400 hover:text-blue-600 hover:bg-white disabled:opacity-30 transition-colors"
                             >
-                              <ChevronUp size={13} />
+                              <ChevronUp size={16} />
                             </button>
                             <button
                               onClick={() => moveExercise(sIdx, exIdx, "down")}
                               disabled={exIdx === session.exercises.length - 1}
-                              className="p-1.5 rounded text-slate-300 hover:text-slate-600 disabled:opacity-20 transition-colors"
+                              className="p-1.5 rounded-md text-slate-400 hover:text-blue-600 hover:bg-white disabled:opacity-30 transition-colors"
                             >
-                              <ChevronDown size={13} />
+                              <ChevronDown size={16} />
                             </button>
+                            <div className="h-px w-full bg-slate-200 my-0.5" />
                             <button
                               onClick={() => removeExercise(sIdx, exIdx)}
-                              className="p-1.5 rounded text-slate-300 hover:text-red-500 transition-colors"
+                              className="p-1.5 rounded-md text-slate-400 hover:text-red-600 hover:bg-white transition-colors"
                             >
-                              <X size={13} />
+                              <Trash2 size={16} />
                             </button>
                           </div>
                         </div>
@@ -614,21 +633,24 @@ async function handleSave() {
                     ))}
                   </div>
                 )}
-                <ExerciseSelector
-                  onSelect={ex => addExercise(sIdx, ex)}
-                  selectedIds={session.exercises.map(e => e.exerciseId)}
-                />
-              </CardContent>
-            </Card>
+
+                <div className="pt-2">
+                  <ExerciseSelector
+                    onSelect={ex => addExercise(sIdx, ex)}
+                    selectedIds={session.exercises.map(e => e.exerciseId)}
+                  />
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       )}
 
-      {/* ══ STEP 3: Progresión de pesos ══ */}
+      {/* STEP 3: Progresión */}
       {step === 3 && (
-        <div className="space-y-5">
-          <div className="flex items-start gap-2 px-4 py-3 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-800">
-            <TrendingUp size={15} className="shrink-0 mt-0.5" />
+        <div className="space-y-6">
+          <div className="flex items-start gap-3 px-5 py-4 bg-blue-50 border border-blue-200/60 rounded-xl text-sm text-blue-900 shadow-sm">
+            <TrendingUp size={18} className="shrink-0 mt-0.5 text-blue-600" />
             <span>
               Ajustá el <strong>peso prescripto</strong> para cada sesión. Las celdas grises usan el
               peso de referencia del template; las azules tienen un valor personalizado.
@@ -639,86 +661,85 @@ async function handleSave() {
           {template.map((session, sIdx) => {
             if (session.exercises.length === 0) return null
             return (
-              <Card key={sIdx} className="overflow-hidden">
-                <CardHeader className="py-3 bg-slate-50 border-b border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
-                      {sIdx + 1}
-                    </div>
-                    <CardTitle className="text-sm">Sesión {sIdx + 1} de la semana</CardTitle>
-                    <span className="text-xs text-slate-400 ml-1">
-                      → {totalWeeks} apariciones: ses. {Array.from({ length: totalWeeks }, (_, w) =>
-                        getSessionNumber(w + 1, sIdx + 1, freq)
-                      ).join(" · ")}
-                    </span>
+              <div key={sIdx} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                <div className="px-5 py-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-slate-800 text-white flex items-center justify-center text-sm font-bold shrink-0 shadow-sm">
+                    {sIdx + 1}
                   </div>
-                </CardHeader>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">Progresión: Sesión {sIdx + 1}</h3>
+                    <p className="text-[11px] font-medium text-slate-500">
+                      Ajustá las cargas de cada semana para esta sesión
+                    </p>
+                  </div>
+                </div>
 
-                <CardContent className="p-0">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm border-collapse">
-                      <thead>
-                        <tr className="border-b border-slate-100">
-                          <th className="sticky left-0 bg-white text-left px-4 py-2.5 text-xs font-semibold text-slate-500 min-w-[160px] border-r border-slate-100">
-                            Ejercicio
-                          </th>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-white">
+                        <th className="sticky left-0 bg-white text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[200px] border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] z-10">
+                          Ejercicio
+                        </th>
+                        {Array.from({ length: totalWeeks }, (_, i) => i + 1).map(w => {
+                          const sNum = getSessionNumber(w, sIdx + 1, freq)
+                          return (
+                            <th key={w} className="text-center px-2 py-3 min-w-[80px]">
+                              <div className="text-xs font-bold text-slate-800">Sem {w}</div>
+                              <div className="text-[10px] font-medium text-slate-400 mt-0.5">Ses {sNum}</div>
+                            </th>
+                          )
+                        })}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {session.exercises.map((ex, exIdx) => (
+                        <tr key={exIdx} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/70 transition-colors group/row">
+                          <td className="sticky left-0 bg-white group-hover/row:bg-slate-50/90 px-5 py-3 border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] z-10 transition-colors">
+                            <p className="text-[13px] font-bold text-slate-900 truncate max-w-[180px]">
+                              {ex.exercise.name}
+                            </p>
+                            <p className="text-[11px] font-medium text-slate-500 mt-0.5 flex items-center gap-1.5">
+                              <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">{ex.sets}×{ex.reps}</span>
+                              {ex.rest && <span>{ex.rest}</span>}
+                            </p>
+                          </td>
                           {Array.from({ length: totalWeeks }, (_, i) => i + 1).map(w => {
                             const sNum = getSessionNumber(w, sIdx + 1, freq)
+                            const val = getWeight(sNum, exIdx, ex)
+                            const isCustom = weightOverrides[sNum]?.[exIdx] !== undefined
                             return (
-                              <th key={w} className="text-center px-2 py-2 min-w-[72px]">
-                                <div className="text-xs font-semibold text-slate-600">Sem {w}</div>
-                                <div className="text-[9px] font-normal text-slate-400">Ses {sNum}</div>
-                              </th>
-                            )
-                          })}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {session.exercises.map((ex, exIdx) => (
-                          <tr key={exIdx} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                            <td className="sticky left-0 bg-white px-4 py-2.5 border-r border-slate-100">
-                              <p className="text-xs font-medium text-slate-900 truncate max-w-[140px]">
-                                {ex.exercise.name}
-                              </p>
-                              <p className="text-[10px] text-slate-400 mt-0.5">
-                                {ex.sets}×{ex.reps}
-                                {ex.rest && ` · ${ex.rest}`}
-                              </p>
-                            </td>
-                            {Array.from({ length: totalWeeks }, (_, i) => i + 1).map(w => {
-                              const sNum = getSessionNumber(w, sIdx + 1, freq)
-                              const val = getWeight(sNum, exIdx, ex)
-                              const isCustom = weightOverrides[sNum]?.[exIdx] !== undefined
-                              return (
-                                <td key={w} className="px-1.5 py-1.5 text-center">
+                              <td key={w} className="px-2 py-2 text-center align-middle">
+                                <div className="relative group/input flex items-center justify-center">
                                   <input
                                     type="number"
                                     min={0}
                                     step={2.5}
                                     value={val ?? ""}
-                                    onChange={e => setWeight(
-                                      sNum, exIdx,
-                                      e.target.value ? parseFloat(e.target.value) : null
-                                    )}
+                                    onChange={e => setWeight(sNum, exIdx, e.target.value ? parseFloat(e.target.value) : null)}
                                     placeholder="—"
                                     className={cn(
-                                      "w-16 h-8 text-center text-xs rounded-lg border outline-none",
-                                      "focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all",
+                                      "w-16 h-9 text-center text-[13px] rounded-lg border outline-none transition-all font-semibold",
+                                      "focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white shadow-sm",
                                       isCustom
-                                        ? "border-blue-300 bg-blue-50 text-blue-800 font-semibold"
-                                        : "border-slate-200 bg-slate-50 text-slate-500"
+                                        ? "border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-300"
+                                        : "border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300 hover:bg-white"
                                     )}
                                   />
-                                </td>
-                              )
-                            })}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                                  <span className="absolute right-1.5 text-[9px] font-bold text-slate-400 pointer-events-none group-focus-within/input:opacity-0 transition-opacity">
+                                    kg
+                                  </span>
+                                </div>
+                              </td>
+                            )
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
-                  {/* Auto-fill */}
+                <div className="bg-slate-50 border-t border-slate-200 p-3">
                   <AutoFillBar
                     session={session}
                     sIdx={sIdx}
@@ -726,36 +747,27 @@ async function handleSave() {
                     totalWeeks={totalWeeks}
                     onAutoFill={autoFill}
                   />
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )
           })}
         </div>
       )}
 
-      {/* ── Navigation ── */}
+      {/* Navigation */}
       <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-        <Button
-          variant="outline"
-          onClick={() => step === 1 ? router.back() : setStep(s => s - 1)}
-        >
+        <Button variant="outline" onClick={() => step === 1 ? router.back() : setStep(s => s - 1)}>
           <ArrowLeft size={15} className="mr-1.5" />
           {step === 1 ? "Cancelar" : "Atrás"}
         </Button>
 
         <div className="flex items-center gap-3">
           {step === 2 && !canStep2 && (
-            <p className="text-xs text-amber-600">
-              Cada sesión necesita al menos un ejercicio
-            </p>
+            <p className="text-xs text-amber-600">Cada sesión necesita al menos un ejercicio</p>
           )}
           {step < 3 ? (
-            <Button
-              onClick={() => setStep(s => s + 1)}
-              disabled={step === 1 ? !canStep1 : !canStep2}
-            >
-              Siguiente
-              <ArrowRight size={15} className="ml-1.5" />
+            <Button onClick={() => setStep(s => s + 1)} disabled={step === 1 ? !canStep1 : !canStep2}>
+              Siguiente <ArrowRight size={15} className="ml-1.5" />
             </Button>
           ) : (
             <Button onClick={handleSave} disabled={saving} className="gap-2">
@@ -769,10 +781,10 @@ async function handleSave() {
   )
 }
 
-// ── Auto-fill bar ──────────────────────────────────────────────────────────
+// ── Auto-fill bar (una sola definición, a nivel de módulo) ─────────────────
 
 function AutoFillBar({
-  session, sIdx, freq, totalWeeks, onAutoFill,
+  session, sIdx, totalWeeks, onAutoFill,
 }: {
   session: TemplateSession
   sIdx: number
@@ -782,83 +794,93 @@ function AutoFillBar({
 }) {
   const [open, setOpen] = useState(false)
   const [exIdx, setExIdx] = useState(0)
-  const [startWeight, setStartWeight] = useState<number>(
-    session.exercises[0]?.targetWeight ?? 60
-  )
+  const [startWeight, setStartWeight] = useState<number>(session.exercises[0]?.targetWeight ?? 60)
   const [increment, setIncrement] = useState<number>(2.5)
   const [everyN, setEveryN] = useState<number>(2)
 
   if (session.exercises.length === 0) return null
 
   return (
-    <div className="border-t border-slate-100 px-4 py-3">
+    <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
       <button
         onClick={() => setOpen(!open)}
-        className="text-xs text-slate-500 hover:text-blue-600 flex items-center gap-1.5 transition-colors"
+        className="w-full px-4 py-3 text-sm font-semibold text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 flex items-center justify-between transition-colors"
       >
-        <Zap size={12} />
-        {open ? "Cerrar auto-fill" : "Auto-fill progresión"}
+        <div className="flex items-center gap-2">
+          <Zap size={16} className={open ? "text-blue-500" : "text-amber-500"} />
+          {open ? "Cerrar generador automático" : "Generar progresión automática (Auto-fill)"}
+        </div>
+        <ChevronDown size={16} className={cn("text-slate-400 transition-transform duration-200", open && "rotate-180")} />
       </button>
 
       {open && (
-        <div className="mt-3 flex flex-wrap items-end gap-3 p-3 bg-blue-50 border border-blue-100 rounded-xl">
-          <div>
-            <label className="text-[10px] text-blue-700 font-semibold uppercase tracking-wide">
-              Ejercicio
-            </label>
-            <select
-              value={exIdx}
-              onChange={e => {
-                const i = Number(e.target.value)
-                setExIdx(i)
-                setStartWeight(session.exercises[i]?.targetWeight ?? 60)
-              }}
-              className="mt-1 block h-8 px-2 text-xs border border-blue-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            >
-              {session.exercises.map((ex, i) => (
-                <option key={i} value={i}>{ex.exercise.name}</option>
-              ))}
-            </select>
-          </div>
+        <div className="p-4 border-t border-slate-100 bg-slate-50/50">
+          <div className="flex flex-wrap items-end gap-4 p-4 bg-white border border-blue-100 rounded-xl shadow-sm">
+            <div className="w-full sm:w-auto">
+              <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1.5">Ejercicio a modificar</label>
+              <select
+                value={exIdx}
+                onChange={e => {
+                  const i = Number(e.target.value)
+                  setExIdx(i)
+                  setStartWeight(session.exercises[i]?.targetWeight ?? 60)
+                }}
+                className="block w-full sm:w-48 h-9 px-3 text-sm border border-slate-200 rounded-lg bg-white text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+              >
+                {session.exercises.map((ex, i) => (
+                  <option key={i} value={i}>{ex.exercise.name}</option>
+                ))}
+              </select>
+            </div>
 
-          {[
-            { label: "Peso inicial (kg)", val: startWeight, setter: setStartWeight, step: 2.5, w: "w-24" },
-            { label: "Incremento (kg)",   val: increment,   setter: setIncrement,   step: 2.5, w: "w-20" },
-            { label: "Cada N semanas",    val: everyN,      setter: setEveryN,      step: 1,   w: "w-16" },
-          ].map(({ label, val, setter, step, w }) => (
-            <div key={label}>
-              <label className="text-[10px] text-blue-700 font-semibold uppercase tracking-wide">
-                {label}
-              </label>
+            <div>
+              <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1.5">Peso inicial</label>
+              <div className="relative">
+                <input
+                  type="number" min={0} step={2.5} value={startWeight}
+                  onChange={e => setStartWeight(parseFloat(e.target.value) || 0)}
+                  className="block w-24 h-9 pl-2 pr-6 text-center text-sm border border-slate-200 rounded-lg bg-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                />
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">kg</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1.5">Incremento</label>
+              <div className="relative">
+                <input
+                  type="number" min={0} step={2.5} value={increment}
+                  onChange={e => setIncrement(parseFloat(e.target.value) || 0)}
+                  className="block w-20 h-9 pl-2 pr-6 text-center text-sm border border-slate-200 rounded-lg bg-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                />
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">kg</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1.5">Cada N semanas</label>
               <input
-                type="number"
-                min={0}
-                step={step}
-                value={val}
-                onChange={e => setter(parseFloat(e.target.value) || 0)}
-                className={cn(
-                  "mt-1 block h-8 text-center text-xs border border-blue-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400",
-                  w
-                )}
+                type="number" min={1} step={1} value={everyN}
+                onChange={e => setEveryN(parseFloat(e.target.value) || 1)}
+                className="block w-16 h-9 text-center text-sm border border-slate-200 rounded-lg bg-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
               />
             </div>
-          ))}
 
-          <div className="text-xs text-blue-600 bg-blue-100 px-3 py-2 rounded-lg leading-snug max-w-[200px]">
-            {startWeight}kg → {startWeight + Math.floor(totalWeeks / everyN) * increment}kg
-            {" "}en {totalWeeks} semanas
+            <div className="flex-1"></div>
+
+            <div className="text-xs text-blue-700 bg-blue-50 px-3 py-2 rounded-lg font-medium border border-blue-100 flex items-center gap-2">
+              <TrendingUp size={14} />
+              {startWeight}kg → {startWeight + Math.floor(totalWeeks / everyN) * increment}kg
+            </div>
+
+            <Button
+              size="sm"
+              onClick={() => { onAutoFill(sIdx, exIdx, startWeight, increment, everyN); setOpen(false) }}
+              className="h-9 px-6 bg-slate-900 hover:bg-slate-800 text-white gap-2 shadow-sm"
+            >
+              <Zap size={14} className="text-amber-400" /> Aplicar
+            </Button>
           </div>
-
-          <Button
-            size="sm"
-            onClick={() => {
-              onAutoFill(sIdx, exIdx, startWeight, increment, everyN)
-              setOpen(false)
-            }}
-            className="h-8 text-xs gap-1.5"
-          >
-            <Zap size={12} /> Aplicar
-          </Button>
         </div>
       )}
     </div>

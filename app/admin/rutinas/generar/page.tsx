@@ -326,7 +326,7 @@ export default function GenerarRutinaPage() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Generador de rutinas</h1>
-          <p className="text-sm text-slate-500">Creá una rutina automática con IA</p>
+          <p className="text-sm text-slate-500">Creá una rutina automática</p>
         </div>
       </div>
 

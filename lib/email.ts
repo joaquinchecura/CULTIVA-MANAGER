@@ -1,6 +1,13 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Función para obtener el cliente Resend (lazy)
+function getResend() {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY no está configurada')
+  }
+  return new Resend(apiKey)
+}
 
 // Plantilla base para todos los emails
 function emailLayout(title: string, content: string, gymName: string = 'Cultiva Fitness') {
@@ -40,7 +47,7 @@ function emailLayout(title: string, content: string, gymName: string = 'Cultiva 
   `
 }
 
-// 1. Email de bienvenida (cuando el alumno se registra)
+// 1. Email de bienvenida
 export async function sendWelcomeEmail(params: {
   to: string
   firstName: string
@@ -48,8 +55,9 @@ export async function sendWelcomeEmail(params: {
   miplanUrl: string
 }) {
   try {
+    const resend = getResend()
     await resend.emails.send({
-        from: `${params.gymName} <noreply@cultivafitness.app>`,
+      from: `${params.gymName} <noreply@cultivafitness.app>`,
       to: params.to,
       subject: `¡Bienvenido/a a ${params.gymName}!`,
       html: emailLayout(
@@ -91,6 +99,7 @@ export async function sendMembershipExpiringEmail(params: {
   miplanUrl: string
 }) {
   try {
+    const resend = getResend()
     const formattedDate = params.endDate.toLocaleDateString('es-AR', {
       day: 'numeric',
       month: 'long',
@@ -99,7 +108,7 @@ export async function sendMembershipExpiringEmail(params: {
     })
 
     await resend.emails.send({
-      from: `${params.gymName} <onboarding@resend.dev>`,
+      from: `${params.gymName} <noreply@cultivafitness.app>`,
       to: params.to,
       subject: `Tu membresía vence en ${params.daysLeft} día${params.daysLeft > 1 ? 's' : ''}`,
       html: emailLayout(
@@ -134,8 +143,9 @@ export async function sendNewRoutineEmail(params: {
   miplanUrl: string
 }) {
   try {
+    const resend = getResend()
     await resend.emails.send({
-      from: `${params.gymName} <onboarding@resend.dev>`,
+      from: `${params.gymName} <noreply@cultivafitness.app>`,
       to: params.to,
       subject: `Nueva rutina asignada: ${params.routineName}`,
       html: emailLayout(

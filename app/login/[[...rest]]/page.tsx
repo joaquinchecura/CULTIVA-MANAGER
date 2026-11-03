@@ -92,6 +92,7 @@ export default function LoginPage() {
                 footerActionText: '!text-slate-500 text-sm',
                 footerActionLink: '!text-blue-600 hover:!text-blue-700 font-semibold',
                 logoBox: 'hidden',
+                footerAction: 'hidden', // <-- Oculta el "¿No tenés cuenta? Registrate"
               },
             }}
           />

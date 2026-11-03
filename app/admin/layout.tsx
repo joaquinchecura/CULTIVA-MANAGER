@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { SignOutButton, OrganizationSwitcher } from '@clerk/nextjs'
+import { SignOutButton, OrganizationSwitcher, useAuth } from '@clerk/nextjs'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import {
@@ -29,7 +29,6 @@ import {
 } from 'lucide-react'
 
 // Temas de color por grupo.
-// Las clases van escritas completas (no armadas dinámicamente) para que Tailwind las detecte.
 const themes = {
   blue: {
     title: 'text-blue-500 hover:text-blue-700',
@@ -164,15 +163,26 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const { isLoaded, isSignedIn } = useAuth() // <-- Hook para evitar el parpadeo
+  
   const [collapsedGroups, setCollapsedGroups] = useState<string[]>([])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
-  // Recordar la preferencia (se lee después del montaje para evitar errores de hidratación)
+  // Recordar la preferencia
   useEffect(() => {
     try {
       if (localStorage.getItem(STORAGE_KEY) === '1') setSidebarCollapsed(true)
     } catch {}
   }, [])
+
+  // MIENTRAS CLERK CARGA O NO HAY SESIÓN -> SPINNER
+  if (!isLoaded || !isSignedIn) {
+    return (
+      <div className="min-h-screen bg-[#F6FDF7] flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
+      </div>
+    )
+  }
 
   const toggleSidebar = () => {
     setSidebarCollapsed((prev) => {
@@ -205,7 +215,7 @@ export default function AdminLayout({
           sidebarCollapsed ? 'w-[72px]' : 'w-64'
         )}
       >
-        {/* Botón para colapsar / expandir (sobre el borde) */}
+        {/* Botón para colapsar / expandir */}
         <button
           onClick={toggleSidebar}
           aria-label={sidebarCollapsed ? 'Expandir menú' : 'Ocultar menú'}
@@ -242,14 +252,12 @@ export default function AdminLayout({
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto overflow-x-hidden">
           {navGroups.map((group) => {
             const t = themes[group.theme]
-            // En modo iconos siempre se muestran todos los items
             const isGroupCollapsed =
               !sidebarCollapsed && collapsedGroups.includes(group.title)
 
             return (
               <div key={group.title} className="mb-3">
                 {sidebarCollapsed ? (
-                  // Separador de color en lugar del título
                   <div className={cn('mx-3 my-2 h-0.5 rounded-full opacity-70', t.divider)} />
                 ) : (
                   <button
@@ -308,7 +316,7 @@ export default function AdminLayout({
           })}
         </nav>
 
-        {/* Organización activa — al fondo, uso ocasional */}
+        {/* Organización activa */}
         <div className="px-3 py-3 border-t border-slate-100 space-y-2">
           {!sidebarCollapsed && (
             <div className="flex items-center gap-2 px-2">
@@ -323,7 +331,6 @@ export default function AdminLayout({
                 organizationSwitcherTrigger: sidebarCollapsed
                   ? 'p-1.5 rounded-lg border border-slate-200'
                   : 'w-full justify-between px-2 py-1.5 rounded-lg border border-slate-200 text-sm',
-                // En modo iconos solo queda el avatar de la organización
                 ...(sidebarCollapsed && {
                   organizationPreviewTextContainer: 'hidden',
                   organizationSwitcherTriggerIcon: 'hidden',
@@ -359,7 +366,6 @@ export default function AdminLayout({
           </div>
           <h1 className="font-bold text-slate-900">Cultiva Manager</h1>
         </div>
-        {/* Mobile menu button - podés agregar un drawer si querés */}
       </div>
 
       {/* Main Content */}

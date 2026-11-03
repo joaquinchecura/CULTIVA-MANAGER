@@ -75,19 +75,30 @@ export default function LoginPage() {
                 cardBox: '!w-full !max-w-full !shadow-none !bg-transparent',
                 card: '!bg-transparent !shadow-none !p-0 !w-full !max-w-full !border-none',
                 
+                // Ocultamos el header de Clerk para no duplicar el título
                 header: 'hidden',
                 
-                formFieldLabel: 'text-slate-600 font-medium text-sm',
+                // Textos e Inputs (forzamos ancho completo para que no se salgan)
+                formFieldLabel: '!text-slate-600 font-medium text-sm !w-full !block mb-1',
                 formFieldInput: '!bg-slate-50 !border-slate-200 !text-slate-900 !h-10 !rounded-lg !w-full',
                 
-                formButtonPrimary: '!bg-blue-600 hover:!bg-blue-700 !text-white font-semibold !h-10 !rounded-lg !w-full',
+                // Ocultamos el texto de advertencia que se salía de la tarjeta
+                formFieldWarningText: 'hidden',
+                formFieldErrorText: '!text-red-500 text-xs mt-1',
+              
+                // Botón principal
+                formButtonPrimary: '!bg-blue-600 hover:!bg-blue-700 !text-white font-semibold !h-10 !rounded-lg !w-full mt-2',
                 
+                // Botones sociales
                 socialButtonsBlockButton: '!border-slate-200 !text-slate-700 hover:!bg-slate-50 !h-10 !rounded-lg !w-full',
                 socialButtonsBlockButtonText: 'text-sm',
                 
+                // Footer y enlaces
                 footer: '!bg-transparent !border-t !border-slate-100 !mt-4 !pt-4 !w-full',
+                footerActionText: '!text-slate-500 text-sm',
                 footerActionLink: '!text-blue-600 hover:!text-blue-700 font-semibold',
                 
+                // Ocultar logo de Clerk
                 logoBox: 'hidden',
               },
             }}

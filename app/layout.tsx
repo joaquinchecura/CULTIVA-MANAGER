@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Geist } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
-import { esES } from '@clerk/localizations' // <-- AGREGADO
+import { esES } from '@clerk/localizations'
 import './globals.css'
 import { cn } from "@/lib/utils";
 
@@ -64,10 +64,10 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider
-      localization={esES}          // <-- Para que diga "Entrar" en lugar de "Sign in"
-      signInUrl="/login"           // <-- Fuerza el uso de tu diseño en /login
-      signUpUrl="/sign-up"         // <-- Fuerza el uso de /sign-up
-      afterSignOutUrl="/login"     // <-- Te manda al login al cerrar sesión
+      localization={esES}
+      signInUrl="/login"
+      signUpUrl="/sign-up"
+      afterSignOutUrl="/login"
     >
       <html lang="es" className={cn("font-sans", geist.variable)}>
         <head>
@@ -80,7 +80,8 @@ export default function RootLayout({
             />
           ))}
         </head>
-        <body className={inter.className}>
+        {/* Agregamos bg-[#F6FDF7] para que el fondo base sea el color de tu marca desde el principio */}
+        <body className={cn(inter.className, "bg-[#F6FDF7] text-slate-900")}>
           {children}
         </body>
       </html>

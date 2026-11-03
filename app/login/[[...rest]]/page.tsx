@@ -1,29 +1,8 @@
-"use client"; // <-- IMPORTANTE: Necesario para usar hooks en Next.js
+"use client";
 
-import { SignIn, useAuth } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { SignIn } from '@clerk/nextjs';
 
 export default function LoginPage() {
-  const { isLoaded, isSignedIn } = useAuth();
-  const router = useRouter();
-
-  // Si Clerk cargó y ya estás logueado, te manda al admin
-  useEffect(() => {
-    if (isLoaded && isSignedIn) {
-      router.push('/admin');
-    }
-  }, [isLoaded, isSignedIn, router]);
-
-  // Mientras chequea, mostramos un fondo limpio para que no parpadee
-  if (!isLoaded || isSignedIn) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-slate-50 relative overflow-hidden flex items-center justify-center p-4">
       
@@ -69,7 +48,7 @@ export default function LoginPage() {
           <SignIn
             routing="path"
             path="/login" 
-            fallbackRedirectUrl="/admin" // <-- Redirige al admin
+            fallbackRedirectUrl="/admin" // <-- Clerk te manda acá automáticamente al loguearte
             appearance={{
               variables: { 
                 colorPrimary: '#2563eb', 
@@ -92,7 +71,7 @@ export default function LoginPage() {
                 footerActionText: '!text-slate-500 text-sm',
                 footerActionLink: '!text-blue-600 hover:!text-blue-700 font-semibold',
                 logoBox: 'hidden',
-                footerAction: 'hidden', // <-- Oculta el "¿No tenés cuenta? Registrate"
+                footerAction: 'hidden', // Oculta el "Registrate"
               },
             }}
           />

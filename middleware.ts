@@ -7,7 +7,12 @@ const isPublicRoute = createRouteMatcher([
 
 export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
-    await auth.protect()
+    const session = await auth()
+    if (!session.userId) {
+      return session.redirectToSignIn()
+    }
+    // Si tiene sesión pero no organización, lo dejamos pasar igual 
+    // (o podrías redirigirlo a una página de "contactá al admin")
   }
 })
 

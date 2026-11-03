@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { SignOutButton, OrganizationSwitcher, useAuth } from '@clerk/nextjs'
+import { SignOutButton, OrganizationSwitcher, useAuth, useOrganization } from '@clerk/nextjs'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import {
@@ -163,7 +163,8 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
-  const { isLoaded, isSignedIn } = useAuth() // <-- Hook para evitar el parpadeo
+  const { isLoaded, isSignedIn } = useAuth()
+  const { organization, isLoaded: isOrgLoaded } = useOrganization()
   
   const [collapsedGroups, setCollapsedGroups] = useState<string[]>([])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -175,18 +176,38 @@ export default function AdminLayout({
     } catch {}
   }, [])
 
-  // MIENTRAS CLERK CARGA O NO HAY SESIÓN -> SPINNER
-  if (!isLoaded || !isSignedIn) {
+  // 1. MIENTRAS CLERK CARGA
+  if (!isLoaded || !isOrgLoaded) {
     return (
       <div className="min-h-screen bg-[#F6FDF7] flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
       </div>
     )
   }
-  // Si cargó pero NO estás logueado, el middleware ya te va a mandar a /login
-  // (no pongas un router.push acá para no crear bucles)
+
+  // 2. SI NO HAY SESIÓN (el middleware debería redirigir, pero por las dudas)
   if (!isSignedIn) {
-    return null; 
+    return null;
+  }
+
+  // 3. SI ESTÁ LOGUEADO PERO NO TIENE ORGANIZACIÓN ASIGNADA
+  if (!organization) {
+    return (
+      <div className="min-h-screen bg-[#F6FDF7] flex flex-col items-center justify-center p-4 text-center">
+        <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-200 max-w-md w-full">
+          <h1 className="text-2xl font-bold text-slate-800 mb-2">Casi listo...</h1>
+          <p className="text-slate-500 mb-6 text-sm">
+            Tu cuenta está creada, pero todavía no tenés una organización asignada. 
+            Contactá al administrador para que te habilite el acceso a tu panel.
+          </p>
+          <SignOutButton redirectUrl="/login">
+            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors">
+              Volver a intentar / Cerrar sesión
+            </button>
+          </SignOutButton>
+        </div>
+      </div>
+    )
   }
 
   const toggleSidebar = () => {

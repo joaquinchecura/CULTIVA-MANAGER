@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Geist } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
+import { esES } from '@clerk/localizations' // <-- AGREGADO
 import './globals.css'
 import { cn } from "@/lib/utils";
 
@@ -39,7 +40,6 @@ export const viewport: Viewport = {
   themeColor: "#F6FDF7",
 }
 
-// Next.js Metadata API no tiene campo dedicado para apple-touch-startup-image (splash de iOS)
 const splashScreens = [
   { size: "640-1136", media: "(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" },
   { size: "750-1334", media: "(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" },
@@ -63,7 +63,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      localization={esES}          // <-- Para que diga "Entrar" en lugar de "Sign in"
+      signInUrl="/login"           // <-- Fuerza el uso de tu diseño en /login
+      signUpUrl="/sign-up"         // <-- Fuerza el uso de /sign-up
+      afterSignOutUrl="/login"     // <-- Te manda al login al cerrar sesión
+    >
       <html lang="es" className={cn("font-sans", geist.variable)}>
         <head>
           {splashScreens.map(({ size, media }) => (

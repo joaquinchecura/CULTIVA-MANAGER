@@ -1,13 +1,36 @@
-import { SignIn } from '@clerk/nextjs'
+"use client"; // <-- IMPORTANTE: Necesario para usar hooks en Next.js
+
+import { SignIn, useAuth } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function LoginPage() {
+  const { isLoaded, isSignedIn } = useAuth();
+  const router = useRouter();
+
+  // Si Clerk cargó y ya estás logueado, te manda al admin
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      router.push('/admin');
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  // Mientras chequea, mostramos un fondo limpio para que no parpadee
+  if (!isLoaded || isSignedIn) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 relative overflow-hidden flex items-center justify-center p-4">
       
       {/* FONDO PREMIUM: Gradiente radial sutil */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-100/60 via-slate-50 to-slate-50 pointer-events-none" />
 
-      {/* FONDO PREMIUM: Patrón de puntos (más sutil que antes) */}
+      {/* FONDO PREMIUM: Patrón de puntos */}
       <div 
         className="absolute inset-0 opacity-[0.3] pointer-events-none" 
         style={{ 
@@ -16,33 +39,16 @@ export default function LoginPage() {
         }} 
       />
 
-      {/* FONDO PREMIUM: Líneas curvas abstractas (estilo data/organización) */}
+      {/* FONDO PREMIUM: Líneas curvas abstractas */}
       <svg
         className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.15]"
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 1440 900"
         preserveAspectRatio="xMidYMid slice"
       >
-        <path
-          d="M0 400 C 300 200, 600 600, 1440 300"
-          fill="none"
-          stroke="#2563eb"
-          strokeWidth="2"
-          strokeDasharray="10 20"
-        />
-        <path
-          d="M-100 600 C 400 800, 800 200, 1600 600"
-          fill="none"
-          stroke="#2563eb"
-          strokeWidth="1"
-        />
-        <path
-          d="M200 900 C 600 500, 1000 700, 1400 100"
-          fill="none"
-          stroke="#3b82f6"
-          strokeWidth="1.5"
-          strokeDasharray="5 15"
-        />
+        <path d="M0 400 C 300 200, 600 600, 1440 300" fill="none" stroke="#2563eb" strokeWidth="2" strokeDasharray="10 20" />
+        <path d="M-100 600 C 400 800, 800 200, 1600 600" fill="none" stroke="#2563eb" strokeWidth="1" />
+        <path d="M200 900 C 600 500, 1000 700, 1400 100" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="5 15" />
       </svg>
 
       {/* TARJETA PRINCIPAL */}
@@ -63,7 +69,7 @@ export default function LoginPage() {
           <SignIn
             routing="path"
             path="/login" 
-            fallbackRedirectUrl="/redirect"
+            fallbackRedirectUrl="/admin" // <-- Redirige al admin
             appearance={{
               variables: { 
                 colorPrimary: '#2563eb', 
@@ -74,31 +80,17 @@ export default function LoginPage() {
                 rootBox: '!w-full !max-w-full',
                 cardBox: '!w-full !max-w-full !shadow-none !bg-transparent',
                 card: '!bg-transparent !shadow-none !p-0 !w-full !max-w-full !border-none',
-                
-                // Ocultamos el header de Clerk para no duplicar el título
                 header: 'hidden',
-                
-                // Textos e Inputs (forzamos ancho completo para que no se salgan)
                 formFieldLabel: '!text-slate-600 font-medium text-sm !w-full !block mb-1',
                 formFieldInput: '!bg-slate-50 !border-slate-200 !text-slate-900 !h-10 !rounded-lg !w-full',
-                
-                // Ocultamos el texto de advertencia que se salía de la tarjeta
                 formFieldWarningText: 'hidden',
                 formFieldErrorText: '!text-red-500 text-xs mt-1',
-              
-                // Botón principal
                 formButtonPrimary: '!bg-blue-600 hover:!bg-blue-700 !text-white font-semibold !h-10 !rounded-lg !w-full mt-2',
-                
-                // Botones sociales
                 socialButtonsBlockButton: '!border-slate-200 !text-slate-700 hover:!bg-slate-50 !h-10 !rounded-lg !w-full',
                 socialButtonsBlockButtonText: 'text-sm',
-                
-                // Footer y enlaces
                 footer: '!bg-transparent !border-t !border-slate-100 !mt-4 !pt-4 !w-full',
                 footerActionText: '!text-slate-500 text-sm',
                 footerActionLink: '!text-blue-600 hover:!text-blue-700 font-semibold',
-                
-                // Ocultar logo de Clerk
                 logoBox: 'hidden',
               },
             }}

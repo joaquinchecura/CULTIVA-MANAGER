@@ -4,11 +4,12 @@ const isPublicRoute = createRouteMatcher([
   '/login(.*)',
   '/sign-in(.*)',
   '/sign-up(.*)',
+  '/redirect(.*)', // <-- Agregamos esto por si Clerk usa esta ruta
 ])
 
 export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
-    await auth.protect() // Si no está logueado, Clerk lo manda a /login automáticamente
+    await auth.protect()
   }
 })
 

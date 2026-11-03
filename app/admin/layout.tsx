@@ -183,6 +183,11 @@ export default function AdminLayout({
       </div>
     )
   }
+  // Si cargó pero NO estás logueado, el middleware ya te va a mandar a /login
+  // (no pongas un router.push acá para no crear bucles)
+  if (!isSignedIn) {
+    return null; 
+  }
 
   const toggleSidebar = () => {
     setSidebarCollapsed((prev) => {

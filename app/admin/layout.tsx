@@ -7,7 +7,6 @@ import {
   OrganizationSwitcher, 
   useAuth, 
   useOrganization,
-  OrganizationList,
   RedirectToSignIn 
 } from '@clerk/nextjs'
 import Link from 'next/link'
@@ -172,36 +171,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     )
   }
 
-  // 2. Si no está logueado, usamos el componente nativo de Clerk.
-  // ESTO EVITA EL BUCLE INFINITO.
+  // 2. Si no está logueado, Clerk lo redirige
   if (!isSignedIn) {
     return <RedirectToSignIn />;
   }
 
-  // 3. Si está logueado pero NO tiene organización -> Seleccionar/Crear
+  // 3. Si no hay organización, el Middleware ya debería haber redirigido a /select-org.
+  // Pero por seguridad mostramos el spinner.
   if (!organization) {
     return (
-      <div className="min-h-screen bg-[#F6FDF7] flex flex-col items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-200 max-w-md w-full text-center">
-          <h1 className="text-2xl font-bold text-slate-800 mb-2">Seleccioná tu organización</h1>
-          <p className="text-slate-500 mb-6 text-sm">
-            Para continuar, por favor seleccioná la organización a la que pertenecés.
-          </p>
-          
-          <OrganizationList 
-            hidePersonal 
-            afterSelectOrganizationUrl="/admin"
-            afterCreateOrganizationUrl="/admin"
-          />
-          
-          <div className="mt-6 pt-6 border-t border-slate-100">
-            <SignOutButton redirectUrl="/login">
-              <button className="text-sm text-slate-500 hover:text-slate-800">
-                Cerrar sesión
-              </button>
-            </SignOutButton>
-          </div>
-        </div>
+      <div className="min-h-screen bg-[#F6FDF7] flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
       </div>
     )
   }

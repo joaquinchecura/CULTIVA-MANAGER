@@ -2,31 +2,21 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { SignOutButton, OrganizationSwitcher, useAuth, useOrganization } from '@clerk/nextjs'
-import { OrganizationList } from '@clerk/nextjs';
+import { 
+  SignOutButton, 
+  OrganizationSwitcher, 
+  useAuth, 
+  useOrganization,
+  OrganizationList,
+  RedirectToSignIn 
+} from '@clerk/nextjs'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import {
-  LogOut,
-  Home,
-  LayoutDashboard,
-  Users,
-  Dumbbell,
-  CalendarDays,
-  CreditCard,
-  Link2,
-  Scan,
-  Newspaper,
-  ClipboardList,
-  BookOpen,
-  BarChart3,
-  FileText,
-  ChevronDown,
-  Settings,
-  UserCircle2,
-  Wrench,
-  PanelLeftClose,
-  PanelLeftOpen,
+  LogOut, Home, LayoutDashboard, Users, Dumbbell, CalendarDays,
+  CreditCard, Link2, Scan, Newspaper, ClipboardList, BookOpen,
+  BarChart3, FileText, ChevronDown, Settings, UserCircle2,
+  Wrench, PanelLeftClose, PanelLeftOpen,
 } from 'lucide-react'
 
 // Temas de color por grupo.
@@ -158,11 +148,7 @@ const navGroups: {
 
 const STORAGE_KEY = 'cultiva-sidebar-collapsed'
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { isLoaded, isSignedIn } = useAuth()
   const { organization, isLoaded: isOrgLoaded } = useOrganization()
@@ -170,14 +156,14 @@ export default function AdminLayout({
   const [collapsedGroups, setCollapsedGroups] = useState<string[]>([])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
-  // Recordar la preferencia
+  // Recordar la preferencia del sidebar
   useEffect(() => {
     try {
       if (localStorage.getItem(STORAGE_KEY) === '1') setSidebarCollapsed(true)
     } catch {}
   }, [])
 
-  // 1. MIENTRAS CLERK CARGA
+  // 1. Spinner mientras carga Clerk
   if (!isLoaded || !isOrgLoaded) {
     return (
       <div className="min-h-screen bg-[#F6FDF7] flex items-center justify-center">
@@ -186,40 +172,40 @@ export default function AdminLayout({
     )
   }
 
-  // 2. SI NO HAY SESIÓN (el middleware debería redirigir, pero por las dudas)
+  // 2. Si no está logueado, usamos el componente nativo de Clerk.
+  // ESTO EVITA EL BUCLE INFINITO.
   if (!isSignedIn) {
-    return null;
+    return <RedirectToSignIn />;
   }
-  
-    // SI ESTÁ LOGUEADO PERO NO TIENE ORGANIZACIÓN ACTIVA
-    if (!organization) {
-      return (
-        <div className="min-h-screen bg-[#F6FDF7] flex flex-col items-center justify-center p-4">
-          <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-200 max-w-md w-full text-center">
-            <h1 className="text-2xl font-bold text-slate-800 mb-2">Seleccioná tu organización</h1>
-            <p className="text-slate-500 mb-6 text-sm">
-              Para continuar, por favor seleccioná la organización a la que pertenecés.
-            </p>
-            
-            {/* ESTO ES LO QUE FALTA: El listado de organizaciones */}
-            <OrganizationList 
-              hidePersonal 
-              afterSelectOrganizationUrl="/admin"
-              afterCreateOrganizationUrl="/admin"
-            />
-            
-            <div className="mt-6 pt-6 border-t border-slate-100">
-              <SignOutButton redirectUrl="/login">
-                <button className="text-sm text-slate-500 hover:text-slate-800">
-                  Cerrar sesión
-                </button>
-              </SignOutButton>
-            </div>
+
+  // 3. Si está logueado pero NO tiene organización -> Seleccionar/Crear
+  if (!organization) {
+    return (
+      <div className="min-h-screen bg-[#F6FDF7] flex flex-col items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-200 max-w-md w-full text-center">
+          <h1 className="text-2xl font-bold text-slate-800 mb-2">Seleccioná tu organización</h1>
+          <p className="text-slate-500 mb-6 text-sm">
+            Para continuar, por favor seleccioná la organización a la que pertenecés.
+          </p>
+          
+          <OrganizationList 
+            hidePersonal 
+            afterSelectOrganizationUrl="/admin"
+            afterCreateOrganizationUrl="/admin"
+          />
+          
+          <div className="mt-6 pt-6 border-t border-slate-100">
+            <SignOutButton redirectUrl="/login">
+              <button className="text-sm text-slate-500 hover:text-slate-800">
+                Cerrar sesión
+              </button>
+            </SignOutButton>
           </div>
         </div>
-      )
-    }
-
+      </div>
+    )
+  }
+  
   const toggleSidebar = () => {
     setSidebarCollapsed((prev) => {
       const next = !prev
@@ -251,7 +237,6 @@ export default function AdminLayout({
           sidebarCollapsed ? 'w-[72px]' : 'w-64'
         )}
       >
-        {/* Botón para colapsar / expandir */}
         <button
           onClick={toggleSidebar}
           aria-label={sidebarCollapsed ? 'Expandir menú' : 'Ocultar menú'}
@@ -261,7 +246,6 @@ export default function AdminLayout({
           {sidebarCollapsed ? <PanelLeftOpen size={13} /> : <PanelLeftClose size={13} />}
         </button>
 
-        {/* Logo */}
         <div className={cn('border-b border-slate-100', sidebarCollapsed ? 'p-4' : 'p-5')}>
           <div className={cn('flex items-center gap-3', sidebarCollapsed && 'justify-center')}>
             <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0">
@@ -284,7 +268,6 @@ export default function AdminLayout({
           </div>
         </div>
 
-        {/* Navegación */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto overflow-x-hidden">
           {navGroups.map((group) => {
             const t = themes[group.theme]
@@ -352,7 +335,6 @@ export default function AdminLayout({
           })}
         </nav>
 
-        {/* Organización activa */}
         <div className="px-3 py-3 border-t border-slate-100 space-y-2">
           {!sidebarCollapsed && (
             <div className="flex items-center gap-2 px-2">
@@ -376,7 +358,6 @@ export default function AdminLayout({
           />
         </div>
 
-        {/* Footer */}
         <div className="p-3 border-t border-slate-100">
           <SignOutButton redirectUrl="/login">
             <button
@@ -394,7 +375,6 @@ export default function AdminLayout({
         </div>
       </aside>
 
-      {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-slate-200 z-50 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -404,7 +384,6 @@ export default function AdminLayout({
         </div>
       </div>
 
-      {/* Main Content */}
       <main
         className={cn(
           'flex-1 p-6 pt-16 md:pt-6 min-h-screen transition-[margin] duration-300 ease-in-out',

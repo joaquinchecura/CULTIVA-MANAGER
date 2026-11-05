@@ -6,6 +6,7 @@ const isPublicRoute = createRouteMatcher([
   '/login(.*)',
   '/sign-up(.*)',
   '/select-org(.*)', // Ruta para elegir organización
+  '/api/webhooks(.*)', // Webhooks de Clerk: los llama Clerk (sin sesión); se autentican con la firma
 ])
 
 export default clerkMiddleware(async (auth, req) => {

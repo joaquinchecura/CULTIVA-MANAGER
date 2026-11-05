@@ -16,7 +16,8 @@ const nextConfig: NextConfig = {
               "worker-src 'self' blob:",
               // TAMBIÉN LO AGREGAMOS ACÁ POR LAS DUDAS
               "connect-src 'self' https://*.cultivafitness.app https://*.clerk.accounts.dev https://api.clerk.com https://clerk-telemetry.com https://cdn.protect.clerk.com",
-              "img-src 'self' data: https://img.clerk.com https://images.clerk.dev",
+              // Cloudinary: imágenes y GIFs de ejercicios + fotos de clientes. blob: para previsualizar subidas.
+              "img-src 'self' data: blob: https://res.cloudinary.com https://img.clerk.com https://images.clerk.dev",
               "style-src 'self' 'unsafe-inline'",
               "font-src 'self' data:",
               "frame-src 'self' https://challenges.cloudflare.com https://*.cultivafitness.app",

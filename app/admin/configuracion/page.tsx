@@ -12,7 +12,7 @@ import { saveQuickActions } from '../quick-actions-actions'
 
 export default async function ConfiguracionPage() {
   const { orgId, sessionClaims } = await auth()
-  if (!orgId) redirect('/login')
+  if (!orgId) redirect('/sin-acceso')
 
   const metadata = sessionClaims?.publicMetadata as { platformAdmin?: boolean } | undefined
   const isPlatformAdmin = metadata?.platformAdmin === true

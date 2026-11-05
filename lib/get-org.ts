@@ -6,10 +6,14 @@ import { redirect } from "next/navigation";
 
 export async function requireOrgForPage() {
   const { userId, orgId } = await auth();
-  if (!userId || !orgId) redirect("/login");
+
+  // Sin sesión: /login. Con sesión, NUNCA mandar a /login: el componente <SignIn>
+  // ve que ya estás logueado y te devuelve a /admin → loop infinito.
+  if (!userId) redirect("/login");
+  if (!orgId) redirect("/sin-acceso");
 
   const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { status: true } });
-  if (!org || org.status !== "ACTIVE") redirect("/login");
+  if (!org || org.status !== "ACTIVE") redirect("/sin-acceso");
 
   return orgId;
 }

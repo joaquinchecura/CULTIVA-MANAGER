@@ -11,9 +11,11 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cultivafitness.app https://*.clerk.accounts.dev https://challenges.cloudflare.com blob:",
+              // AGREGAMOS cdn.protect.clerk.com ACÁ
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cultivafitness.app https://*.clerk.accounts.dev https://challenges.cloudflare.com https://cdn.protect.clerk.com blob:",
               "worker-src 'self' blob:",
-              "connect-src 'self' https://*.cultivafitness.app https://*.clerk.accounts.dev https://api.clerk.com https://clerk-telemetry.com",
+              // TAMBIÉN LO AGREGAMOS ACÁ POR LAS DUDAS
+              "connect-src 'self' https://*.cultivafitness.app https://*.clerk.accounts.dev https://api.clerk.com https://clerk-telemetry.com https://cdn.protect.clerk.com",
               "img-src 'self' data: https://img.clerk.com https://images.clerk.dev",
               "style-src 'self' 'unsafe-inline'",
               "font-src 'self' data:",

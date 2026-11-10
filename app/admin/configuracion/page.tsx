@@ -2,13 +2,15 @@
 export const dynamic = 'force-dynamic'
 
 import { prisma } from '@/lib/prisma'
-import { auth } from '@clerk/nextjs/server'
+import { auth, clerkClient } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import BackupButton from '@/components/admin/BackupButton'
 import { ShareRegistrationLink } from '@/components/ShareRegistrationLink'
 import { Settings, DatabaseBackup, Building2, LayoutGrid } from 'lucide-react'
 import { QuickActionsEditor } from '../components/QuickActionsEditor'
+import { GymNameForm } from '../components/GymNameForm'
 import { saveQuickActions } from '../quick-actions-actions'
+import { saveGymName } from './actions'
 
 export default async function ConfiguracionPage() {
   const { orgId, sessionClaims } = await auth()
@@ -19,19 +21,20 @@ export default async function ConfiguracionPage() {
 
   let config = await prisma.gymConfig.findFirst({ where: { organizationId: orgId } })
 
-  // 👇 Si no existe, lo creamos con valores por defecto
+  // Si no existe, lo creamos usando el nombre de la organización de Clerk
   if (!config) {
+    const clerk = await clerkClient()
+    const org = await clerk.organizations.getOrganization({ organizationId: orgId })
     config = await prisma.gymConfig.create({
       data: {
         organizationId: orgId,
-        name: 'Mi Gimnasio',
+        name: org.name || 'Mi Gimnasio',
         timezone: 'America/Argentina/Buenos_Aires',
         dashboardQuickActions: ['clientes', 'rutinas', 'agenda', 'pagos'],
       },
     })
   }
-  
-  // Leemos las acciones rápidas configuradas
+
   const initialActions = (config?.dashboardQuickActions as any) ?? [
     'clientes', 'rutinas', 'agenda', 'pagos',
   ]
@@ -46,10 +49,8 @@ export default async function ConfiguracionPage() {
         <p className="text-slate-500 mt-1">Datos del gimnasio, accesos rápidos y respaldo</p>
       </div>
 
-      {/* Link de registro para clientes */}
       <ShareRegistrationLink />
 
-      {/* NUEVO: Accesos rápidos del panel de control */}
       <div className="bg-white border border-slate-200 rounded-xl p-6">
         <div className="flex items-start gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
@@ -62,13 +63,9 @@ export default async function ConfiguracionPage() {
             </p>
           </div>
         </div>
-        <QuickActionsEditor
-          initialActions={initialActions}
-          onSave={saveQuickActions}
-        />
+        <QuickActionsEditor initialActions={initialActions} onSave={saveQuickActions} />
       </div>
 
-      {/* Backup propio — visible para cualquier profesional */}
       <div className="bg-white border border-slate-200 rounded-xl p-6">
         <div className="flex items-start gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
@@ -84,7 +81,6 @@ export default async function ConfiguracionPage() {
         <BackupButton endpoint="/api/backup" label="Descargar mis datos" />
       </div>
 
-      {/* Backup total de plataforma — solo visible para el admin de plataforma */}
       {isPlatformAdmin && (
         <div className="bg-white border border-slate-200 rounded-xl p-6">
           <div className="flex items-start gap-3 mb-4">
@@ -102,7 +98,6 @@ export default async function ConfiguracionPage() {
         </div>
       )}
 
-      {/* Datos del gimnasio */}
       <div className="bg-white border border-slate-200 rounded-xl p-6">
         <div className="flex items-start gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center shrink-0">
@@ -111,14 +106,12 @@ export default async function ConfiguracionPage() {
           <div>
             <h3 className="font-semibold text-slate-900">Datos del gimnasio</h3>
             <p className="text-sm text-slate-500 mt-0.5">
-              Nombre: <strong>{config?.name || 'Sin configurar'}</strong>
-              {config?.timezone && ` · Zona horaria: ${config.timezone}`}
+              Este nombre aparece en los emails que reciben tus clientes.
+              {config?.timezone && ` Zona horaria: ${config.timezone}`}
             </p>
           </div>
         </div>
-        <p className="text-xs text-slate-400">
-          Edición de estos datos disponible próximamente.
-        </p>
+        <GymNameForm initialName={config?.name ?? ''} onSave={saveGymName} />
       </div>
     </div>
   )
